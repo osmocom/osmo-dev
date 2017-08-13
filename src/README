@@ -1,0 +1,129 @@
+This dir is intended to keep all the git clones.
+
+There are some handy scripts I use for my daily Osmocom development:
+
+ ./g   run a git command in each source tree
+ ./e   run an arbitrary shell command in each source tree
+ ./st  show a brief branch and local mods status for each source tree
+ ./s   walk through each source tree and use gitk as well as user interaction
+       to quickly fast-forward / reset changes coming in from upstream. (This
+       is potentially dangerous, but safe if you only hit enter every time.)
+
+Examples:
+
+-----------------------------------------------------------------------------
+
+./g fetch    # run 'git fetch' in each clone = fetch all from upstream
+
+===== libasn1c =====
+remote: Counting objects: 29, done
+remote: Finding sources: 100% (26/26)
+remote: Total 26 (delta 8), reused 22 (delta 8)
+Unpacking objects: 100% (26/26), done.
+From ssh://go/libasn1c
+   4151e59..aaae8c7  master     -> origin/master
+
+===== libosmo-abis =====
+
+===== libosmo-netif =====
+remote: Counting objects: 105, done
+remote: Finding sources: 100% (92/92)
+remote: Total 92 (delta 54), reused 92 (delta 54)
+Unpacking objects: 100% (92/92), done.
+From ssh://go/libosmo-netif
+   6032a35..e786055  master     -> origin/master
+ + 058d3b7...89180ef pespin/jitterbuffer -> origin/pespin/jitterbuffer  (forced update)
+ * [new branch]      pespin/osmux-lostpkt -> origin/pespin/osmux-lostpkt
+
+===== libosmo-sccp =====
+
+===== libosmocore =====
+remote: Counting objects: 36, done
+remote: Finding sources: 100% (24/24)
+remote: Total 24 (delta 18), reused 24 (delta 18)
+Unpacking objects: 100% (24/24), done.
+From ssh://go/libosmocore
+   4a29f34..733810c  master     -> origin/master
+
+[...]
+
+-----------------------------------------------------------------------------
+
+./st         # any modifications / updates? (e.g. useful after './g fetch')
+             # (checks only 'master' and the current checked-out branch)
+
+     libasn1c master
+ libosmo-abis master
+libosmo-netif master
+ libosmo-sccp MODS master[+1|-10]
+  libosmocore master
+    libsmpp34 master
+     openggsn master
+     osmo-bsc pre_release[+43|-43]
+     osmo-hlr master
+     osmo-iuh pre_release[+1]
+     osmo-mgw pre_release
+     osmo-msc pre_release
+    osmo-sgsn pre_release
+
+# This shows me that I have local mods in libosmo-sccp, while my local master
+# branch has one commit that isn't on upstream ("+1"); but at the same time
+# origin/master has moved on by 10 commits ("-10").
+# My osmo-bsc git is on branch 'pre_release', and apparently I have amended the
+# 44th commit before pre_release's HEAD.
+# And on osmo-iuh, I have one un-pushed local commit.
+
+-----------------------------------------------------------------------------
+
+./e rm .version  # in each source tree, remove the local .version file
+
+-----------------------------------------------------------------------------
+
+./s         # interactively try to fast-forward to upstream and/or save
+            # local modifications.
+            # If you just hit Enter all the time, nothing will be changed.
+
+
+libosmocore
+master
+Your branch is behind 'origin/master' by 2 commits, and can be fast-forwarded.
+Behind. git merge?  (empty = no, 'ok' = yes)
+ok                   # <-- type 'ok' and hit enter
+git merge
+Updating ff932bb..4a29f34
+Fast-forward
+ include/osmocom/gprs/gprs_rlc.h | 25 +++++++++++++++++++
+ include/osmocom/gsm/tlv.h       | 21 +++++++++++++++-
+ src/gsm/gprs_rlc.c              | 90 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/gsm/libosmogsm.map          |  6 +++++
+ 4 files changed, 141 insertions(+), 1 deletion(-)
+
+
+libosmo-netif
+master
+Your branch is up-to-date with 'origin/master'.
+
+
+libosmo-sccp
+master
+Your branch and 'origin/master' have diverged,
+Diverged. git reset --hard origin/master ?  (empty = no, 'ok' = yes)
+# a 'gitk' opens; just hit 'enter' to keep local diverged commits.
+# If you type 'ok', local mods are saved to a wip branch first.
+
+Local mods
+  modified:   src/osmo_ss7_vty.c
+
+commit to new branch? (enter name, empty = no)
+
+commit to this branch master ?  (empty = no, 'ok' = yes)
+
+[...]
+
+-----------------------------------------------------------------------------
+
+
+Enjoy,
+
+~Neels
+<nhofmeyr@sysmocom.de>

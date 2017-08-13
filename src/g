@@ -1,0 +1,7 @@
+#!/bin/sh
+for gitdir in */.git ; do
+  dir="$(dirname "$gitdir")"
+  echo
+  echo "===== $dir ====="
+  git -C "$dir" $@
+done

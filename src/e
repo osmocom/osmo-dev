@@ -1,0 +1,10 @@
+#!/bin/sh
+base="$PWD"
+for gitdir in */.git ; do
+  cd "$base"
+  dir="$(dirname "$gitdir")"
+  echo
+  echo "===== $dir ====="
+  cd "$dir"
+  $@
+done

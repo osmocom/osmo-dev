@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+Git() {
+  echo "git $@"
+  git $@
+  if [ "$?" != "0" ]; then
+    echo "GIT RETURNED ERROR!"
+    exit 1
+  fi
+}
+
+Git_may_fail() {
+  git $@
+}
+
+Git_branch() {
+  echo "$(Git -C "$dir" status)" | grep 'On branch' | sed 's/On branch //'
+}
+
+
+gitk_start() {
+  if [ -n "$DISPLAY" ]; then
+    gitk --all &
+    gitk_started="1"
+  fi
+}
+
+dance() {
+  echo
+  echo
+  br="$(Git_branch)"
+
+  echo "$dir"
+  cd "$dir"
+
+  st="$(Git status)"
+  mods="$(echo "$st" | grep 'modified:')"
+
+  stline="$(echo "$st" | grep '\(behind\|ahead\|up-to-date\|diverged\)')"
+
+  echo "$br"
+  echo "$stline"
+
+  if [ -z "$mods" -a -n "$(echo "$stline" | grep up-to-date)" ]; then
+    return 0
+  fi
+
+  gitk_start
+
+  if [ -n "$(echo "$stline" | grep behind)" ]; then
+    echo "Behind. git merge?  (empty = no, 'ok' = yes)"
+    read ok
+    if [ "x$ok" = xok ]; then
+      Git merge
+    fi
+  elif [ -n "$(echo "$stline" | grep ahead)" ]; then
+    echo "Ahead. commit to new branch? (enter name, empty = no)"
+    read wipbranch
+    if [ -n "$wipbranch" ]; then
+      Git checkout -b "$wipbranch"
+      Git_may_fail commit -am wip
+      #Git push --set-upstream origin "$wipbranch"
+      Git checkout "$br"
+    fi
+    echo "$br: git reset --hard origin/$br ?  (empty = no, 'ok' = yes)"
+    read ok
+    if [ "x$ok" = xok ]; then
+      Git reset --hard "origin/$br"
+    fi
+    return 0
+  elif [ -n "$(echo "$stline" | grep diverged)" ]; then
+    echo "Diverged. git reset --hard origin/$br ?  (empty = no, 'ok' = yes)"
+    read ok
+    if [ "x$ok" = xok ]; then
+      wipbranch="neels/wip_$(date +%Y%m%d_%H%M)"
+      Git checkout -b "$wipbranch"
+      Git_may_fail commit -am wip
+      Git checkout "$br"
+      Git reset --hard "origin/$br"
+    fi
+  elif [ -z "$(echo "$stline" | grep up-to-date)" ]; then
+    echo "Nothing to do."
+    echo "$st"
+  fi
+
+  if [ -n "$mods" ]; then
+    echo "Local mods"
+    echo "$mods"
+    echo
+    echo "commit to new branch? (enter name, empty = no)"
+    read wipbranch
+    if [ -n "$wipbranch" ]; then
+      Git checkout -b "$wipbranch"
+      Git_may_fail commit -am wip
+      #Git push --set-upstream origin "$wipbranch"
+      Git checkout "$br"
+      return 0
+    fi
+
+    echo "commit to this branch $br ?  (empty = no, 'ok' = yes)"
+    read ok
+    if [ "x$ok" = xok ]; then
+      Git commit -am wip
+      #Git push
+      return 0
+    fi
+  fi
+}
+
+kill_gitk() {
+  if [ "$gitk_started" = "1" ]; then
+    kill %1
+    gitk_started="0"
+  fi
+}
+
+
+basedir="$(pwd)"
+gitk_started="0"
+for gitdir in */.git ; do
+  cd "$basedir"
+  dir="$(dirname "$gitdir")"
+
+  orig_branch="$(Git_branch)"
+
+  kill_gitk
+  dance
+  cd "$basedir"
+
+  if [ "$orig_branch" != master ]; then
+	kill_gitk
+	git -C "$dir" checkout master || continue
+	dance
+	cd "$basedir"
+	pwd
+	git -C "$dir" checkout "$orig_branch"
+  fi
+
+#  if [ "$dir" = "openbsc" ]; then
+#    kill_gitk
+#    Git checkout "sysmocom/iu"
+#    dance
+#  fi
+
+  sleep .1
+
+done
+
+kill_gitk
+
+echo
+echo
+./st
+
+# vim: shiftwidth=2 expandtab

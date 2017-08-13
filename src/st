@@ -1,0 +1,10 @@
+#!/bin/sh
+
+git_dirs() {
+  for gitdir in */.git ; do
+    echo "$(dirname "$gitdir")"
+  done
+}
+
+./git_branch_summary.py $(git_dirs)
+# vim: shiftwidth=2 expandtab

@@ -3,4 +3,9 @@ __pycache__
 tags
 *.pyc
 make-*
-src
+src/*
+!src/g
+!src/e
+!src/st
+!src/s
+!src/README
