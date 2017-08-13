@@ -1,0 +1,6 @@
+__pycache__
+.*.sw?
+tags
+*.pyc
+make-*
+src
