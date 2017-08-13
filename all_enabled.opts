@@ -1,0 +1,4 @@
+osmo-mgw --enable-mgcp-transcoding
+osmo-msc --enable-smpp --enable-iu --enable-mgcp-transcoding --enable-external-tests
+osmo-bsc --enable-osmo-bsc --enable-nat --enable-mgcp-transcoding --enable-external-tests
+osmo-sgsn --enable-iu --enable-external-tests

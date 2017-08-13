@@ -1,0 +1,14 @@
+# project	build these first
+libosmocore
+libosmo-abis	libosmocore
+libosmo-netif	libosmo-abis
+libosmo-sccp	libosmo-netif
+libsmpp34
+libasn1c
+openggsn	libosmocore
+osmo-iuh	libosmo-sccp libasn1c
+osmo-hlr	libosmo-abis
+osmo-mgw	libosmo-netif
+osmo-msc	osmo-iuh osmo-mgw
+osmo-bsc	libosmo-sccp osmo-mgw
+osmo-sgsn	osmo-iuh

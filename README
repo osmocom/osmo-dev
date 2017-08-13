@@ -1,0 +1,38 @@
+This provides a set of top-level makefiles to build variants of the Osmocom
+source trees. It is inteded for the core network components and related
+projects, but works generically.
+
+The idea is to have all your Osmocom git clones in ./src, while keeping one or
+more separate build trees in ./make-*.
+
+Run ./gen_makefile.py with a choice of projects (2G only or also 3G?)
+and a choice of configure options, for example:
+
+  ./gen_makefile.py 3G+2G.deps all_enabled.opts
+
+This generates a new dir containing a Makefile. When you run make in it, this
+will clone the source trees (if not present yet) and build all of them in the
+right order:
+
+  cd make-3G+2G.deps-all_enabled.opts/
+  make
+
+If you make modifications in one of the source trees, this Makefile will pick
+it up, rebuild the project and also rebuild all dependencies (according to the
+*.deps file the Makefile was generated from).
+
+If you modify the *.deps or *.opts file, you can easily run 'make regen' in a
+make-* subdir to regenerate the Makefile from the same files.
+
+In your make-* subdir there are empty status files that are touched for every
+completed make target. From these, 'make' can detect what needs to be rebuilt.
+You can manually remove them to force a rebuild of a specific target.
+
+For example, if you 'rm .make.libosmocore.autoconf', libosmocore and all
+projects depending on libosmocore will be rebuilt from scratch.
+
+For more details on the *.opts and *.deps syntax, read the docs at the top of
+./gen_makefile.py.
+
+It is also easily possible to keep sources and build trees in various
+configurations, see the command line options of ./gen_makefile.py.
