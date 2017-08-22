@@ -1,0 +1,3 @@
+osmo-msc --enable-external-tests --enable-vty-tests
+osmo-bsc --enable-external-tests --enable-vty-tests
+osmo-sgsn --enable-external-tests --enable-vty-tests
