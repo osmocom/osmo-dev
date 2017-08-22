@@ -1,3 +1,5 @@
+=== gen_makefile.py
+
 This provides a set of top-level makefiles to build variants of the Osmocom
 source trees. It is inteded for the core network components and related
 projects, but works generically.
@@ -36,3 +38,9 @@ For more details on the *.opts and *.deps syntax, read the docs at the top of
 
 It is also easily possible to keep sources and build trees in various
 configurations, see the command line options of ./gen_makefile.py.
+
+
+=== osmo-uninstall.sh
+
+Remove osmocom built binaries and headers from given prefix,
+default is /usr/local.
