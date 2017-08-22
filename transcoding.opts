@@ -1,2 +1,3 @@
 osmo-mgw --enable-mgcp-transcoding
 osmo-msc --enable-mgcp-transcoding
+osmo-bsc --enable-mgcp-transcoding
