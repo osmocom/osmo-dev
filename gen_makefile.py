@@ -198,7 +198,7 @@ regen:
   out.write('clone: \\\n\t' + ' \\\n\t'.join([ '.make.%s.clone' % p for p, d in projects_deps ]) + '\n\n')
 
   # now the actual useful build rules
-  out.write('all: \\\n\t' + ' \\\n\t'.join([ '.make.%s.detect_edits .make.%s.install' % (p,p) for p, d in projects_deps ]) + '\n\n')
+  out.write('all: \\\n\tclone \\\n\t' + ' \\\n\t'.join([ '.make.%s.detect_edits .make.%s.install' % (p,p) for p, d in projects_deps ]) + '\n\n')
 
   for proj, deps in projects_deps:
     out.write(gen_make(proj, deps, configure_opts.get(proj), args.jobs,
