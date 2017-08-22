@@ -230,3 +230,5 @@ regen:
   for proj, deps in projects_deps:
     out.write(gen_make(proj, deps, configure_opts.get(proj), args.jobs,
                        make_dir, args.src_dir, build_dir, args.url))
+
+# vim: expandtab tabstop=2 shiftwidth=2
