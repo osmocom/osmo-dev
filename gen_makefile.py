@@ -2,7 +2,7 @@
 '''
 Generate a top-level makefile that builds the Osmocom 2G + 3G network components.
 
-  ./gen_makefile.py projects.deps [configuration.opts] [-o Makefile.output]
+  ./gen_makefile.py projects.deps [configure.opts [more.opts]] [-o Makefile.output]
 
 Configured by text files:
 
@@ -37,10 +37,10 @@ parser.add_argument('projects_and_deps_file',
   help='''Config file containing projects to build and
 dependencies between those''')
 
-parser.add_argument('configure_opts_file',
+parser.add_argument('configure_opts_files',
   help='''Config file containing project name and
 ./configure options''',
-  default=None, nargs='?')
+  nargs='*')
 
 parser.add_argument('-m', '--make-dir', dest='make_dir',
   help='''Place Makefile in this dir (default: create
@@ -69,6 +69,27 @@ parser.add_argument('-j', '--jobs', dest='jobs', default='9',
 
 args = parser.parse_args()
 
+class listdict(dict):
+  'a dict of lists { "a": [1, 2, 3],  "b": [1, 2] }'
+
+  def add(self, name, item):
+    l = self.get(name)
+    if not l:
+      l = []
+      self[name] = l
+    l.append(item)
+
+  def extend(self, name, l):
+    for v in l:
+      self.add(name, v)
+
+  def add_dict(self, d):
+    for k,v in d.items():
+      self.add(k, v)
+
+  def extend_dict(self, d):
+    for k,v in d.items():
+      l = self.extend(k, v)
 
 def read_projects_deps(path):
   'Read deps config and return tuples of (project_name, which-other-to-build-first).'
@@ -156,11 +177,17 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 
 
 projects_deps = read_projects_deps(args.projects_and_deps_file)
-configure_opts = read_configure_opts(args.configure_opts_file)
+configure_opts = listdict()
+configure_opts_files = sorted(args.configure_opts_files or [])
+for configure_opts_file in configure_opts_files:
+  r = read_configure_opts(configure_opts_file)
+  configure_opts.extend_dict(read_configure_opts(configure_opts_file))
 
 make_dir = args.make_dir
 if not make_dir:
-  make_dir = 'make-%s-%s' % (args.projects_and_deps_file, args.configure_opts_file)
+  deps_name = args.projects_and_deps_file.replace('.deps', '')
+  opts_names = '+'.join([f.replace('.opts', '') for f in configure_opts_files])
+  make_dir = 'make-%s-%s' % (deps_name, opts_names)
 
 if not os.path.isdir(make_dir):
   os.makedirs(make_dir)
@@ -187,7 +214,7 @@ regen:
 '''.format(
     script=os.path.relpath(sys.argv[0], make_dir),
     projects_and_deps=os.path.relpath(args.projects_and_deps_file, make_dir),
-    configure_opts=os.path.relpath(args.configure_opts_file, make_dir),
+    configure_opts=' '.join([os.path.relpath(f, make_dir) for f in configure_opts_files]),
     make_dir='.',
     makefile=args.output,
     src_dir=os.path.relpath(args.src_dir, make_dir),

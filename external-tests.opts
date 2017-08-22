@@ -1,0 +1,3 @@
+osmo-msc --enable-external-tests
+osmo-bsc --enable-external-tests
+osmo-sgsn --enable-external-tests

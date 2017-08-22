@@ -8,13 +8,13 @@ more separate build trees in ./make-*.
 Run ./gen_makefile.py with a choice of projects (2G only or also 3G?)
 and a choice of configure options, for example:
 
-  ./gen_makefile.py 3G+2G.deps all_enabled.opts
+  ./gen_makefile.py 3G+2G.deps default.opts iu.opts
 
 This generates a new dir containing a Makefile. When you run make in it, this
 will clone the source trees (if not present yet) and build all of them in the
 right order:
 
-  cd make-3G+2G.deps-all_enabled.opts/
+  cd make-3G+2G-default+iu
   make
 
 If you make modifications in one of the source trees, this Makefile will pick
