@@ -194,6 +194,9 @@ regen:
     build_dir=os.path.relpath(build_dir, make_dir),
     ))
 
+  # convenience target: clone all repositories first
+  out.write('clone: \\\n\t' + ' \\\n\t'.join([ '.make.%s.clone' % p for p, d in projects_deps ]) + '\n\n')
+
   # now the actual useful build rules
   out.write('all: \\\n\t' + ' \\\n\t'.join([ '.make.%s.detect_edits .make.%s.install' % (p,p) for p, d in projects_deps ]) + '\n\n')
 
