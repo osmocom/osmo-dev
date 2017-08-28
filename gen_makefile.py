@@ -153,7 +153,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 
 .PHONY: .make.{proj}.detect_edits
 .make.{proj}.detect_edits:
-	@test -z "$(shell find {src_proj} -newer .make.{proj}.last_edited -name "*.[hc]")" || (touch .make.{proj}.last_edited; echo {proj} edited)
+	@test -z "$(shell find {src_proj} -newer .make.{proj}.last_edited -name "*.[hc]"  '(' -name "*.[hc]" -or -name "Makefile.am" -or -name "*.py" ')' )" || (touch .make.{proj}.last_edited; echo {proj} edited)
 
 .make.{proj}.build: .make.{proj}.configure .make.{proj}.last_edited
 	@echo "\n\n\n===== $@\n"
