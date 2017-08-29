@@ -165,6 +165,8 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	$(MAKE) -C {build_proj} install
 	touch $@
 
+{proj}: .make.{proj}.install
+
 .PHONY: {proj}-clean
 {proj}-clean:
 	@echo "\n\n\n===== $@\n"
