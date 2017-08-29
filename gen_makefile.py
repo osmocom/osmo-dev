@@ -164,6 +164,13 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	@echo "\n\n\n===== $@\n"
 	$(MAKE) -C {build_proj} install
 	touch $@
+
+.PHONY: {proj}-clean
+{proj}-clean:
+	@echo "\n\n\n===== $@\n"
+	-chmod -R ug+w {build_proj}
+	-rm -rf {build_proj}
+	-rm -rf .make.{proj}.*
 '''.format(
     url=url,
     proj=proj,
@@ -223,6 +230,9 @@ regen:
 
   # convenience target: clone all repositories first
   out.write('clone: \\\n\t' + ' \\\n\t'.join([ '.make.%s.clone' % p for p, d in projects_deps ]) + '\n\n')
+
+  # convenience target: clean all
+  out.write('clean: \\\n\t' + ' \\\n\t'.join([ '%s-clean' % p for p, d in projects_deps ]) + '\n\n')
 
   # now the actual useful build rules
   out.write('all: \\\n\tclone \\\n\t' + ' \\\n\t'.join([ '.make.%s.detect_edits .make.%s.install' % (p,p) for p, d in projects_deps ]) + '\n\n')
