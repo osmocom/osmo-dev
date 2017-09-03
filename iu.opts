@@ -1,2 +1,0 @@
-osmo-msc --enable-iu
-osmo-sgsn --enable-iu

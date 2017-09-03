@@ -8,15 +8,23 @@ The idea is to have all your Osmocom git clones in ./src, while keeping one or
 more separate build trees in ./make-*.
 
 Run ./gen_makefile.py with a choice of projects (2G only or also 3G?)
-and a choice of configure options, for example:
+and a choice of configure options.
 
-  ./gen_makefile.py 3G+2G.deps default.opts iu.opts
+Examples:
+
+Full 2G and 3G support:
+
+  ./gen_makefile.py 3G+2G.deps default.opts
+
+2G only (requires to pass no-iu.opts), and a custom dir name of 'make-2G':
+
+  ./gen_makefile.py 2G.deps default.opts no-iu.opts -m make-2G
 
 This generates a new dir containing a Makefile. When you run make in it, this
 will clone the source trees (if not present yet) and build all of them in the
 right order:
 
-  cd make-3G+2G-default+iu
+  cd make-3G+2G-default
   make
 
 If you make modifications in one of the source trees, this Makefile will pick
