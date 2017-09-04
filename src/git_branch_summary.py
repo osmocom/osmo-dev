@@ -2,6 +2,10 @@
 
 import sys, subprocess, re
 
+if len(sys.argv) < 2:
+  print("Usage: %s <git_dir> [...]\nThis is mostly here for helping the 'st' script." % sys.argv[0])
+  exit(1)
+
 interesting_branch_names = [ 'master', 'sysmocom/iu', 'sysmocom/sccp', 'aper-prefix-onto-upstream' ]
 
 re_branch_name = re.compile('^..([^ ]+) .*')
@@ -15,7 +19,7 @@ interesting = []
 
 def do_one_git(git_dir):
   global interesting
-  branch_strs = subprocess.check_output(('git', '-C', git_dir, 'branch', '-vv')).splitlines()
+  branch_strs = subprocess.check_output(('git', '-C', git_dir, 'branch', '-vv')).decode().splitlines()
   interesting_branches = []
 
   for line in branch_strs:
@@ -35,7 +39,7 @@ def do_one_git(git_dir):
     else:
       interesting_branches.append(br)
 
-  status = subprocess.check_output(('git', '-C', git_dir, 'status'))
+  status = subprocess.check_output(('git', '-C', git_dir, 'status')).decode()
   has_mods = 'modified:' in status
 
   interesting.append((git_dir, has_mods, interesting_branches))
@@ -59,6 +63,6 @@ for git_dir, has_mods, interesting_branches in interesting:
       br.append('[%s]' % '|'.join(ahead))
     strs.append(''.join(br))
 
-  print ' '.join(strs)
+  print(' '.join(strs))
 
 # vim: shiftwidth=2 expandtab tabstop=2
