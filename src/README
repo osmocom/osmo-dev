@@ -2,6 +2,15 @@ This dir is intended to keep all the git clones.
 
 There are some handy scripts I use for my daily Osmocom development:
 
+ osmo-add-gerrit-hooks.sh
+	Look for git repositories in and below the current dir and install the
+	gerrit commit-msg hook in each one. This requires an ~/.ssh/config
+	entry, see top comment in the script.
+
+ fetch-gerrit-patch.sh
+	Pass a patch number seen on gerrit to fetch the latest patch set into
+	your git clone. See top comment in the script.
+
  ./g   run a git command in each source tree
  ./e   run an arbitrary shell command in each source tree
  ./st  show a brief branch and local mods status for each source tree
@@ -10,6 +19,38 @@ There are some handy scripts I use for my daily Osmocom development:
        is potentially dangerous, but safe if you only hit enter every time.)
 
 Examples:
+
+
+-----------------------------------------------------------------------------
+
+git clone ssh://go/osmo-msc
+
+./osmo-add-gerrit-hooks.sh
++ cd /n/s/osmo/src/./osmo-msc/.git
++ [ ! -f hooks/commit-msg ]
++ scp go:hooks/commit-msg hooks/
+commit-msg                                                             100% 4688     4.6KB/s   00:00    
+
+
+-----------------------------------------------------------------------------
+
+
+cd osmo-msc
+../fetch-gerrit-patch.sh 3787
++ git fetch origin refs/changes/87/3787/2
+From ssh://go/osmo-msc
+ * branch            refs/changes/87/3787/2 -> FETCH_HEAD
++ git checkout -b 3787_2 FETCH_HEAD
+Switched to a new branch '3787_2'
+
+
+# or if you want an earlier patch set
+../fetch-gerrit-patch.sh 3787/1
+From ssh://go/osmo-msc
+ * branch            refs/changes/87/3787/1 -> FETCH_HEAD
++ git checkout -b 3787_1 FETCH_HEAD
+Switched to a new branch '3787_1'
+
 
 -----------------------------------------------------------------------------
 

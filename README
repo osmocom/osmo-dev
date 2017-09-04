@@ -52,3 +52,8 @@ configurations, see the command line options of ./gen_makefile.py.
 
 Remove osmocom built binaries and headers from given prefix,
 default is /usr/local.
+
+
+=== src/*
+
+Find other useful scripts in src/, see src/README.
