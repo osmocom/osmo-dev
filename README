@@ -14,17 +14,17 @@ Examples:
 
 Full 2G and 3G support:
 
-  ./gen_makefile.py 3G+2G.deps default.opts
+  ./gen_makefile.py 3G+2G.deps default.opts iu.opts
 
 2G only (requires to pass no-iu.opts), and a custom dir name of 'make-2G':
 
-  ./gen_makefile.py 2G.deps default.opts no-iu.opts -m make-2G
+  ./gen_makefile.py 2G.deps default.opts -m make-2G
 
 This generates a new dir containing a Makefile. When you run make in it, this
 will clone the source trees (if not present yet) and build all of them in the
 right order:
 
-  cd make-3G+2G-default
+  cd make-3G+2G-default+iu
   make
 
 If you make modifications in one of the source trees, this Makefile will pick

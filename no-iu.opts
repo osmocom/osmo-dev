@@ -1,2 +1,0 @@
-osmo-msc --disable-iu
-osmo-sgsn --disable-iu
