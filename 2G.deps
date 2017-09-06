@@ -4,7 +4,7 @@ libosmo-abis	libosmocore
 libosmo-netif	libosmo-abis
 libosmo-sccp	libosmo-netif
 libsmpp34
-openggsn	libosmocore
+osmo-ggsn	libosmocore
 osmo-hlr	libosmo-abis
 osmo-mgw	libosmo-netif
 osmo-msc	osmo-mgw
