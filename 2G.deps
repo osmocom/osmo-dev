@@ -9,4 +9,4 @@ osmo-hlr	libosmo-abis
 osmo-mgw	libosmo-netif
 osmo-msc	osmo-mgw
 osmo-bsc	libosmo-sccp osmo-mgw
-osmo-sgsn
+osmo-sgsn	libosmo-sccp
