@@ -129,6 +129,8 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
   return r'''
 ### {proj} ###
 
+{proj}_files := $(shell find {src_proj} -name "*.[hc]" -or -name "Makefile.am" -or -name "*.py" -or -name "*.in" )
+
 .make.{proj}.clone:
 	@echo "\n\n\n===== $@\n"
 	test -d {src} || mkdir -p {src}
@@ -140,7 +142,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	cd {src_proj}; autoreconf -fi
 	touch $@
 	
-.make.{proj}.configure: .make.{proj}.autoconf {deps_installed}
+.make.{proj}.configure: .make.{proj}.autoconf {deps_installed} $({proj}_files)
 	@echo "\n\n\n===== $@\n"
 	-chmod -R ug+w {build_proj}
 	-rm -rf {build_proj}
@@ -148,14 +150,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	cd {build_proj}; {build_to_src}/configure {configure_opts}
 	touch $@
 
-.make.{proj}.last_edited:
-	touch $@
-
-.PHONY: .make.{proj}.detect_edits
-.make.{proj}.detect_edits:
-	@test -z "$(shell find {src_proj} -newer .make.{proj}.last_edited -name "*.[hc]"  '(' -name "*.[hc]" -or -name "Makefile.am" -or -name "*.py" ')' )" || (touch .make.{proj}.last_edited; echo {proj} edited)
-
-.make.{proj}.build: .make.{proj}.configure .make.{proj}.last_edited
+.make.{proj}.build: .make.{proj}.configure
 	@echo "\n\n\n===== $@\n"
 	$(MAKE) -C {build_proj} -j {jobs} check
 	touch $@
@@ -237,7 +232,9 @@ regen:
   out.write('clean: \\\n\t' + ' \\\n\t'.join([ '%s-clean' % p for p, d in projects_deps ]) + '\n\n')
 
   # now the actual useful build rules
-  out.write('all: \\\n\tclone \\\n\t' + ' \\\n\t'.join([ '.make.%s.detect_edits .make.%s.install' % (p,p) for p, d in projects_deps ]) + '\n\n')
+  out.write('all: clone all-install\n\n')
+
+  out.write('all-install: \\\n\t' + ' \\\n\t'.join([ '.make.%s.install' % p for p, d in projects_deps ]) + '\n\n')
 
   for proj, deps in projects_deps:
     out.write(gen_make(proj, deps, configure_opts.get(proj), args.jobs,
