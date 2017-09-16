@@ -19,7 +19,7 @@ interesting = []
 
 def do_one_git(git_dir):
   global interesting
-  branch_strs = subprocess.check_output(('git', '-C', git_dir, 'branch', '-vv')).decode().splitlines()
+  branch_strs = subprocess.check_output(('git', '-C', git_dir, 'branch', '-vv')).decode('utf-8').splitlines()
   interesting_branches = []
 
   for line in branch_strs:
