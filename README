@@ -10,11 +10,21 @@ more separate build trees in ./make-*.
 Run ./gen_makefile.py with a choice of projects (2G only or also 3G?)
 and a choice of configure options.
 
+For the clone step to work, you must either provide the --url argument to
+gen_makefile like
+  ./gen_makefile --url git://git.osmocom.org
+OR add an SSH config to reach gerrit.osmocom.org as ssh://go; add this to your
+~/.ssh/config:
+  host go
+  hostname gerrit.osmocom.org
+  port 29418
+
+
 Examples:
 
 Full 2G and 3G support:
 
-  ./gen_makefile.py 3G+2G.deps default.opts iu.opts
+  ./gen_makefile.py --url=git://git.osmocom.org 3G+2G.deps default.opts iu.opts
 
 2G only (requires to pass no-iu.opts), and a custom dir name of 'make-2G':
 
