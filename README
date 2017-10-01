@@ -58,6 +58,26 @@ It is also easily possible to keep sources and build trees in various
 configurations, see the command line options of ./gen_makefile.py.
 
 
+=== Build Environment
+
+For dependencies, see
+
+  https://osmocom.org/projects/cellular-infrastructure/wiki/Build_from_Source
+
+Furthermore, note that the makefiles by default install to /usr/local/*,
+so if your system doesn't have this by default, you should probably add
+
+  export LD_LIBRARY_PATH="/usr/local/lib"
+
+and
+
+  export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
+
+to your environment. To use the installed binaries after installation, also
+
+  export PATH="$PATH:/usr/local/bin"
+
+
 === osmo-uninstall.sh
 
 Remove osmocom built binaries and headers from given prefix,
