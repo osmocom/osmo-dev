@@ -139,6 +139,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 
 .make.{proj}.autoconf: .make.{proj}.clone {src_proj}/configure.ac
 	@echo "\n\n\n===== $@\n"
+	-rm {src_proj}/.version
 	cd {src_proj}; autoreconf -fi
 	touch $@
 	
