@@ -1,0 +1,13 @@
+libasn1c --enable-sanitize
+libosmo-abis --enable-sanitize
+libosmocore --enable-sanitize
+libosmo-netif --enable-sanitize
+libosmo-sccp --enable-sanitize
+libsmpp34 --enable-sanitize
+osmo-bsc --enable-sanitize
+osmo-ggsn --enable-sanitize
+osmo-hlr --enable-sanitize
+osmo-iuh --enable-sanitize
+osmo-mgw --enable-sanitize
+osmo-msc --enable-sanitize
+osmo-sgsn --enable-sanitize
