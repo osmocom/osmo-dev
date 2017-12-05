@@ -53,13 +53,13 @@ parser.add_argument('-b', '--build-dir', dest='build_dir',
   help='''Parent dir for all build trees (default:
 directly in the make-dir).''')
 
-parser.add_argument('-u', '--url', dest='url', default='ssh://go',
-  help='''git clone base URL. Default is 'ssh://go',
-e.g. add this to your ~/.ssh/config:
+parser.add_argument('-u', '--url', dest='url', default='git://git.osmocom.org',
+  help='''git clone base URL. Default is 'git://git.osmocom.org'.
+e.g. with a config like this in your ~/.ssh/config:
   host go
   hostname gerrit.osmocom.org
   port 29418
-Alternatively pass '-u git://git.osmocom.org'.''')
+you may pass '-u ssh://go' to be able to submit to gerrit.''')
 
 parser.add_argument('-o', '--output', dest='output', default='Makefile',
   help='''Makefile filename (default: 'Makefile').''')
@@ -214,7 +214,7 @@ default: all
 # regenerate this Makefile, in case the deps or opts changed
 .PHONY: regen
 regen:
-	{script} {projects_and_deps} {configure_opts} -m {make_dir} -o {makefile} -s {src_dir} -b {build_dir}
+	{script} {projects_and_deps} {configure_opts} -m {make_dir} -o {makefile} -s {src_dir} -b {build_dir} -u "{url}"
 
 '''.format(
     script=os.path.relpath(sys.argv[0], make_dir),
@@ -224,6 +224,7 @@ regen:
     makefile=args.output,
     src_dir=os.path.relpath(args.src_dir, make_dir),
     build_dir=os.path.relpath(build_dir, make_dir),
+    url=args.url
     ))
 
   # convenience target: clone all repositories first
