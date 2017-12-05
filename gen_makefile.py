@@ -25,6 +25,19 @@ it when some bits in the middle have changed. The makefile keeps local progress
 marker files like .make.libosmocore.configure; if such progress marker is
 removed or becomes outdated, that step and all dependent ones are re-run.
 This is helpful in daily hacking across several repositories.
+
+Note that by default, this includes 'sudo ldconfig' calls following each
+installation. You may want to permit your user to run 'sudo ldconfig' without
+needing a password, e.g. by
+
+  sudo sh -c "echo '$USER  ALL= NOPASSWD: /sbin/ldconfig' > /etc/sudoers.d/${USER}_ldconfig"
+
+You can skip the 'sudo ldconfig' by issuing the --no-ldconfig option.
+
+You can run 'ldconfig' without sudo by issuing the --ldconfig-without-sudo option.
+
+By default, it is assumed that your user has write permission to /usr/local. If you
+need sudo to install there, you may issue the --sudo-make-install option.
 '''
 
 import sys
@@ -67,6 +80,19 @@ parser.add_argument('-o', '--output', dest='output', default='Makefile',
 parser.add_argument('-j', '--jobs', dest='jobs', default='9',
   help='''-j option to pass to 'make'.''')
 
+parser.add_argument('-I', '--sudo-make-install', dest='sudo_make_install',
+  action='store_true',
+  help='''run 'make install' step with 'sudo'.''')
+
+parser.add_argument('-L', '--no-ldconfig', dest='no_ldconfig',
+  action='store_true',
+  help='''omit the 'sudo ldconfig' step.''')
+
+parser.add_argument('--ldconfig-without-sudo', dest='ldconfig_without_sudo',
+  action='store_true',
+  help='''call just 'ldconfig', without sudo, which implies
+root privileges (not recommended)''')
+
 args = parser.parse_args()
 
 class listdict(dict):
@@ -108,7 +134,7 @@ def read_configure_opts(path):
     return {}
   return dict(read_projects_deps(path))
 
-def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url):
+def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, sudo_make_install, no_ldconfig, ldconfig_without_sudo):
   src_proj = os.path.join(src_dir, proj)
   build_proj = os.path.join(build_dir, proj)
 
@@ -158,7 +184,8 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 
 .make.{proj}.install: .make.{proj}.build
 	@echo "\n\n\n===== $@\n"
-	$(MAKE) -C {build_proj} install
+	{sudo_make_install}$(MAKE) -C {build_proj} install
+	{no_ldconfig}{sudo_ldconfig}ldconfig
 	touch $@
 
 {proj}: .make.{proj}.install
@@ -178,7 +205,11 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     build_proj=make_to_build_proj,
     build_to_src=build_to_src,
     deps_installed=' '.join(['.make.%s.install' % d for d in deps]),
-    configure_opts=configure_opts_str)
+    configure_opts=configure_opts_str,
+    sudo_make_install='sudo ' if sudo_make_install else '',
+    no_ldconfig='#' if no_ldconfig else '',
+    sudo_ldconfig='' if ldconfig_without_sudo else 'sudo '
+    )
 
 
 projects_deps = read_projects_deps(args.projects_and_deps_file)
@@ -214,7 +245,7 @@ default: all
 # regenerate this Makefile, in case the deps or opts changed
 .PHONY: regen
 regen:
-	{script} {projects_and_deps} {configure_opts} -m {make_dir} -o {makefile} -s {src_dir} -b {build_dir} -u "{url}"
+	{script} {projects_and_deps} {configure_opts} -m {make_dir} -o {makefile} -s {src_dir} -b {build_dir} -u "{url}"{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}
 
 '''.format(
     script=os.path.relpath(sys.argv[0], make_dir),
@@ -224,7 +255,10 @@ regen:
     makefile=args.output,
     src_dir=os.path.relpath(args.src_dir, make_dir),
     build_dir=os.path.relpath(build_dir, make_dir),
-    url=args.url
+    url=args.url,
+    sudo_make_install=' -I' if args.sudo_make_install else '',
+    no_ldconfig=' -L' if args.no_ldconfig else '',
+    ldconfig_without_sudo=' --ldconfig-without-sudo' if args.ldconfig_without_sudo else ''
     ))
 
   # convenience target: clone all repositories first
@@ -240,6 +274,8 @@ regen:
 
   for proj, deps in projects_deps:
     out.write(gen_make(proj, deps, configure_opts.get(proj), args.jobs,
-                       make_dir, args.src_dir, build_dir, args.url))
+                       make_dir, args.src_dir, build_dir, args.url,
+                       args.sudo_make_install, args.no_ldconfig,
+                       args.ldconfig_without_sudo))
 
 # vim: expandtab tabstop=2 shiftwidth=2
