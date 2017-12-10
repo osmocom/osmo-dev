@@ -10,31 +10,19 @@ more separate build trees in ./make-*.
 Run ./gen_makefile.py with a choice of projects (2G only or also 3G?)
 and a choice of configure options.
 
-For the clone step to work, you must either provide the --url argument to
-gen_makefile like
-  ./gen_makefile --url git://git.osmocom.org
-OR add an SSH config to reach gerrit.osmocom.org as ssh://go; add this to your
-~/.ssh/config:
-  host go
-  hostname gerrit.osmocom.org
-  port 29418
-
 
 Examples:
 
 Full 2G and 3G support:
 
-  ./gen_makefile.py --url=git://git.osmocom.org 3G+2G.deps default.opts iu.opts
+  ./gen_makefile.py 3G+2G.deps default.opts iu.opts  -m make
+  cd make
+  make
 
-2G only (requires to pass no-iu.opts), and a custom dir name of 'make-2G':
+2G only, and a custom dir name of 'make-2G':
 
   ./gen_makefile.py 2G.deps default.opts -m make-2G
-
-This generates a new dir containing a Makefile. When you run make in it, this
-will clone the source trees (if not present yet) and build all of them in the
-right order:
-
-  cd make-3G+2G-default+iu
+  cd make-2G
   make
 
 If you make modifications in one of the source trees, this Makefile will pick
@@ -60,12 +48,14 @@ configurations, see the command line options of ./gen_makefile.py.
 
 === Build Environment
 
-For dependencies, see
+For dependencies, see the "External dependencies" on:
 
   https://osmocom.org/projects/cellular-infrastructure/wiki/Build_from_Source
 
-Furthermore, note that the makefiles by default install to /usr/local/*,
-so if your system doesn't have this by default, you should probably add
+If /usr/local/ is not writable by your user, pass the --sudo-make-install
+option to gen_makefile.py above (a custom --prefix is not yet supported).
+
+If your system doesn't have this by default, you will need:
 
   export LD_LIBRARY_PATH="/usr/local/lib"
 
