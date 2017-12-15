@@ -155,7 +155,8 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
   return r'''
 ### {proj} ###
 
-{proj}_files := $(shell find {src_proj} -name "*.[hc]" -or -name "Makefile.am" -or -name "*.py" -or -name "*.in" )
+{proj}_configure_files := $(shell find {src_proj} -name "Makefile.am" -or -name "*.in" )
+{proj}_files := $(shell find {src_proj} -name "*.[hc]" -or -name "*.py" )
 
 .make.{proj}.clone:
 	@echo "\n\n\n===== $@\n"
@@ -169,7 +170,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	cd {src_proj}; autoreconf -fi
 	touch $@
 	
-.make.{proj}.configure: .make.{proj}.autoconf {deps_installed} $({proj}_files)
+.make.{proj}.configure: .make.{proj}.autoconf {deps_installed} $({proj}_configure_files)
 	@echo "\n\n\n===== $@\n"
 	-chmod -R ug+w {build_proj}
 	-rm -rf {build_proj}
@@ -177,7 +178,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	cd {build_proj}; {build_to_src}/configure {configure_opts}
 	touch $@
 
-.make.{proj}.build: .make.{proj}.configure
+.make.{proj}.build: .make.{proj}.configure $({proj}_files)
 	@echo "\n\n\n===== $@\n"
 	$(MAKE) -C {build_proj} -j {jobs} check
 	touch $@
