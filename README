@@ -1,3 +1,27 @@
+=== Quick Start
+
+sudo apt install \
+  build-essential gcc g++ make automake autoconf libtool pkg-config \
+  libtalloc-dev libpcsclite-dev libortp-dev libsctp-dev libssl-dev libdbi-dev \
+  libdbd-sqlite3 libsqlite3-dev libpcap-dev libc-ares-dev libgnutls28-dev \
+  libsctp-dev sqlite3
+
+./gen_makefile.py 3G+2G.deps default.opts iu.opts -I -m make
+
+cd make
+make
+
+- 'make' will ask for sudo password to run 'make install' and 'ldconfig'.
+  To run non-interactively:
+
+  - 'make install':
+    chown $USER: /usr/local
+    Then call gen_makefile.py once without the -I option
+
+  - 'ldconfig':
+    echo "$USER  ALL= NOPASSWD: /sbin/ldconfig" > /etc/sudoers.d/ldconfig
+
+
 === gen_makefile.py
 
 This provides a set of top-level makefiles to build variants of the Osmocom
