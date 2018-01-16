@@ -38,6 +38,13 @@ You can run 'ldconfig' without sudo by issuing the --ldconfig-without-sudo optio
 
 By default, it is assumed that your user has write permission to /usr/local. If you
 need sudo to install there, you may issue the --sudo-make-install option.
+
+EXAMPLE:
+
+  ./gen_makefile.py 3G+2G.deps default.opts iu.opts -I -m build
+  cd build
+  make
+
 '''
 
 import sys
