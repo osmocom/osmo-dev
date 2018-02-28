@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+fastforwards=""
+
 Git() {
   echo "git $@"
   git $@
@@ -24,6 +26,16 @@ gitk_start() {
   fi
 }
 
+status() {
+  st="$(Git status)"
+  mods="$(echo "$st" | grep 'modified:')"
+
+  stline="$(echo "$st" | grep '\(behind\|ahead\|up-to-date\|diverged\)')"
+
+  echo "$br"
+  echo "$stline"
+}
+
 dance() {
   echo
   echo
@@ -32,55 +44,13 @@ dance() {
   echo "$dir"
   cd "$dir"
 
-  st="$(Git status)"
-  mods="$(echo "$st" | grep 'modified:')"
-
-  stline="$(echo "$st" | grep '\(behind\|ahead\|up-to-date\|diverged\)')"
-
-  echo "$br"
-  echo "$stline"
+  status
 
   if [ -z "$mods" -a -n "$(echo "$stline" | grep up-to-date)" ]; then
     return 0
   fi
 
   gitk_start
-
-  if [ -n "$(echo "$stline" | grep behind)" ]; then
-    echo "Behind. git merge?  (empty = no, 'ok' = yes)"
-    read ok
-    if [ "x$ok" = xok ]; then
-      Git merge
-    fi
-  elif [ -n "$(echo "$stline" | grep ahead)" ]; then
-    echo "Ahead. commit to new branch? (enter name, empty = no)"
-    read wipbranch
-    if [ -n "$wipbranch" ]; then
-      Git checkout -b "$wipbranch"
-      Git_may_fail commit -am wip
-      #Git push --set-upstream origin "$wipbranch"
-      Git checkout "$br"
-    fi
-    echo "$br: git reset --hard origin/$br ?  (empty = no, 'ok' = yes)"
-    read ok
-    if [ "x$ok" = xok ]; then
-      Git reset --hard "origin/$br"
-    fi
-    return 0
-  elif [ -n "$(echo "$stline" | grep diverged)" ]; then
-    echo "Diverged. git reset --hard origin/$br ?  (empty = no, 'ok' = yes)"
-    read ok
-    if [ "x$ok" = xok ]; then
-      wipbranch="neels/wip_$(date +%Y%m%d_%H%M)"
-      Git checkout -b "$wipbranch"
-      Git_may_fail commit -am wip
-      Git checkout "$br"
-      Git reset --hard "origin/$br"
-    fi
-  elif [ -z "$(echo "$stline" | grep up-to-date)" ]; then
-    echo "Nothing to do."
-    echo "$st"
-  fi
 
   if [ -n "$mods" ]; then
     echo "Local mods"
@@ -93,17 +63,64 @@ dance() {
       Git_may_fail commit -am wip
       #Git push --set-upstream origin "$wipbranch"
       Git checkout "$br"
-      return 0
+    else
+      echo "commit to this branch $br ?  (empty = no, 'ok' = yes)"
+      read ok
+      if [ "x$ok" = xok ]; then
+        Git commit -am wip
+        #Git push
+      fi
     fi
 
-    echo "commit to this branch $br ?  (empty = no, 'ok' = yes)"
-    read ok
-    if [ "x$ok" = xok ]; then
-      Git commit -am wip
-      #Git push
+    status
+
+    if [ -n "$mods" ]; then
       return 0
     fi
   fi
+
+  if [ -n "$(echo "$stline" | grep behind)" ]; then
+    if [ -n "$(echo "$stline" | grep "and can be fast-forwarded")" ]; then
+      echo "fast forwarding..."
+      fastforwards="${fastforwards} $dir/$br:$(Git_may_fail rev-parse --short HEAD)"
+      ok="ok"
+    else
+      echo "Behind. git merge?  (empty = no, 'ok' = yes)"
+      read ok
+    fi
+    if [ "x$ok" = xok ]; then
+      Git merge
+    fi
+  elif [ -n "$(echo "$stline" | grep ahead)" ]; then
+    echo "Ahead. commit to new branch? (enter name, empty = no)"
+    read wipbranch
+    if [ -n "$wipbranch" ]; then
+      Git checkout -b "$wipbranch"
+      Git_may_fail commit -am wip
+      #Git push --set-upstream origin "$wipbranch"
+      Git checkout "$br"
+    fi
+    echo "$br: git reset --hard origin/$br ?  (empty = no, 'OK' IN CAPS = yes)"
+    read ok
+    if [ "x$ok" = xOK ]; then
+      Git reset --hard "origin/$br"
+    fi
+    return 0
+  elif [ -n "$(echo "$stline" | grep diverged)" ]; then
+    echo "Diverged. git reset --hard origin/$br ?  (empty = no, 'OK' IN CAPS = yes)"
+    read ok
+    if [ "x$ok" = xOK ]; then
+      wipbranch="neels/wip_$(date +%Y%m%d_%H%M)"
+      Git checkout -b "$wipbranch"
+      Git_may_fail commit -am wip
+      Git checkout "$br"
+      Git reset --hard "origin/$br"
+    fi
+  elif [ -z "$(echo "$stline" | grep up-to-date)" ]; then
+    echo "Nothing to do."
+    echo "$st"
+  fi
+
 }
 
 kill_gitk() {
@@ -150,5 +167,10 @@ kill_gitk
 echo
 echo
 ./st
+
+if [ -n "$fastforwards" ]; then
+  echo
+  echo "FAST-FORWARDED: $fastforwards"
+fi
 
 # vim: shiftwidth=2 expandtab
