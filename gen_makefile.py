@@ -81,7 +81,7 @@ e.g. with a config like this in your ~/.ssh/config:
   port 29418
 you may pass '-u ssh://go' to be able to submit to gerrit.''')
 
-parser.add_argument('-p', '--push-url', dest='push_url', default=None,
+parser.add_argument('-p', '--push-url', dest='push_url', default='',
   help='''git push-URL. Default is to not configure a separate push-URL.''')
 
 parser.add_argument('-o', '--output', dest='output', default='Makefile',
