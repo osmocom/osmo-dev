@@ -81,6 +81,9 @@ e.g. with a config like this in your ~/.ssh/config:
   port 29418
 you may pass '-u ssh://go' to be able to submit to gerrit.''')
 
+parser.add_argument('-p', '--push-url', dest='push_url', default=None,
+  help='''git push-URL. Default is to not configure a separate push-URL.''')
+
 parser.add_argument('-o', '--output', dest='output', default='Makefile',
   help='''Makefile filename (default: 'Makefile').''')
 
@@ -141,7 +144,7 @@ def read_configure_opts(path):
     return {}
   return dict(read_projects_deps(path))
 
-def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, sudo_make_install, no_ldconfig, ldconfig_without_sudo):
+def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo):
   src_proj = os.path.join(src_dir, proj)
   build_proj = os.path.join(build_dir, proj)
 
@@ -168,7 +171,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 .make.{proj}.clone:
 	@echo "\n\n\n===== $@\n"
 	test -d {src} || mkdir -p {src}
-	test -d {src_proj} || git -C {src} clone {url}/{proj}
+	test -d {src_proj} || ( git -C {src} clone "{url}/{proj}" "{proj}" && git -C "{src}/{proj}" remote set-url --push origin "{push_url}/{proj}" )
 	touch $@
 
 .make.{proj}.autoconf: .make.{proj}.clone {src_proj}/configure.ac
@@ -206,6 +209,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	-rm -rf .make.{proj}.*
 '''.format(
     url=url,
+    push_url=push_url or url,
     proj=proj,
     jobs=jobs,
     src=make_to_src,
@@ -253,7 +257,7 @@ default: all
 # regenerate this Makefile, in case the deps or opts changed
 .PHONY: regen
 regen:
-	{script} {projects_and_deps} {configure_opts} -m {make_dir} -o {makefile} -s {src_dir} -b {build_dir} -u "{url}"{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}
+	{script} {projects_and_deps} {configure_opts} -m {make_dir} -o {makefile} -s {src_dir} -b {build_dir} -u "{url}" -p "{push_url}"{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}
 
 '''.format(
     script=os.path.relpath(sys.argv[0], make_dir),
@@ -264,6 +268,7 @@ regen:
     src_dir=os.path.relpath(args.src_dir, make_dir),
     build_dir=os.path.relpath(build_dir, make_dir),
     url=args.url,
+    push_url=args.push_url,
     sudo_make_install=' -I' if args.sudo_make_install else '',
     no_ldconfig=' -L' if args.no_ldconfig else '',
     ldconfig_without_sudo=' --ldconfig-without-sudo' if args.ldconfig_without_sudo else ''
@@ -282,7 +287,7 @@ regen:
 
   for proj, deps in projects_deps:
     out.write(gen_make(proj, deps, configure_opts.get(proj), args.jobs,
-                       make_dir, args.src_dir, build_dir, args.url,
+                       make_dir, args.src_dir, build_dir, args.url, args.push_url,
                        args.sudo_make_install, args.no_ldconfig,
                        args.ldconfig_without_sudo))
 
