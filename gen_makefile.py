@@ -254,6 +254,11 @@ with open(output, 'w') as out:
   out.write(r'''
 default: all
 
+.PHONY: all_debug
+all_debug:
+	$(MAKE) --dry-run -d all | grep "is newer than target"
+	$(MAKE) all
+
 # regenerate this Makefile, in case the deps or opts changed
 .PHONY: regen
 regen:
