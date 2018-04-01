@@ -146,6 +146,8 @@ def read_configure_opts(path):
 
 def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo):
   src_proj = os.path.join(src_dir, proj)
+  if proj == 'openbsc':
+    src_proj = os.path.join(src_proj, 'openbsc')
   build_proj = os.path.join(build_dir, proj)
 
   make_to_src = os.path.relpath(src_dir, make_dir)
