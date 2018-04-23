@@ -203,6 +203,10 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 
 {proj}: .make.{proj}.install
 
+.PHONY: {proj}-reinstall
+{proj}-reinstall: {deps_reinstall}
+	{sudo_make_install}$(MAKE) -C {build_proj} install
+
 .PHONY: {proj}-clean
 {proj}-clean:
 	@echo "\n\n\n===== $@\n"
@@ -219,6 +223,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     build_proj=make_to_build_proj,
     build_to_src=build_to_src,
     deps_installed=' '.join(['.make.%s.install' % d for d in deps]),
+    deps_reinstall=' '.join(['%s-reinstall' %d for d in deps]),
     configure_opts=configure_opts_str,
     sudo_make_install='sudo ' if sudo_make_install else '',
     no_ldconfig='#' if no_ldconfig else '',
