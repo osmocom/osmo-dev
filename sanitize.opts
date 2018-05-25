@@ -11,3 +11,4 @@ osmo-iuh --enable-sanitize
 osmo-mgw --enable-sanitize
 osmo-msc --enable-sanitize
 osmo-sgsn --enable-sanitize
+openbsc --enable-sanitize

@@ -1,0 +1,8 @@
+# project	build these first
+libosmocore
+libosmo-abis	libosmocore
+libosmo-netif	libosmo-abis
+libsmpp34
+osmo-ggsn	libosmocore
+osmo-sgsn	libosmo-netif osmo-ggsn
+openbsc		libosmo-netif libsmpp34

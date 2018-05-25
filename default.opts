@@ -1,1 +1,2 @@
 osmo-msc --enable-smpp
+openbsc --enable-smpp --enable-osmo-bsc --enable-nat
