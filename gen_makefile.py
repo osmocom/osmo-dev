@@ -160,10 +160,6 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
   else:
     configure_opts_str = ''
 
-  # special hack for libsmpp34: cannot build in parallel
-  if proj == 'libsmpp34':
-    jobs = 1
-
   return r'''
 ### {proj} ###
 
