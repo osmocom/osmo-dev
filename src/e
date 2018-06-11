@@ -1,10 +1,15 @@
-#!/bin/sh
-base="$PWD"
-for gitdir in */.git ; do
-  cd "$base"
-  dir="$(dirname "$gitdir")"
-  echo
-  echo "===== $dir ====="
-  cd "$dir"
-  $@
-done
+#!/usr/bin/env python3
+import os
+import os.path
+import sys
+import subprocess
+
+base_dir = os.getcwd()
+
+for p in list(os.listdir('.')):
+	subdir = os.path.join(base_dir, p)
+	if not os.path.isdir(os.path.join(subdir, '.git')):
+		continue
+	print("\n===== %s =====" % p)
+	os.chdir(subdir)
+	subprocess.call(sys.argv[1:])
