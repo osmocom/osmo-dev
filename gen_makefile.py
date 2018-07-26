@@ -170,12 +170,14 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	@echo "\n\n\n===== $@\n"
 	test -d {src} || mkdir -p {src}
 	test -d {src_proj} || ( git -C {src} clone "{url}/{proj}" "{proj}" && git -C "{src}/{proj}" remote set-url --push origin "{push_url}/{proj}" )
+	sync
 	touch $@
 
 .make.{proj}.autoconf: .make.{proj}.clone {src_proj}/configure.ac
 	@echo "\n\n\n===== $@\n"
 	-rm -f {src_proj}/.version
 	cd {src_proj}; autoreconf -fi
+	sync
 	touch $@
 	
 .make.{proj}.configure: .make.{proj}.autoconf {deps_installed} $({proj}_configure_files)
@@ -184,17 +186,20 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	-rm -rf {build_proj}
 	mkdir -p {build_proj}
 	cd {build_proj}; {build_to_src}/configure {configure_opts}
+	sync
 	touch $@
 
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
 	@echo "\n\n\n===== $@\n"
 	$(MAKE) -C {build_proj} -j {jobs} check
+	sync
 	touch $@
 
 .make.{proj}.install: .make.{proj}.build
 	@echo "\n\n\n===== $@\n"
 	{sudo_make_install}$(MAKE) -C {build_proj} install
 	{no_ldconfig}{sudo_ldconfig}ldconfig
+	sync
 	touch $@
 
 {proj}: .make.{proj}.install
