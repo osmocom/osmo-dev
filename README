@@ -1,3 +1,12 @@
+=== WHAT IS THIS?
+
+* quickly build the entire Osmocom core network stack from source, with a
+  generated top-level makefile (see the rest of this README file below).
+
+* quickly configure, launch and tear down an entire Osmocom core network on
+  your box (see net/README).
+
+
 === Quick Start
 
 sudo apt install \

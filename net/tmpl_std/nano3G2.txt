@@ -1,0 +1,18 @@
+ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 -c aes128-cbc root@${HNODEB_IP2}
+
+telnet ${HNODEB_IP2} 8090
+
+set mcc="${MCC}"
+set mnc="${MNC}"
+set rfParamsCandidateList=({${UARFCN2}, ${SCRAMBLE2}, 1})
+set lacRacCandidateList=({${LAC2}, (${RAC2})})
+set hnbGwAddress="${HNBGW_IP}"
+action 2061
+action 1216
+action establishPermanentHnbGwConnection
+set csgAccessMode=CSG_ACCESS_MODE_CLOSED_ACCESS
+set accessControlList = ({"901700000014702",1,"14702"})
+
+set accessControlList = ({"901700000014701",1,"14701"},{"901700000014702",1,"14702"})
+
+set csgAccessMode=CSG_ACCESS_MODE_OPEN_ACCESS

@@ -1,0 +1,106 @@
+=== WHAT IS THIS?
+
+* quickly configure, launch and tear down an entire Osmocom core network on
+  your box (see net/README).
+
+This is the set of tools I wrote for myself and use every day to run and test
+the Osmocom core network. I hope this helps, and I would appreciate
+contributions of any improvements you may have!
+
+
+=== Quick Start
+
+cp config_2g3g config_mine
+$EDITOR config_mine
+# update IP addresses and device names as required
+
+mkdir my_network
+cd my_network
+../cfg.sh ../config_mine ../tmpl_std
+
+./run.sh
+# Launches numerous x-terminals with one component running in each.
+# Logs and pcap traces are being taken automatically.
+
+# hit enter in the original first terminal to tear down all programs.
+# Enter a name to save logs, otherwise all logging will be stored
+# under autolog/<timestamp>
+
+Then possibly modify the config and refresh:
+
+# tweak config?
+$EDITOR ../config_mine
+../cfg.sh
+# picks up same ../config_mine and ../tmpl_std from last time
+
+# own templates?
+cp -r ../tmpl_std ../tmpl_mine
+$EDITOR ../tmpl_mine/*
+../cfg.sh ../tmpl_mine
+# picks up same ../config_mine from last time, and ../tmpl_mine from cmdline
+
+
+
+=== Config file templates
+
+A *directory* contains template files that are filled with specific values by the
+cfg.sh script (aided by fill_config.py). See e.g. tmpl_std/.
+
+A *file* contains local config items that are put into the templates. See e.g.
+config_2g3g.
+
+The cfg.sh script helps to fill the templates with the config values. Simply
+invoke cfg.sh with a dir argument (templates dir) and a file argument (specific
+config values).
+
+If one or both are omitted, the script tries to re-use the most recent paths,
+they were stored in local files '.last_config' and '.last_templates'.
+
+The result is a complete set of .cfg files that match your local machine and
+network config.
+
+
+=== Launch
+
+A run.sh script template (tmpl_std/run.sh) also gets filled with specifics and
+placed next to the .cfg files.
+
+run.sh uses sudo to start tcpdump, configure ip forwarding and masquerading
+(for the GGSN's APN tunnel required for data services).
+
+When you launch run.sh, many xterms are launched, and when hitting enter, all
+of them get destroyed again. This is obviously intended to be run on your
+desktop computer or laptop, not on a remote box. It may also make sense to
+launch all of them in the current shell, and maybe or maybe not switch off
+stderr logging; or to launch each component in a tmux window or whatnot -- if
+you figure out something in that line, I would be glad to get contributions and
+incorporate that.
+
+
+=== Logging and pcaps
+
+The run.sh script automatically stores all configs, logs and pcap traces in
+./autolog/<timestamp> dirs. After closing the components (by hitting enter),
+you may also enter a name for the logs, after which they are stored in
+./logs/<name>. The idea is to keep all important logs with a name, and that you
+can every now and then just 'rm -rf ./autolog' to make space.
+
+
+=== 3G
+
+You may notice that the templates include nano3G.txt files. These include a
+convenient listing of commands to connect to an ip.access nano3G DMI and
+connect it to the HNBGW as configured by the templates.
+
+
+=== 2G BTS
+
+At the time of writing, there are no osmo-bts.cfg files, since this is intended
+for the core network and BSC components only. Feel free to add!
+
+Typically you'd need to edit only the /etc/osmocom/osmo-bts.cfg to match your
+IP address and ipa unit-id:
+
+bts 0
+ oml remote-ip 192.168.0.123
+ ipa unit-id 1800 0
