@@ -40,14 +40,34 @@ $EDITOR ../tmpl_mine/*
 # picks up same ../config_mine from last time, and ../tmpl_mine from cmdline
 
 
+If you wanted to change to dynamic timeslots, you can:
+
+cd ..
+mkdir tmpl_dyn
+cd tmpl_dyn
+ln -s ../tmpl_std/* .
+rm ./osmo-bsc.cfg
+cp ../tmpl_std/osmo-bsc.cfg .
+sed -i 's#TCH/F#TCH/F_TCH/H_PDCH#' osmo-bsc.cfg
+
+cd ../my_network
+../fill_config.py ../tmpl_dyn
+
+
+If you moved your laptop to a different location, you can:
+
+cp ../config_mine ../config_foo
+$EDITOR ../config_foo  # set new IP address(es)
+../fill_config.py ../config_foo
+
 
 === Config file templates
 
 A *directory* contains template files that are filled with specific values by the
 fill_config.py script. See e.g. tmpl_std/.
 
-A *file* contains local config items that are put into the templates. See e.g.
-config_2g3g.
+A *file* contains local config items as name=val pairs that are put into the
+templates. See e.g. config_2g3g.
 
 The fill_config.py script helps to fill the templates with the config values. Simply
 invoke fill_config.py with a dir argument (templates dir) and a file argument (specific
@@ -102,5 +122,5 @@ Typically you'd need to edit only the /etc/osmocom/osmo-bts.cfg to match your
 IP address and ipa unit-id:
 
 bts 0
- oml remote-ip 192.168.0.123
- ipa unit-id 1800 0
+ oml remote-ip 192.168.0.23
+ ipa unit-id 1234 0
