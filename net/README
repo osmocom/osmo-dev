@@ -16,7 +16,7 @@ $EDITOR config_mine
 
 mkdir my_network
 cd my_network
-../cfg.sh ../config_mine ../tmpl_std
+../fill_config.py ../config_mine ../tmpl_std
 
 ./run.sh
 # Launches numerous x-terminals with one component running in each.
@@ -30,13 +30,13 @@ Then possibly modify the config and refresh:
 
 # tweak config?
 $EDITOR ../config_mine
-../cfg.sh
+../fill_config.py
 # picks up same ../config_mine and ../tmpl_std from last time
 
 # own templates?
 cp -r ../tmpl_std ../tmpl_mine
 $EDITOR ../tmpl_mine/*
-../cfg.sh ../tmpl_mine
+../fill_config.py ../tmpl_mine
 # picks up same ../config_mine from last time, and ../tmpl_mine from cmdline
 
 
@@ -44,13 +44,13 @@ $EDITOR ../tmpl_mine/*
 === Config file templates
 
 A *directory* contains template files that are filled with specific values by the
-cfg.sh script (aided by fill_config.py). See e.g. tmpl_std/.
+fill_config.py script. See e.g. tmpl_std/.
 
 A *file* contains local config items that are put into the templates. See e.g.
 config_2g3g.
 
-The cfg.sh script helps to fill the templates with the config values. Simply
-invoke cfg.sh with a dir argument (templates dir) and a file argument (specific
+The fill_config.py script helps to fill the templates with the config values. Simply
+invoke fill_config.py with a dir argument (templates dir) and a file argument (specific
 config values).
 
 If one or both are omitted, the script tries to re-use the most recent paths,

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-../stale_config.sh
+../fill_config.py --check-stale || ( echo "STALE CONFIGS. Hit enter to continue anyway."; read enter_to_continue )
 
 dev="${ETH_DEV}"
 ip2="${PUBLIC_IP2}"

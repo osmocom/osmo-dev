@@ -1,20 +1,62 @@
 #!/usr/bin/env python3
+'''Take values from a config file and fill them into a set of templates.
+Write the result to the current directory.'''
 
 import os, sys, re, shutil
+import argparse
 
-def get_arg(nr, default):
-  if len(sys.argv) > nr:
-    return sys.argv[nr]
-  return default
+def file_newer(path_a, than_path_b):
+  return os.path.getmtime(path_a) > os.path.getmtime(than_path_b)
 
-local_config_file = os.path.realpath(get_arg(1, 'local_config'))
-tmpl_dir = get_arg(2, 'tmpl')
+LAST_LOCAL_CONFIG_FILE = '.last_config'
+LAST_TMPL_DIR = '.last_templates'
 
-if not os.path.isdir(tmpl_dir):
+parser = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+parser.add_argument('sources', metavar='SRC', nargs='*',
+                    help='Pass both a template directory and a config file.')
+parser.add_argument('-s', '--check-stale', dest='check_stale', action='store_true',
+                    help='only verify age of generated files vs. config and templates.'
+                    ' Exit nonzero when any source file is newer. Do not write anything.')
+
+args = parser.parse_args()
+
+local_config_file = None
+tmpl_dir = None
+
+for src in args.sources:
+  if os.path.isdir(src):
+    if tmpl_dir is not None:
+      print('Error: only one template dir permitted. (%r vs. %r)' % (tmpl_dir, src))
+    tmpl_dir = src
+  elif os.path.isfile(src):
+    if local_config_file is not None:
+      print('Error: only one config file permitted. (%r vs. %r)' % (local_config_file, src))
+    local_config_file = src
+
+if local_config_file is None and os.path.isfile(LAST_LOCAL_CONFIG_FILE):
+  local_config_file = open(LAST_LOCAL_CONFIG_FILE).read().strip()
+
+if tmpl_dir is None and os.path.isfile(LAST_TMPL_DIR):
+  tmpl_dir = open(LAST_TMPL_DIR).read().strip()
+
+if not tmpl_dir or not os.path.isdir(tmpl_dir):
   print("Template dir does not exist: %r" % tmpl_dir)
   exit(1)
 
+if not local_config_file or not os.path.isfile(local_config_file):
+  print("No such config file: %r" % tmpl_dir)
+  exit(1)
+
+local_config_file = os.path.realpath(local_config_file)
+tmpl_dir = os.path.realpath(tmpl_dir)
+
 print('using config file %r\non templates %r' % (local_config_file, tmpl_dir))
+
+with open(LAST_LOCAL_CONFIG_FILE, 'w') as last_file:
+  last_file.write(local_config_file)
+with open(LAST_TMPL_DIR, 'w') as last_file:
+  last_file.write(tmpl_dir)
 
 # read in variable values from config file
 local_config = {}
@@ -23,6 +65,10 @@ line_nr = 0
 for line in open(local_config_file):
   line_nr += 1
   line = line.strip('\n')
+
+  if line.startswith('#'):
+    continue
+
   if not '=' in line:
     if line:
       print("Error: %r line %d: %r" % (local_config_file, line_nr, line))
@@ -40,17 +86,29 @@ for line in open(local_config_file):
     print("Error: duplicate identifier in %r line %d: %r" % (local_config_file, line_nr, line))
   local_config[name] = val
 
-print('config:\n\n' + '\n'.join('%s=%r' % (n,v) for n,v in local_config.items()))
-
 # replace variable names with above values recursively
 replace_re = re.compile('\$\{([A-Za-z0-9_]*)\}')
 command_re = re.compile('\$\{([A-Za-z0-9_]*)\(([^)]*)\)\}')
 
 idx = 0
 
+def check_stale(src_path, target_path):
+  if file_newer(src_path, target_path):
+    print('Stale: %r is newer than %r' % (src_path, target_path))
+    exit(1)
+
 for tmpl_name in sorted(os.listdir(tmpl_dir)):
+
+  # omit "hidden" files
+  if tmpl_name.startswith('.'):
+    continue
+
   tmpl_src = os.path.join(tmpl_dir, tmpl_name)
   dst = tmpl_name
+
+  if args.check_stale:
+    check_stale(local_config_file, dst)
+    check_stale(tmpl_src, dst)
 
   local_config['_fname'] = tmpl_name
   local_config['_name'] = os.path.splitext(tmpl_name)[0]
@@ -79,6 +137,8 @@ for tmpl_name in sorted(os.listdir(tmpl_dir)):
         except:
           print('Cannot read %r for %r' % (include_path, tmpl_src))
           raise
+        if args.check_stale:
+          check_stale(include_path, dst)
         result = result.replace('${%s(%s)}' % (cmd, arg), incl)
       else:
         print('Error: unknown command: %r in %r' % (cmd, tmpl_src))
@@ -97,9 +157,9 @@ for tmpl_name in sorted(os.listdir(tmpl_dir)):
     for var in used_vars:
       result = result.replace('${%s}' % var, local_config.get(var))
 
-  with open(dst, 'w') as dst_file:
-    dst_file.write(result)
-
-  shutil.copymode(tmpl_src, dst)
+  if not args.check_stale:
+    with open(dst, 'w') as dst_file:
+      dst_file.write(result)
+    shutil.copymode(tmpl_src, dst)
 
 # vim: ts=2 sw=2 expandtab
