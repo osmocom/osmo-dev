@@ -206,6 +206,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	sync
 	touch $@
 
+.PHONY: {proj}
 {proj}: .make.{proj}.install
 
 .PHONY: {proj}-reinstall
