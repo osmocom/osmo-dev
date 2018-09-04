@@ -306,7 +306,10 @@ regen:
   out.write('all-install: \\\n\t' + ' \\\n\t'.join([ '.make.%s.install' % p for p, d in projects_deps ]) + '\n\n')
 
   for proj, deps in projects_deps:
-    out.write(gen_make(proj, deps, configure_opts.get(proj), args.jobs,
+    all_config_opts = []
+    all_config_opts.extend(configure_opts.get('ALL') or [])
+    all_config_opts.extend(configure_opts.get(proj) or [])
+    out.write(gen_make(proj, deps, all_config_opts, args.jobs,
                        make_dir, args.src_dir, build_dir, args.url, args.push_url,
                        args.sudo_make_install, args.no_ldconfig,
                        args.ldconfig_without_sudo, args.make_check))
