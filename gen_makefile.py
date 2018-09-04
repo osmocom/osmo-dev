@@ -103,6 +103,10 @@ parser.add_argument('--ldconfig-without-sudo', dest='ldconfig_without_sudo',
   help='''call just 'ldconfig', without sudo, which implies
 root privileges (not recommended)''')
 
+parser.add_argument('-c', '--no-make-check', dest='make_check',
+  default=True, action='store_false',
+  help='''do not 'make check', just 'make' to build.''')
+
 args = parser.parse_args()
 
 class listdict(dict):
@@ -144,7 +148,7 @@ def read_configure_opts(path):
     return {}
   return dict(read_projects_deps(path))
 
-def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo):
+def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
   src_proj = os.path.join(src_dir, proj)
   if proj == 'openbsc':
     src_proj = os.path.join(src_proj, 'openbsc')
@@ -191,7 +195,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
 	@echo "\n\n\n===== $@\n"
-	$(MAKE) -C {build_proj} -j {jobs} check
+	$(MAKE) -C {build_proj} -j {jobs} {check}
 	sync
 	touch $@
 
@@ -228,7 +232,8 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     configure_opts=configure_opts_str,
     sudo_make_install='sudo ' if sudo_make_install else '',
     no_ldconfig='#' if no_ldconfig else '',
-    sudo_ldconfig='' if ldconfig_without_sudo else 'sudo '
+    sudo_ldconfig='' if ldconfig_without_sudo else 'sudo ',
+    check='check' if make_check else '',
     )
 
 
@@ -270,7 +275,7 @@ all_debug:
 # regenerate this Makefile, in case the deps or opts changed
 .PHONY: regen
 regen:
-	{script} {projects_and_deps} {configure_opts} -m {make_dir} -o {makefile} -s {src_dir} -b {build_dir} -u "{url}" -p "{push_url}"{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}
+	{script} {projects_and_deps} {configure_opts} -m {make_dir} -o {makefile} -s {src_dir} -b {build_dir} -u "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}
 
 '''.format(
     script=os.path.relpath(sys.argv[0], make_dir),
@@ -281,10 +286,11 @@ regen:
     src_dir=os.path.relpath(args.src_dir, make_dir),
     build_dir=os.path.relpath(build_dir, make_dir),
     url=args.url,
-    push_url=args.push_url,
+    push_url=(" -p '%s'"%args.push_url) if args.push_url else '',
     sudo_make_install=' -I' if args.sudo_make_install else '',
     no_ldconfig=' -L' if args.no_ldconfig else '',
-    ldconfig_without_sudo=' --ldconfig-without-sudo' if args.ldconfig_without_sudo else ''
+    ldconfig_without_sudo=' --ldconfig-without-sudo' if args.ldconfig_without_sudo else '',
+    make_check='' if args.make_check else " --no-make-check",
     ))
 
   # convenience target: clone all repositories first
@@ -302,6 +308,6 @@ regen:
     out.write(gen_make(proj, deps, configure_opts.get(proj), args.jobs,
                        make_dir, args.src_dir, build_dir, args.url, args.push_url,
                        args.sudo_make_install, args.no_ldconfig,
-                       args.ldconfig_without_sudo))
+                       args.ldconfig_without_sudo, args.make_check))
 
 # vim: expandtab tabstop=2 shiftwidth=2
