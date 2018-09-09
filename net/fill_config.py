@@ -45,7 +45,7 @@ if not tmpl_dir or not os.path.isdir(tmpl_dir):
   exit(1)
 
 if not local_config_file or not os.path.isfile(local_config_file):
-  print("No such config file: %r" % tmpl_dir)
+  print("No such config file: %r" % local_config_file)
   exit(1)
 
 local_config_file = os.path.realpath(local_config_file)
