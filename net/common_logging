@@ -4,7 +4,7 @@ log stderr
  logging print level 1
  logging print category 1
  logging print category-hex 0
- logging print file basename
+ logging print file basename last
  #logging print timestamp date
  logging print extended-timestamp 1
  logging level all debug
@@ -14,7 +14,7 @@ log file current_log/${_name}.log
  logging print level 1
  logging print category 1
  logging print category-hex 0
- logging print file basename
+ logging print file basename last
  #logging print timestamp date
  logging print extended-timestamp 1
  logging level all debug
