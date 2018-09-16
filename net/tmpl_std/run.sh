@@ -21,8 +21,14 @@ if [ -z "$(ip tuntap show | grep $apn)" ]; then
   sudo ip link set $apn up
 fi
 
-if [ -z "$(ip addr show dev $dev | grep "$ip2")" ]; then
-  sudo ip addr add ${PUBLIC_IP2}/32 dev $dev
+if [ -z "$(ip addr show | grep "$PUBLIC_IP")" ]; then
+  echo "No interface has IP address $PUBLIC_IP! Hit enter to continue anyway."
+  read enter_to_continue
+fi
+if [ -z "$(ip addr show | grep "$ip2")" ]; then
+  echo "No interface has IP address $ip2! Hit enter to 'ip addr add $ip2/32 dev $dev'"
+  read enter_to_continue
+  sudo ip addr add $ip2/32 dev $dev
 fi
 
 logdir="current_log"
