@@ -58,9 +58,6 @@ term() {
 
 find_term
 
-sudo tcpdump -i $dev -n -w current_log/$dev.single.pcap -U not port 22 &
-sudo tcpdump -i lo -n -w current_log/lo.single.pcap -U not port 22 &
-
 hnbgw="osmo-hnbgw"
 msc="gdb -ex run --args $(which osmo-msc)"
 gbproxy="osmo-gbproxy"
@@ -73,6 +70,23 @@ mgw4bsc="osmo-mgw -c osmo-mgw-for-bsc.cfg"
 hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr"
 stp="osmo-stp"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
+
+if [ "${SIPCON_ENABLE}" == "true" ]; then
+  sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
+  msc="$msc -M ${MSC_MNCC_SOCKET}"
+
+  # Require kamailio (PATH hack is needed for Debian)
+  kamailio="$(PATH="$PATH:/usr/sbin:/sbin" which kamailio)"
+  if [ -z "$kamailio" ]; then
+    echo "ERROR: kamailio is not installed, but it's required for SIPCON_ENABLE."
+    echo "After installing it, make sure that it does *not* run as daemon."
+    exit 1
+  fi
+  kamailio="$kamailio -f kamailio.cfg -D -e -E"
+fi
+
+sudo tcpdump -i $dev -n -w current_log/$dev.single.pcap -U not port 22 &
+sudo tcpdump -i lo -n -w current_log/lo.single.pcap -U not port 22 &
 
 term "$ggsn" GGSN &
 sleep .2
@@ -94,12 +108,25 @@ term "$hnbgw" HNBGW &
 sleep .2
 term "$bsc" BSC &
 
+if [ "${SIPCON_ENABLE}" == "true" ]; then
+  sleep .2
+  term "$sipcon" SIPCON &
+  sleep .2
+  term "$kamailio" KAMAILIO &
+fi
+
 #ssh bts rm /tmp/bts.log /tmp/pcu.log
 #ssh bts neels/run_remote.sh &
 
 echo enter to close
 read enter_to_close
 echo Closing...
+
+if [ "${SIPCON_ENABLE}" == "true" ]; then
+  kill %13 %14
+  killall osmo-sip-connector
+  killall kamailio
+fi
 
 #ssh bts neels/stop_remote.sh
 
