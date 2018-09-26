@@ -97,6 +97,32 @@ def check_stale(src_path, target_path):
     print('Stale: %r is newer than %r' % (src_path, target_path))
     exit(1)
 
+def insert_includes(tmpl, tmpl_dir, tmpl_src):
+    for m in command_re.finditer(tmpl):
+      cmd = m.group(1)
+      arg = m.group(2)
+      if cmd == 'include':
+        include_path = os.path.join(tmpl_dir, arg)
+        if not os.path.isfile(include_path):
+          print('Error: included file does not exist: %r in %r' % (include_path, tmpl_src))
+          exit(1)
+        try:
+          incl = open(include_path).read()
+        except:
+          print('Cannot read %r for %r' % (include_path, tmpl_src))
+          raise
+        if args.check_stale:
+          check_stale(include_path, dst)
+
+        # recurse, to follow the paths that the included bits come from
+        incl = insert_includes(incl, os.path.dirname(include_path), include_path)
+
+        tmpl = tmpl.replace('${%s(%s)}' % (cmd, arg), incl)
+      else:
+        print('Error: unknown command: %r in %r' % (cmd, tmpl_src))
+        exit(1)
+    return tmpl
+
 for tmpl_name in sorted(os.listdir(tmpl_dir)):
 
   # omit "hidden" files
@@ -124,25 +150,8 @@ for tmpl_name in sorted(os.listdir(tmpl_dir)):
 
   while True:
     used_vars = set()
-    for m in command_re.finditer(result):
-      cmd = m.group(1)
-      arg = m.group(2)
-      if cmd == 'include':
-        include_path = os.path.join(tmpl_dir, arg)
-        if not os.path.isfile(include_path):
-          print('Error: included file does not exist: %r in %r' % (include_path, tmpl_src))
-          exit(1)
-        try:
-          incl = open(include_path).read()
-        except:
-          print('Cannot read %r for %r' % (include_path, tmpl_src))
-          raise
-        if args.check_stale:
-          check_stale(include_path, dst)
-        result = result.replace('${%s(%s)}' % (cmd, arg), incl)
-      else:
-        print('Error: unknown command: %r in %r' % (cmd, tmpl_src))
-        exit(1)
+
+    result = insert_includes(result, tmpl_dir, tmpl_src)
 
     for m in replace_re.finditer(result):
       name = m.group(1)
