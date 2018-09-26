@@ -1,0 +1,11 @@
+${include(common_logging)}
+log stderr
+ logging level lsua notice
+ logging level lss7 notice
+ logging level linp notice
+ logging level hodec notice
+log gsmtap 127.0.0.1
+ logging level lsua notice
+ logging level lss7 notice
+ logging level linp notice
+ logging level hodec notice
