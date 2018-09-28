@@ -34,17 +34,29 @@ fi
 logdir="current_log"
 mkdir -p "$logdir"
 
+find_term() {
+  # Find a terminal program and write to the global "terminal" variable
+  local programs="urxvt xterm"
+  local program
+  for program in $programs; do
+    terminal="$(which $program)"
+    [ -n "$terminal" ] && return
+  done
+
+  # No terminal found
+  echo "ERROR: Couldn't find terminal program! Looked for: $programs"
+  exit 1
+}
+
 term() {
   title="$2"
   if [ -z "$title" ]; then
     title="$(basename $@)"
   fi
-  terminal="$(which urxvt || which xterm)"
-  if ! which $terminal; then
-    echo "CANNOT FIND XTERM PROGRAM"
-  fi
   exec $terminal -title "CN:$title" -e sh -c "export LD_LIBRARY_PATH='/usr/local/lib'; $1; echo; while true; do echo 'q Enter to close'; read q_to_close; if [ \"x\$q_to_close\" = xq ]; then break; fi; done"
 }
+
+find_term
 
 sudo tcpdump -i $dev -n -w current_log/$dev.single.pcap -U not port 22 &
 sudo tcpdump -i lo -n -w current_log/lo.single.pcap -U not port 22 &
