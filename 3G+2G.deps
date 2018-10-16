@@ -13,3 +13,4 @@ osmo-msc	osmo-iuh osmo-mgw libsmpp34
 osmo-bsc	libosmo-sccp osmo-mgw
 osmo-sgsn	osmo-iuh osmo-ggsn
 osmo-sip-connector	libosmocore
+osmo-trx	libosmocore

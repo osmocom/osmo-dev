@@ -10,3 +10,4 @@ osmo-mgw	libosmo-netif
 osmo-msc	libosmo-sccp osmo-mgw libsmpp34
 osmo-bsc	libosmo-sccp osmo-mgw
 osmo-sgsn	libosmo-sccp osmo-ggsn
+osmo-trx	libosmocore
