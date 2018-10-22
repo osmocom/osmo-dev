@@ -71,7 +71,8 @@ templates. See e.g. config_2g3g.
 
 The fill_config.py script helps to fill the templates with the config values. Simply
 invoke fill_config.py with a dir argument (templates dir) and a file argument (specific
-config values).
+config values). The dir argument can be used in the templates with ${NET_DIR},
+temporary files (sockets etc.) should be placed inside this folder.
 
 If one or both are omitted, the script tries to re-use the most recent paths,
 they were stored in local files '.last_config' and '.last_templates'.

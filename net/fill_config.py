@@ -50,8 +50,9 @@ if not local_config_file or not os.path.isfile(local_config_file):
 
 local_config_file = os.path.realpath(local_config_file)
 tmpl_dir = os.path.realpath(tmpl_dir)
+net_dir = os.path.realpath(".")
 
-print('using config file %r\non templates %r' % (local_config_file, tmpl_dir))
+print('using config file %r\non templates %r\nwith NET_DIR %r' % (local_config_file, tmpl_dir, net_dir))
 
 with open(LAST_LOCAL_CONFIG_FILE, 'w') as last_file:
   last_file.write(local_config_file)
@@ -59,7 +60,8 @@ with open(LAST_TMPL_DIR, 'w') as last_file:
   last_file.write(tmpl_dir)
 
 # read in variable values from config file
-local_config = {}
+# NET_DIR is the folder where fill_config.py was started
+local_config = {"NET_DIR": net_dir}
 
 line_nr = 0
 for line in open(local_config_file):
