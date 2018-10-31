@@ -1,0 +1,362 @@
+#!/usr/bin/env python3
+import sys, subprocess, re, argparse, os
+
+doc = '''gits: conveniently manage several git subdirectories.
+Instead of doing the 'cd foo; git status; cd ../bar; git status' dance, this
+helps to save your time with: status, fetch, rebase, ...
+
+See 'gits help'
+'''
+
+re_status_mods = re.compile('^\t(modified|deleted):.*')
+
+def error(*msgs):
+  sys.stderr.write(''.join(msgs))
+  sys.stderr.write('\n')
+  exit(1)
+
+def usage(*msgs):
+  global doc
+  error(doc, '\n\n', *msgs)
+
+def git(git_dir, *args, may_fail=False, section_marker=False, show_cmd=True):
+  if section_marker:
+    print('\n===== %s =====' % git_dir)
+    sys.stdout.flush()
+
+  cmd = ['git', '-C', git_dir] + list(args)
+  if show_cmd:
+    print(' '.join(cmd))
+
+  rc = subprocess.call(cmd)
+  if rc and not may_fail:
+    error('git returned error! command: git -C %r %s' % (git_dir, ' '.join(repr(arg) for arg in args)))
+
+  if section_marker:
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+def git_output(git_dir, *args):
+  return subprocess.check_output(['git', '-C', git_dir,] + list(args)).decode('utf-8')
+
+def git_branch(git_dir):
+  re_branch_name = re.compile('On branch ([^ ]*)')
+  status = git_output(git_dir, 'status')
+  m = re_branch_name.find(status)
+  if not m:
+    error('No current branch in %r' % git_dir)
+  return m.group(1)
+
+def git_status(git_dir, verbose=False):
+  status_lines = git_output(git_dir, 'status').splitlines()
+  if verbose and len(status_lines):
+    print(status_lines[0])
+
+  on_branch = None
+  branch_status_str = None
+  local_mods = False
+
+  ON_BRANCH = 'On branch '
+  STATUS = 'Your branch'
+
+  for l in status_lines:
+    if l.startswith(ON_BRANCH):
+      if on_branch:
+        error('cannot parse status, more than one branch?')
+      on_branch = l[len(ON_BRANCH):]
+    elif l.startswith(STATUS):
+      if 'Your branch is up to date' in l:
+        branch_status_str = l
+      elif 'Your branch is ahead' in l:
+        branch_status_str = 'ahead: ' + l
+      elif 'Your branch is behind' in l:
+        branch_status_str = 'behind: ' + l
+      elif 'have diverged' in l:
+        branch_status_str = 'diverged: ' + l
+      else:
+        error('unknown status str: %r' % l)
+    else:
+      m = re_status_mods.match(l)
+      if m:
+        local_mods = True
+
+  if verbose:
+    print('%s%s' % (branch_status_str, '\nLOCAL MODS' if local_mods else ''))
+  return (on_branch, branch_status_str, local_mods)
+
+
+def git_branch_summary(git_dir):
+  '''return a list of strings: [branchname, info0, info1,...]'''
+
+  interesting_branch_names = [ 'master' ]
+
+  strs = [git_dir,]
+
+  on_branch, branch_status_str, has_mods = git_status(git_dir)
+
+  if has_mods:
+    strs.append('MODS')
+
+  branch_strs = git_output(git_dir, 'branch', '-vv').splitlines()
+  re_branch_name = re.compile('^..([^ ]+) .*')
+  re_ahead = re.compile('ahead [0-9]+|behind [0-9]+')
+
+  for line in branch_strs:
+    m = re_branch_name.match(line)
+    name = m.group(1)
+
+    current_branch = False
+    if line.startswith('*'):
+      current_branch = True
+    elif name not in interesting_branch_names:
+      continue
+    ahead = re_ahead.findall(line)
+    if not ahead and not current_branch:
+      continue
+    ahead = [x.replace('ahead ', '+').replace('behind ', '-') for x in ahead]
+
+    branch_info = [name]
+    if ahead:
+      branch_info.append('[%s]' % '|'.join(ahead))
+
+    strs.append(''.join(branch_info))
+
+  return strs
+
+def format_summaries(summaries, sep0=' ', sep1=' '):
+  first_col = max([len(row[0]) for row in summaries])
+  first_col_fmt = '%' + str(first_col) + 's'
+
+  lines = []
+  for row in summaries:
+    lines.append('%s%s%s' % (first_col_fmt % row[0], sep0, sep1.join(row[1:])))
+
+  return '\n'.join(lines)
+
+def git_dirs():
+  dirs = []
+  for sub in os.listdir():
+    git_path = os.path.join(sub, '.git')
+    if not os.path.isdir(git_path):
+      continue
+    dirs.append(sub)
+
+  if not dirs:
+    error('No subdirectories found that are git clones')
+
+  return list(sorted(dirs))
+
+def cmd_help():
+  global commands
+  global aliases
+
+  if len(sys.argv) > 2:
+    error('no arguments allowed')
+
+  lines = []
+
+  for name, cmd in commands.items():
+
+    names = [name,]
+
+    for alias_name, alias_for in aliases.items():
+      if alias_for == name:
+        names.append(alias_name)
+
+    line = ['|'.join(names), ]
+
+    func, doc = cmd
+    line.append(doc)
+
+    lines.append(line)
+
+  lines.append(('<git-command>', "Run arbitrary git command in each clone, shortcut for 'do'"))
+  print(format_summaries(lines, ': '))
+
+def print_status():
+  infos = [git_branch_summary(git_dir) for git_dir in git_dirs()]
+  print(format_summaries(infos))
+
+def cmd_status():
+  if len(sys.argv) > 2:
+    error('no arguments allowed')
+  print_status()
+
+def cmd_do(argv=None):
+  if argv is None:
+    argv = sys.argv[2:]
+  for git_dir in git_dirs():
+    git(git_dir, *argv, may_fail=True, section_marker=True)
+
+def cmd_sh():
+  cmd = sys.argv[2:]
+  for git_dir in git_dirs():
+    print('\n===== %s =====' % git_dir)
+    sys.stdout.flush()
+    subprocess.call(cmd, cwd=git_dir)
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+class SkipThisRepos(Exception):
+  pass
+
+def ask(git_dir, *question, valid_answers=('*',)):
+  while True:
+    print('\n' + '\n  '.join(question))
+    print('  ' + '\n  '.join((
+      's  skip this repos',
+      't  show in tig',
+      'g  show in gitk',
+      )))
+
+    answer = sys.stdin.readline().strip()
+    if answer == 's':
+      raise SkipThisRepos()
+    if answer == 't':
+      subprocess.call(('tig', '--all'), cwd=git_dir)
+      continue
+    if answer == 'g':
+      subprocess.call(('gitk', '--all'), cwd=git_dir)
+      continue
+
+    for v in valid_answers:
+      if v == answer:
+        return answer
+      if v == '*':
+        return answer
+      if v == '+' and len(answer) > 0:
+        return answer
+
+def rebase(git_dir):
+  orig_branch, branch_status_str, local_mods = git_status(git_dir, verbose=True)
+
+  if orig_branch is None:
+    print('Not on a branch: %s' % git_dir)
+    raise SkipThisRepos()
+
+  if local_mods:
+    do_commit = ask(git_dir, 'Local mods.',
+      'c  commit to this branch',
+      '<name>  commit to new branch',
+      '<empty> skip')
+
+    if not do_commit:
+      raise SkipThisRepos()
+
+    if do_commit == 'c':
+      git(git_dir, 'commit', '-am', 'wip', may_fail=True)
+    else:
+      git(git_dir, 'checkout', '-b', do_commit)
+      git(git_dir, 'commit', '-am', 'wip', may_fail=True)
+      git(git_dir, 'checkout', orig_branch)
+
+    _, _, local_mods = git_status(git_dir)
+
+    if local_mods:
+      print('There still are local modifications')
+      raise SkipThisRepos()
+
+
+  if branch_status_str is None:
+    print('there is no upstream branch for %r' % orig_branch)
+
+  elif branch_status_str.startswith('behind'):
+    if 'and can be fast-forwarded' in branch_status_str:
+      print('fast-forwarding...')
+      git(git_dir, 'merge')
+    else:
+      do_merge = ask(git_dir, 'Behind. git merge?',
+        "<empty>  don't merge",
+        'ok  git merge',
+        valid_answers=('', 'ok')
+        )
+
+      if do_merge == 'ok':
+        git(git_dir, 'merge')
+
+  elif branch_status_str.startswith('ahead'):
+    do_commit = ask(git_dir, 'Ahead. commit to new branch?',
+      '<empty>  no',
+      '<name>   create new branch',
+      )
+    if do_commit:
+      git(git_dir, 'checkout', '-b', do_commit)
+      git(git_dir, 'commit', '-am', 'wip', may_fail=True)
+      git(git_dir, 'checkout', orig_branch)
+
+    do_reset = ask(git_dir, '%s: git reset --hard origin/%s?' % (orig_branch, orig_branch),
+      '<empty>  no',
+      'OK  yes (write OK in caps!)',
+      valid_answers=('', 'OK'))
+
+    if do_reset == 'OK':
+      git(git_dir, 'reset', '--hard', 'origin/%s' % orig_branch)
+
+  elif branch_status_str.startswith('diverged'):
+    do_reset = ask(git_dir, 'Diverged.',
+      '%s: git reset --hard origin/%s?' % (orig_branch, orig_branch),
+      '<empty>  no',
+      'OK  yes (write OK in caps!)',
+      valid_answers=('', 'OK'))
+
+    if do_reset == 'OK':
+      git(git_dir, 'reset', '--hard', 'origin/%s' % orig_branch)
+
+  return orig_branch
+
+
+def cmd_rebase():
+  skipped = []
+  for git_dir in git_dirs():
+    try:
+      print('\n\n===== %s =====' % git_dir)
+      sys.stdout.flush()
+
+      branch = rebase(git_dir)
+      if branch != 'master':
+        git(git_dir, 'checkout', 'master')
+        rebase(git_dir)
+        git(git_dir, 'checkout', branch)
+
+    except SkipThisRepos:
+      print('\nSkipping %r' % git_dir)
+      skipped.append(git_dir)
+
+  print('\n\n==========\nrebase done.\n')
+  print_status()
+  if skipped:
+    print('\nskipped: %s' % ' '.join(skipped))
+
+commands = {
+  'help': (cmd_help, 'List commands.'),
+  'status': (cmd_status, 'Show a branch summary and indicate modifications.'),
+  'rebase': (cmd_rebase, 'Interactively merge master and rebase current branch.'),
+  'sh': (cmd_sh, 'Run arbitrary shell command in each clone'),
+  'do': (cmd_do, 'Run arbitrary git command in each clone'),
+}
+
+aliases = {
+  'st': 'status',
+  'r': 'rebase',
+}
+
+if __name__ == '__main__':
+
+  if len(sys.argv) < 2:
+    usage('Pass at least one argument to tell me what to do.')
+
+  command_str = sys.argv[1]
+  alias_for = aliases.get(command_str)
+  if alias_for:
+    command_str = alias_for
+  command = commands.get(command_str)
+
+  if command:
+    func, doc = command
+    func()
+  else:
+    # run arbitrary git command
+    cmd_do(sys.argv[1:])
+
+
+# vim: shiftwidth=2 expandtab tabstop=2

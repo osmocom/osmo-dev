@@ -11,12 +11,11 @@ There are some handy scripts I use for my daily Osmocom development:
 	Pass a patch number seen on gerrit to fetch the latest patch set into
 	your git clone. See top comment in the script.
 
- ./g   run a git command in each source tree
- ./e   run an arbitrary shell command in each source tree
- ./st  show a brief branch and local mods status for each source tree
- ./s   walk through each source tree and use gitk as well as user interaction
-       to quickly fast-forward / reset changes coming in from upstream. (This
-       is potentially dangerous, but safe if you only hit enter every time.)
+ gits   Conveniently manage several git clones:
+        - run a git or shell command in each source tree
+	- show a brief branch and local mods status for each source tree
+	- merge / rebase / fast-forward each source tree interactively
+	See ./gits help
 
 Examples:
 
@@ -54,7 +53,7 @@ Switched to a new branch '3787_1'
 
 -----------------------------------------------------------------------------
 
-./g fetch    # run 'git fetch' in each clone = fetch all from upstream
+./gits fetch    # run 'git fetch' in each clone = fetch all from upstream
 
 ===== libasn1c =====
 remote: Counting objects: 29, done
@@ -90,7 +89,7 @@ From ssh://go/libosmocore
 
 -----------------------------------------------------------------------------
 
-./st         # any modifications / updates? (e.g. useful after './g fetch')
+./gits st    # any modifications / updates? (e.g. useful after './g fetch')
              # (checks only 'master' and the current checked-out branch)
 
      libasn1c master
@@ -116,13 +115,13 @@ libosmo-netif master
 
 -----------------------------------------------------------------------------
 
-./e rm .version  # in each source tree, remove the local .version file
+./gits sh rm .version  # in each source tree, remove the local .version file
 
 -----------------------------------------------------------------------------
 
-./s         # interactively try to fast-forward to upstream and/or save
-            # local modifications.
-            # If you just hit Enter all the time, nothing will be changed.
+./gits rebase  # interactively try to fast-forward to upstream and/or save
+               # local modifications.
+               # If you just hit Enter all the time, nothing dangerous will happen.
 
 
 libosmocore
