@@ -11,6 +11,6 @@ osmo-hlr	libosmo-abis
 osmo-mgw	libosmo-netif
 osmo-msc	osmo-iuh osmo-mgw libsmpp34
 osmo-bsc	libosmo-sccp osmo-mgw
-osmo-sgsn	osmo-iuh osmo-ggsn
+osmo-sgsn	osmo-iuh osmo-ggsn osmo-hlr
 osmo-sip-connector	libosmocore
 osmo-trx	libosmocore
