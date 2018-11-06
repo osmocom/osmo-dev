@@ -130,3 +130,9 @@ default is /usr/local.
 === src/*
 
 Find other useful scripts in src/, see src/README.
+
+
+=== Troubleshooting
+
+When using sanitize.opts, osmo-trx is not built with the address sanitizer
+enabled. Linking a sanitizer-enabled libosmocore will not work.
