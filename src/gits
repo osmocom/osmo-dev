@@ -18,7 +18,6 @@
 
 import sys
 import subprocess
-import re
 import argparse
 import os
 import shlex
@@ -27,11 +26,6 @@ doc = '''gits: conveniently manage several git subdirectories.
 Instead of doing the 'cd foo; git status; cd ../bar; git status' dance, this
 helps to save your time with: status, fetch, rebase, ...
 '''
-
-re_status_mods = re.compile('^\t(modified|deleted):.*')
-re_status_branch_name = re.compile('On branch ([^ ]*)')
-re_branch_name = re.compile('^..([^ ]+) .*')
-re_ahead_behind = re.compile('ahead [0-9]+|behind [0-9]+')
 
 
 def error(*msgs):
@@ -67,52 +61,69 @@ def git_output(git_dir, *args):
     return subprocess.check_output(['git', '-C', git_dir, ] + list(args)).decode('utf-8')
 
 
-def git_branch(git_dir):
-    status = git_output(git_dir, 'status', '--long')
-    m = re_status_branch_name.find(status)
-    if not m:
-        error('No current branch in %r' % git_dir)
-    return m.group(1)
+def git_bool(git_dir, *args):
+    try:
+        subprocess.check_output(['git', '-C', git_dir, ] + list(args))
+        return True
+    except subprocess.CalledProcessError as e:
+        return False
 
 
-def git_status(git_dir, verbose=False):
-    status_lines = git_output(git_dir, 'status').splitlines()
-    if verbose and len(status_lines):
-        print(status_lines[0])
+def git_branch_exists(git_dir, branch='origin/master'):
+    return git_bool(git_dir, 'rev-parse', '--quiet', '--verify', branch)
 
-    on_branch = None
-    branch_status_str = None
-    local_mods = False
 
-    ON_BRANCH = 'On branch '
-    STATUS = 'Your branch'
+def git_ahead_behind(git_dir, branch='master', remote='origin'):
+    ''' Count revisions ahead/behind of the remote branch.
+        returns: (ahead, behind) (e.g. (0, 5)) '''
 
-    for l in status_lines:
-        if l.startswith(ON_BRANCH):
-            if on_branch:
-                error('cannot parse status, more than one branch?')
-            on_branch = l[len(ON_BRANCH):]
-        elif l.startswith(STATUS):
-            if 'Your branch is up to date' in l:
-                branch_status_str = l
-            elif 'Your branch is up-to-date' in l:
-                branch_status_str = l
-            elif 'Your branch is ahead' in l:
-                branch_status_str = 'ahead: ' + l
-            elif 'Your branch is behind' in l:
-                branch_status_str = 'behind: ' + l
-            elif 'have diverged' in l:
-                branch_status_str = 'diverged: ' + l
-            else:
-                error('unknown status str: %r' % l)
-        else:
-            m = re_status_mods.match(l)
-            if m:
-                local_mods = True
+    # Missing remote branch
+    if not git_branch_exists(git_dir, remote + '/' + branch):
+        return (0, 0)
 
-    if verbose:
-        print('%s%s' % (branch_status_str, '\nLOCAL MODS' if local_mods else ''))
-    return (on_branch, branch_status_str, local_mods)
+    behind = git_output(git_dir, 'rev-list', '--count', '%s..%s/%s' % (branch, remote, branch))
+    ahead = git_output(git_dir, 'rev-list', '--count', '%s/%s..%s' % (remote, branch, branch))
+    return (int(ahead.rstrip()), int(behind.rstrip()))
+
+
+def git_branches(git_dir, obj='refs/heads'):
+    ret = git_output(git_dir, 'for-each-ref', obj, '--format', '%(refname:short)')
+    return ret.splitlines()
+
+
+def git_branch_current(git_dir):
+    ret = git_output(git_dir, 'rev-parse', '--abbrev-ref', 'HEAD').rstrip()
+    if ret == 'HEAD':
+        return None
+    return ret
+
+
+def git_has_modifications(git_dir):
+    return not git_bool(git_dir, 'diff-index', '--quiet', 'HEAD')
+
+
+def git_can_fast_forward(git_dir, branch='master', remote='origin'):
+    return git_bool(git_dir, 'merge-base', '--is-ancestor', 'HEAD', remote + '/' + branch)
+
+
+def format_branch_ahead_behind(branch, ahead, behind):
+    ''' branch: string like "master"
+        ahead, behind: integers like 5, 3
+        returns: string like "master", "master[+5]", "master[-3]", "master[+5|-3]" '''
+    # Just the branch
+    if not ahead and not behind:
+        return branch
+
+    # Suffix with ahead/behind
+    ret = branch + '['
+    if ahead:
+        ret += '+' + str(ahead)
+        if behind:
+            ret += '|'
+    if behind:
+        ret += '-' + str(behind)
+    ret += ']'
+    return ret
 
 
 def git_branch_summary(git_dir):
@@ -122,36 +133,22 @@ def git_branch_summary(git_dir):
     interesting_branch_names = ('master',)
 
     strs = [git_dir, ]
-
-    on_branch, branch_status_str, has_mods = git_status(git_dir)
-
-    if has_mods:
+    if git_has_modifications(git_dir):
         strs.append('MODS')
 
-    branch_strs = git_output(git_dir, 'branch', '-vv').splitlines()
-
-    for line in branch_strs:
-        m = re_branch_name.match(line)
-        name = m.group(1)
-
-        current_branch = False
-        if line.startswith('*'):
-            current_branch = True
-        elif name not in interesting_branch_names:
+    branch_current = git_branch_current(git_dir)
+    for branch in git_branches(git_dir):
+        is_current = (branch == branch_current)
+        if not is_current and branch not in interesting_branch_names:
             continue
-        ahead_behind = re_ahead_behind.findall(line)
-        if not ahead_behind and not current_branch:
+
+        ahead, behind = git_ahead_behind(git_dir, branch)
+        if not ahead and not behind and not is_current:
             # skip branches that are "not interesting"
             continue
-        ahead_behind = [
-            x.replace('ahead ', '+').replace('behind ', '-') for x in ahead_behind]
 
-        branch_info = name
-        if ahead_behind:
-            branch_info = branch_info + ('[%s]' % '|'.join(ahead_behind))
-
-        strs.append(''.join(branch_info))
-
+        # Branch with ahead/behind origin info ("master[+1|-5]")
+        strs.append(format_branch_ahead_behind(branch, ahead, behind))
     return strs
 
 
@@ -236,14 +233,15 @@ def ask(git_dir, *question, valid_answers=('*',)):
 
 
 def rebase(git_dir):
-    orig_branch, branch_status_str, local_mods = git_status(
-        git_dir, verbose=True)
-
+    orig_branch = git_branch_current(git_dir)
     if orig_branch is None:
         print('Not on a branch: %s' % git_dir)
         raise SkipThisRepo()
 
-    if local_mods:
+    print('Rebasing branch: ' + orig_branch)
+    ahead, behind = git_ahead_behind(git_dir, orig_branch)
+
+    if git_has_modifications(git_dir):
         do_commit = ask(git_dir, 'Local mods.',
                         'c  commit to this branch',
                         '<name>  commit to new branch',
@@ -259,17 +257,29 @@ def rebase(git_dir):
             git(git_dir, 'commit', '-am', 'wip', may_fail=True)
             git(git_dir, 'checkout', orig_branch)
 
-        _, _, local_mods = git_status(git_dir)
-
-        if local_mods:
+        if git_has_modifications(git_dir):
             print('There still are local modifications')
             raise SkipThisRepo()
 
-    if branch_status_str is None:
+    # Missing upstream branch
+    if not git_branch_exists(git_dir, 'origin/' + orig_branch):
         print('there is no upstream branch for %r' % orig_branch)
 
-    elif branch_status_str.startswith('behind'):
-        if 'and can be fast-forwarded' in branch_status_str:
+    # Diverged
+    elif ahead and behind:
+        do_reset = ask(git_dir, 'Diverged.',
+                       '%s: git reset --hard origin/%s?' % (
+                           orig_branch, orig_branch),
+                       '<empty>  no',
+                       'OK  yes (write OK in caps!)',
+                       valid_answers=('', 'OK'))
+
+        if do_reset == 'OK':
+            git(git_dir, 'reset', '--hard', 'origin/%s' % orig_branch)
+
+    # Behind
+    elif behind:
+        if git_can_fast_forward(git_dir, orig_branch):
             print('fast-forwarding...')
             git(git_dir, 'merge')
         else:
@@ -282,7 +292,8 @@ def rebase(git_dir):
             if do_merge == 'ok':
                 git(git_dir, 'merge')
 
-    elif branch_status_str.startswith('ahead'):
+    # Ahead
+    elif ahead:
         do_commit = ask(git_dir, 'Ahead. commit to new branch?',
                         '<empty>  no',
                         '<name>   create new branch',
@@ -293,17 +304,6 @@ def rebase(git_dir):
             git(git_dir, 'checkout', orig_branch)
 
         do_reset = ask(git_dir, '%s: git reset --hard origin/%s?' % (orig_branch, orig_branch),
-                       '<empty>  no',
-                       'OK  yes (write OK in caps!)',
-                       valid_answers=('', 'OK'))
-
-        if do_reset == 'OK':
-            git(git_dir, 'reset', '--hard', 'origin/%s' % orig_branch)
-
-    elif branch_status_str.startswith('diverged'):
-        do_reset = ask(git_dir, 'Diverged.',
-                       '%s: git reset --hard origin/%s?' % (
-                           orig_branch, orig_branch),
                        '<empty>  no',
                        'OK  yes (write OK in caps!)',
                        valid_answers=('', 'OK'))
