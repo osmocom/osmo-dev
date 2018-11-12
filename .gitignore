@@ -3,8 +3,15 @@ __pycache__
 tags
 *.pyc
 make-*
+make/*
 src/*
 !src/fetch-gerrit-patch.sh
 !src/gits
 !src/osmo-add-gerrit-hooks.sh
 !src/README
+net/*
+!net/tmpl_*
+!net/config_2g3g
+!net/common_*
+!net/README
+!net/fill_config.py
