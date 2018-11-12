@@ -103,7 +103,7 @@ def git_has_modifications(git_dir):
 
 
 def git_can_fast_forward(git_dir, branch='master', remote='origin'):
-    return git_bool(git_dir, 'merge-base', '--is-ancestor', 'HEAD', remote + '/' + branch)
+    return git_bool(git_dir, 'merge-base', '--is-ancestor', branch, remote + '/' + branch)
 
 
 def format_branch_ahead_behind(branch, ahead, behind):
