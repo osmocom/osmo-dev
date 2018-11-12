@@ -238,6 +238,18 @@ def ask(git_dir, *question, valid_answers=('*',)):
                 return answer
 
 
+def ask_reset_hard(git_dir):
+    do_reset = ask(git_dir, 'Diverged.',
+                   '%s: git reset --hard %s?' % (
+                       orig_branch, upstream_branch),
+                   '<empty>  no',
+                   'OK  yes (write OK in caps!)',
+                   valid_answers=('', 'OK'))
+
+    if do_reset == 'OK':
+        git(git_dir, 'reset', '--hard', upstream_branch)
+
+
 def rebase(git_dir):
     orig_branch = git_branch_current(git_dir)
     if orig_branch is None:
@@ -275,15 +287,7 @@ def rebase(git_dir):
 
     # Diverged
     elif ahead and behind:
-        do_reset = ask(git_dir, 'Diverged.',
-                       '%s: git reset --hard %s?' % (
-                           orig_branch, upstream_branch),
-                       '<empty>  no',
-                       'OK  yes (write OK in caps!)',
-                       valid_answers=('', 'OK'))
-
-        if do_reset == 'OK':
-            git(git_dir, 'reset', '--hard', upstream_branch)
+        ask_reset_hard(git_dir)
 
     # Behind
     elif behind:
@@ -311,13 +315,7 @@ def rebase(git_dir):
             git(git_dir, 'commit', '-am', 'wip', may_fail=True)
             git(git_dir, 'checkout', orig_branch)
 
-        do_reset = ask(git_dir, '%s: git reset --hard %s?' % (orig_branch, upstream_branch),
-                       '<empty>  no',
-                       'OK  yes (write OK in caps!)',
-                       valid_answers=('', 'OK'))
-
-        if do_reset == 'OK':
-            git(git_dir, 'reset', '--hard', upstream_branch)
+        ask_reset_hard(git_dir)
 
     return orig_branch
 
