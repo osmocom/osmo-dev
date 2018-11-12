@@ -238,16 +238,19 @@ def ask(git_dir, *question, valid_answers=('*',)):
                 return answer
 
 
-def ask_reset_hard(git_dir):
+def ask_reset_hard_or_push_f(git_dir):
     do_reset = ask(git_dir, 'Diverged.',
                    '%s: git reset --hard %s?' % (
                        orig_branch, upstream_branch),
                    '<empty>  no',
-                   'OK  yes (write OK in caps!)',
-                   valid_answers=('', 'OK'))
+                   'OK  yes, reset to upstream (write OK in caps!)',
+                   'P   `push -f` to overwrite upstream (P in caps!)',
+                   valid_answers=('', 'OK', 'P'))
 
     if do_reset == 'OK':
         git(git_dir, 'reset', '--hard', upstream_branch)
+    elif do_reset == 'P':
+        git(git_dir, 'push', '-f')
 
 
 def rebase(git_dir):
@@ -287,7 +290,7 @@ def rebase(git_dir):
 
     # Diverged
     elif ahead and behind:
-        ask_reset_hard(git_dir)
+        ask_reset_hard_or_push_f(git_dir)
 
     # Behind
     elif behind:
@@ -315,7 +318,7 @@ def rebase(git_dir):
             git(git_dir, 'commit', '-am', 'wip', may_fail=True)
             git(git_dir, 'checkout', orig_branch)
 
-        ask_reset_hard(git_dir)
+        ask_reset_hard_or_push_f(git_dir)
 
     return orig_branch
 
