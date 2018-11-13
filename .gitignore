@@ -4,8 +4,7 @@ tags
 *.pyc
 make-*
 src/*
-!src/g
-!src/e
-!src/st
-!src/s
+!src/fetch-gerrit-patch.sh
+!src/gits
+!src/osmo-add-gerrit-hooks.sh
 !src/README
