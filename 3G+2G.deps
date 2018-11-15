@@ -9,7 +9,7 @@ osmo-ggsn	libosmocore
 osmo-iuh	libosmo-sccp libasn1c
 osmo-hlr	libosmo-abis
 osmo-mgw	libosmo-netif
-osmo-msc	osmo-iuh osmo-mgw libsmpp34
+osmo-msc	osmo-iuh osmo-mgw libsmpp34 osmo-hlr
 osmo-bsc	libosmo-sccp osmo-mgw
 osmo-sgsn	osmo-iuh osmo-ggsn osmo-hlr
 osmo-sip-connector	libosmocore
