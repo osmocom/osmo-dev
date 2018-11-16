@@ -210,6 +210,10 @@ for tmpl_name in sorted(os.listdir(tmpl_dir)):
   if tmpl_name.startswith('.'):
     continue
 
+  # omit files to be included by other files
+  if tmpl_name.startswith('common_'):
+    continue
+
   tmpl_src = os.path.join(tmpl_dir, tmpl_name)
   dst = tmpl_name
 
