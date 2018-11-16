@@ -99,7 +99,7 @@ def git_branch_current(git_dir):
 
 
 def git_has_modifications(git_dir):
-    return not git_bool(git_dir, 'diff-index', '--quiet', 'HEAD')
+    return not git_bool(git_dir, 'diff', '--quiet', 'HEAD')
 
 
 def git_can_fast_forward(git_dir, branch='master', remote='origin'):
