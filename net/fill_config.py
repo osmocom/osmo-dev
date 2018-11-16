@@ -99,30 +99,109 @@ def check_stale(src_path, target_path):
     print('Stale: %r is newer than %r' % (src_path, target_path))
     exit(1)
 
-def insert_includes(tmpl, tmpl_dir, tmpl_src):
+def replace_vars(tmpl, tmpl_dir, tmpl_src, local_config, strict=True):
+    used_vars = set()
+    for m in replace_re.finditer(tmpl):
+      name = m.group(1)
+      if not name in local_config:
+        if strict:
+          print('Error: undefined var %r in %r' % (name, tmpl_src))
+          exit(1)
+        else:
+          continue
+      used_vars.add(name)
+
+    for var in used_vars:
+      tmpl = tmpl.replace('${%s}' % var, local_config.get(var))
+
+    return tmpl
+
+def insert_includes(tmpl, tmpl_dir, tmpl_src, local_config, arg):
+    include_path = os.path.join(tmpl_dir, arg)
+    if not os.path.isfile(include_path):
+      print('Error: included file does not exist: %r in %r' % (include_path, tmpl_src))
+      exit(1)
+    try:
+      incl = open(include_path).read()
+    except:
+      print('Cannot read %r for %r' % (include_path, tmpl_src))
+      raise
+    if args.check_stale:
+      check_stale(include_path, dst)
+
+    # recurse, to follow the paths that the included bits come from
+    incl = handle_commands(incl, os.path.dirname(include_path), include_path, local_config)
+
+    return tmpl.replace('${include(%s)}' % arg, incl)
+
+def insert_foreach(tmpl, tmpl_dir, tmpl_src, match, local_config, arg):
+
+    # figure out section to handle
+    start_span = match.span()
+
+    if tmpl[start_span[1]] == '\n':
+      start_span = (start_span[0], start_span[1] + 1)
+
+    end_str = '${foreach_end}\n'
+
+    end_at = tmpl.find(end_str, start_span[1])
+    if end_at < 0:
+      end_str = end_str[:-1]
+      end_at = tmpl.find(end_str, start_span[1])
+
+    if end_at < 0:
+      raise Exception('%r: unmatched %r' % (tmpl_src, match.string))
+
+    end_span = (end_at, end_at + len(end_str))
+
+    before_block = tmpl[:start_span[0]]
+    foreach_block = tmpl[start_span[1]:end_span[0]]
+    after_block = tmpl[end_span[1]:]
+
+    # figure out what items matching the foreach(FOO<number>) there are
+    item_re = re.compile('(^%s([0-9]+))_.*' % arg)
+    items = set()
+    for item in local_config.keys():
+      item_m = item_re.match(item)
+      if not item_m:
+        continue
+      items.add((item_m.group(1), item_m.group(2)))
+
+    items = sorted(list(items))
+
+    expanded = [before_block]
+    for item, nr in items:
+      expanded_block = foreach_block
+
+      while True:
+        expanded_block_was = expanded_block
+
+        expanded_block = expanded_block.replace('${%sn_' % arg, '${%s_' % item)
+        expanded_block = expanded_block.replace('${%sn}' % arg, nr)
+        expanded_block = replace_vars(expanded_block, tmpl_dir, tmpl_src, local_config)
+
+        if expanded_block_was == expanded_block:
+          break
+
+      expanded.append(expanded_block)
+
+    expanded.extend(after_block)
+    return ''.join(expanded)
+
+def handle_commands(tmpl, tmpl_dir, tmpl_src, local_config):
+    handled = 0
     for m in command_re.finditer(tmpl):
+      handled += 1
       cmd = m.group(1)
       arg = m.group(2)
       if cmd == 'include':
-        include_path = os.path.join(tmpl_dir, arg)
-        if not os.path.isfile(include_path):
-          print('Error: included file does not exist: %r in %r' % (include_path, tmpl_src))
-          exit(1)
-        try:
-          incl = open(include_path).read()
-        except:
-          print('Cannot read %r for %r' % (include_path, tmpl_src))
-          raise
-        if args.check_stale:
-          check_stale(include_path, dst)
-
-        # recurse, to follow the paths that the included bits come from
-        incl = insert_includes(incl, os.path.dirname(include_path), include_path)
-
-        tmpl = tmpl.replace('${%s(%s)}' % (cmd, arg), incl)
+        tmpl = insert_includes(tmpl, tmpl_dir, tmpl_src, local_config, arg)
+      elif cmd == 'foreach':
+        tmpl = insert_foreach(tmpl, tmpl_dir, tmpl_src, m, local_config, arg)
       else:
         print('Error: unknown command: %r in %r' % (cmd, tmpl_src))
         exit(1)
+
     return tmpl
 
 for tmpl_name in sorted(os.listdir(tmpl_dir)):
@@ -151,22 +230,11 @@ for tmpl_name in sorted(os.listdir(tmpl_dir)):
     raise
 
   while True:
-    used_vars = set()
-
-    result = insert_includes(result, tmpl_dir, tmpl_src)
-
-    for m in replace_re.finditer(result):
-      name = m.group(1)
-      if not name in local_config:
-        print('Error: undefined var %r in %r' % (name, tmpl_src))
-        exit(1)
-      used_vars.add(name)
-
-    if not used_vars:
+    result_was = result
+    result = handle_commands(result, tmpl_dir, tmpl_src, local_config)
+    result = replace_vars(result, tmpl_dir, tmpl_src, local_config)
+    if result_was == result:
       break
-
-    for var in used_vars:
-      result = result.replace('${%s}' % var, local_config.get(var))
 
   if not args.check_stale:
     with open(dst, 'w') as dst_file:
