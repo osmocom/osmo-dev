@@ -79,6 +79,13 @@ It is also easily possible to keep sources and build trees in various
 configurations, see the command line options of ./gen_makefile.py.
 
 
+=== Install in /usr
+
+By default, the Osmocom install prefix is /usr/local, while (currently) the
+default systemd *.service files expect binaries installed in /usr/bin. To
+install in /usr instead, use prefix_usr.opts, which sets --prefix=/usr.
+
+
 === Build Environment
 
 For dependencies, see the "External dependencies" on:
