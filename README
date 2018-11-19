@@ -86,6 +86,19 @@ default systemd *.service files expect binaries installed in /usr/bin. To
 install in /usr instead, use prefix_usr.opts, which sets --prefix=/usr.
 
 
+=== Systemd Service Files
+
+If you encounter problems installing *.service files, no_systemd.opts may help:
+
+Systemd recommends installing service files in the distribution's single
+service file location; that may sound sane, but if that location is
+/lib/systemd/system, that means even a --prefix=/home/private/prefix ends up
+trying to install service files system-wide in /lib/systemd/system, making all
+attempts to install to a user-writable location fail.
+
+no_systemd.opts disables installing *.service files.
+
+
 === Build Environment
 
 For dependencies, see the "External dependencies" on:
