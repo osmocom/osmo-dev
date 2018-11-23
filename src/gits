@@ -238,7 +238,7 @@ def ask(git_dir, *question, valid_answers=('*',)):
                 return answer
 
 
-def ask_reset_hard_or_push_f(git_dir):
+def ask_reset_hard_or_push_f(git_dir, orig_branch, upstream_branch):
     do_reset = ask(git_dir, 'Diverged.',
                    '%s: git reset --hard %s?' % (
                        orig_branch, upstream_branch),
@@ -290,7 +290,7 @@ def rebase(git_dir):
 
     # Diverged
     elif ahead and behind:
-        ask_reset_hard_or_push_f(git_dir)
+        ask_reset_hard_or_push_f(git_dir, orig_branch, upstream_branch)
 
     # Behind
     elif behind:
@@ -318,7 +318,7 @@ def rebase(git_dir):
             git(git_dir, 'commit', '-am', 'wip', may_fail=True)
             git(git_dir, 'checkout', orig_branch)
 
-        ask_reset_hard_or_push_f(git_dir)
+        ask_reset_hard_or_push_f(git_dir, orig_branch, upstream_branch)
 
     return orig_branch
 
