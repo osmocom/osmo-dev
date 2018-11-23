@@ -8,8 +8,12 @@ rm -rf $prefix/lib/libmtp.*
 rm -rf $prefix/lib/libosmo*
 rm -rf $prefix/lib/libsccp.*
 rm -rf $prefix/lib/libsmpp34*
-rm -rf $prefix/lib/libxua.*
-rm -rf $prefix/lib/pkgconfig/
+rm -rf $prefix/lib/pkgconfig/libasn1c*
+rm -rf $prefix/lib/pkgconfig/libgtp.*
+rm -rf $prefix/lib/pkgconfig/libmtp.*
+rm -rf $prefix/lib/pkgconfig/libosmo*
+rm -rf $prefix/lib/pkgconfig/libsccp.*
+rm -rf $prefix/lib/pkgconfig/libsmpp34*
 rm -rf $prefix/include/asn1c/
 rm -rf $prefix/include/gtp.h
 rm -rf $prefix/include/gtpie.h
