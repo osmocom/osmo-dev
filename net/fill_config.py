@@ -150,7 +150,7 @@ def insert_foreach(tmpl, tmpl_dir, tmpl_src, match, local_config, arg):
       end_at = tmpl.find(end_str, start_span[1])
 
     if end_at < 0:
-      raise Exception('%r: unmatched %r' % (tmpl_src, match.string))
+      raise Exception('%r: ${for_each()} expects %r in %r' % (tmpl_src, end_str, tmpl[start_span[1]:]))
 
     end_span = (end_at, end_at + len(end_str))
 
