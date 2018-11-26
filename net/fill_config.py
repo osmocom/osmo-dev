@@ -189,9 +189,12 @@ def insert_foreach(tmpl, tmpl_dir, tmpl_src, match, local_config, arg):
     return ''.join(expanded)
 
 def handle_commands(tmpl, tmpl_dir, tmpl_src, local_config):
-    handled = 0
-    for m in command_re.finditer(tmpl):
-      handled += 1
+    while True:
+      # make sure to re-run the regex after each expansion to get proper string
+      # offsets each time
+      m = command_re.search(tmpl)
+      if not m:
+        break;
       cmd = m.group(1)
       arg = m.group(2)
       if cmd == 'include':
@@ -201,6 +204,9 @@ def handle_commands(tmpl, tmpl_dir, tmpl_src, local_config):
       else:
         print('Error: unknown command: %r in %r' % (cmd, tmpl_src))
         exit(1)
+
+      # There was some command expansion. Go again.
+      continue
 
     return tmpl
 
