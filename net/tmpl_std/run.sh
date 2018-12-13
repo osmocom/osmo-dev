@@ -67,7 +67,7 @@ mgw4msc="osmo-mgw -c osmo-mgw-for-msc.cfg"
 #mgw4bsc="gdb -ex run --args osmo-mgw -c osmo-mgw-for-bsc.cfg"
 #mgw4bsc="strace osmo-mgw -c osmo-mgw-for-bsc.cfg"
 mgw4bsc="osmo-mgw -c osmo-mgw-for-bsc.cfg"
-hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr"
+hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
 stp="osmo-stp"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
 
