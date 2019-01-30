@@ -96,6 +96,7 @@ idx = 0
 
 def check_stale(src_path, target_path):
   if file_newer(src_path, target_path):
+    print()
     print('Stale: %r is newer than %r' % (src_path, target_path))
     exit(1)
 

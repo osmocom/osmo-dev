@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
-../fill_config.py --check-stale || ( echo "STALE CONFIGS. Hit enter to continue anyway."; read enter_to_continue )
+
+if ! ../fill_config.py --check-stale; then
+	echo
+	echo "WARNING: STALE CONFIGS - your net configs are older than the templates they should be based on!"
+	echo " * Hit enter to continue, and use the stale config files"
+	echo " * Hit ^C and run 'make regen' to regenerate your configs"
+	read enter_to_continue
+fi
 
 dev="${ETH_DEV}"
 ip2="${PUBLIC_IP2}"
