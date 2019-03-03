@@ -1,0 +1,8 @@
+stats reporter statsd
+ disable
+ remote-ip ${STATSD_IP}
+ remote-port 9125
+ level global
+ no prefix
+ enable
+stats interval 5

@@ -9,7 +9,6 @@ if ! ../fill_config.py --check-stale; then
 fi
 
 dev="${ETH_DEV}"
-ip2="${PUBLIC_IP2}"
 apn="${APN_DEV}"
 
 sudo true || exit 1
@@ -28,14 +27,14 @@ if [ -z "$(ip tuntap show | grep $apn)" ]; then
   sudo ip link set $apn up
 fi
 
-if [ -z "$(ip addr show | grep "$PUBLIC_IP")" ]; then
-  echo "No interface has IP address $PUBLIC_IP! Hit enter to continue anyway."
+if [ -z "$(ip addr show | grep "$TO_RAN_IP")" ]; then
+  echo "No interface has IP address $TO_RAN_IP! Hit enter to continue anyway."
   read enter_to_continue
 fi
-if [ -z "$(ip addr show | grep "$ip2")" ]; then
-  echo "No interface has IP address $ip2! Hit enter to 'ip addr add $ip2/32 dev $dev'"
+if [ -z "$(ip addr show | grep "$TO_RAN_IU_IP")" ]; then
+  echo "No interface has IP address $TO_RAN_IU_IP! Hit enter to 'ip addr add $TO_RAN_IU_IP/32 dev $dev'"
   read enter_to_continue
-  sudo ip addr add $ip2/32 dev $dev
+  sudo ip addr add $TO_RAN_IU_IP/32 dev $dev
 fi
 
 logdir="current_log"
@@ -78,14 +77,14 @@ hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
 stp="osmo-stp"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
 
-if [ "${SIPCON_ENABLE}" == "true" ]; then
+if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
   msc="$msc -M ${MSC_MNCC_SOCKET}"
 
   # Require kamailio (PATH hack is needed for Debian)
   kamailio="$(PATH="$PATH:/usr/sbin:/sbin" which kamailio)"
   if [ -z "$kamailio" ]; then
-    echo "ERROR: kamailio is not installed, but it's required for SIPCON_ENABLE."
+    echo "ERROR: kamailio is not installed, but it's required for external MNCC."
     echo "After installing it, make sure that it does *not* run as daemon."
     exit 1
   fi
@@ -115,7 +114,7 @@ term "$hnbgw" HNBGW &
 sleep .2
 term "$bsc" BSC &
 
-if [ "${SIPCON_ENABLE}" == "true" ]; then
+if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sleep .2
   term "$sipcon" SIPCON &
   sleep .2
@@ -129,7 +128,7 @@ echo enter to close
 read enter_to_close
 echo Closing...
 
-if [ "${SIPCON_ENABLE}" == "true" ]; then
+if [ "x${MSC_MNCC}" != "xinternal" ]; then
   kill %13 %14
   killall osmo-sip-connector
   killall kamailio

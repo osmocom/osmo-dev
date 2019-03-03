@@ -16,7 +16,7 @@ $EDITOR config_mine
 
 mkdir my_network
 cd my_network
-../fill_config.py ../config_mine ../tmpl_std
+../fill_config.py ../config_mine ../templates
 
 ./run.sh
 # Launches numerous x-terminals with one component running in each.
@@ -31,27 +31,27 @@ Then possibly modify the config and refresh:
 # tweak config?
 $EDITOR ../config_mine
 ../fill_config.py
-# picks up same ../config_mine and ../tmpl_std from last time
+# picks up same ../config_mine and ../templates from last time
 
 # own templates?
-cp -r ../tmpl_std ../tmpl_mine
-$EDITOR ../tmpl_mine/*
-../fill_config.py ../tmpl_mine
-# picks up same ../config_mine from last time, and ../tmpl_mine from cmdline
+cp -r ../templates ../templates_mine
+$EDITOR ../templates_mine/*
+../fill_config.py ../templates_mine
+# picks up same ../config_mine from last time, and ../templates_mine from cmdline
 
 
 If you wanted to change to dynamic timeslots, you can:
 
 cd ..
-mkdir tmpl_dyn
-cd tmpl_dyn
-ln -s ../tmpl_std/* .
+mkdir templates_dyn
+cd templates_dyn
+ln -s ../templates/* .
 rm ./osmo-bsc.cfg
-cp ../tmpl_std/osmo-bsc.cfg .
+cp ../templates/osmo-bsc.cfg .
 sed -i 's#TCH/F#TCH/F_TCH/H_PDCH#' osmo-bsc.cfg
 
 cd ../my_network
-../fill_config.py ../tmpl_dyn
+../fill_config.py ../templates_dyn
 
 
 If you moved your laptop to a different location, you can:
@@ -64,7 +64,7 @@ $EDITOR ../config_foo  # set new IP address(es)
 === Config file templates
 
 A *directory* contains template files that are filled with specific values by the
-fill_config.py script. See e.g. tmpl_std/.
+fill_config.py script. See e.g. templates/.
 
 A *file* contains local config items as name=val pairs that are put into the
 templates. See e.g. config_2g3g.
@@ -83,7 +83,7 @@ network config.
 
 === Launch
 
-A run.sh script template (tmpl_std/run.sh) also gets filled with specifics and
+A run.sh script template (templates/run.sh) also gets filled with specifics and
 placed next to the .cfg files.
 
 run.sh uses sudo to start tcpdump, configure ip forwarding and masquerading
