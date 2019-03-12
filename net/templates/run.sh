@@ -73,6 +73,7 @@ hnbgw="osmo-hnbgw"
 #   will not show in osmo-msc.log
 #msc="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/path/to/udtrace/libudtrace.so osmo-msc 2>&1 | tee -a current_log/osmo-msc.out"
 msc="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/n/s/udtrace/libudtrace.so osmo-msc 2>&1 | tee -a current_log/osmo-msc.out"
+msc2="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/n/s/udtrace/libudtrace.so osmo-msc -c osmo-msc2.cfg 2>&1 | tee -a current_log/osmo-msc2.out"
 gbproxy="osmo-gbproxy"
 sgsn="osmo-sgsn"
 ggsn="osmo-ggsn"
@@ -80,9 +81,11 @@ mgw4msc="osmo-mgw -c osmo-mgw-for-msc.cfg"
 #mgw4bsc="gdb -ex run --args osmo-mgw -c osmo-mgw-for-bsc.cfg"
 #mgw4bsc="strace osmo-mgw -c osmo-mgw-for-bsc.cfg"
 mgw4bsc="osmo-mgw -c osmo-mgw-for-bsc.cfg"
-hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
+hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade -c osmo-hlr.cfg"
+#hlr2="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade -c osmo-hlr2.cfg"
 stp="osmo-stp"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
+bsc2="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc2.cfg"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
@@ -97,6 +100,10 @@ if [ "x${MSC_MNCC}" != "xinternal" ]; then
   kamailio="$kamailio -f kamailio.cfg -D -e -E"
 fi
 
+if [ "x${MSC2_MNCC}" != "xinternal" ]; then
+  sipcon2="osmo-sip-connector -c osmo-sip-connector2.cfg"
+fi
+
 sudo tcpdump -i $dev -n -w current_log/$dev.single.pcap -U not port 22 &
 sudo tcpdump -i lo -n -w current_log/lo.single.pcap -U not port 22 &
 
@@ -106,6 +113,8 @@ term "$stp" STP &
 sleep .2
 term "$hlr" HLR &
 sleep .2
+#term "$hlr2" HLR2 &
+#sleep .2
 term "$sgsn" SGSN &
 sleep .2
 term "$gbproxy" GBPROXY &
@@ -116,15 +125,24 @@ term "$mgw4bsc" MGW4BSC &
 sleep .2
 term "$msc" MSC &
 sleep 2
+term "$msc2" MSC2 &
+sleep 2
 term "$hnbgw" HNBGW &
 sleep .2
 term "$bsc" BSC &
+sleep .2
+term "$bsc2" BSC2 &
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sleep .2
   term "$sipcon" SIPCON &
   sleep .2
   term "$kamailio" KAMAILIO &
+fi
+
+if [ "x${MSC2_MNCC}" != "xinternal" ]; then
+  sleep .2
+  term "$sipcon2" SIPCON2 &
 fi
 
 #ssh bts rm /tmp/bts.log /tmp/pcu.log
@@ -136,7 +154,7 @@ echo Closing...
 
 #ssh bts neels/stop_remote.sh
 
-kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14
+kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15 %16 %17
 killall osmo-msc
 killall osmo-bsc
 killall osmo-gbproxy
