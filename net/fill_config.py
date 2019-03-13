@@ -234,6 +234,22 @@ for tmpl_name in sorted(os.listdir(tmpl_dir)):
   idx += 1
   local_config['_idx1'] = str(idx)
 
+  # If there are ${FOOn} in the value of a variable called FOO23_SOMETHING,
+  # then replace that n by 23. This happens automatically in ${foreach} blocks,
+  # but doing this also allows expanding the n outside of ${foreach}.
+  for key, val in local_config.items():
+    foo_n_re = re.compile('\$\{([A-Za-z0-9_]*)n[_}]')
+    for m in foo_n_re.finditer(val):
+      name = m.group(1)
+      item_re = re.compile('^%s([0-9]+)_.*' % name)
+      item_m = item_re.match(key)
+      if not item_m:
+        continue
+      nr_in_key = item_m.group(1)
+      val = val.replace('${%sn}' % name, nr_in_key)
+      val = val.replace('${%sn_' % name, '${%s%s_' % (name, nr_in_key))
+    local_config[key] = val
+
   try:
     result = open(tmpl_src).read()
   except:
