@@ -27,14 +27,14 @@ if [ -z "$(ip tuntap show | grep $apn)" ]; then
   sudo ip link set $apn up
 fi
 
-if [ -z "$(ip addr show | grep "$TO_RAN_IP")" ]; then
-  echo "No interface has IP address $TO_RAN_IP! Hit enter to continue anyway."
+if [ -z "$(ip addr show | grep "${TO_RAN_IP}")" ]; then
+  echo "No interface has IP address ${TO_RAN_IP}! Hit enter to continue anyway."
   read enter_to_continue
 fi
-if [ -z "$(ip addr show | grep "$TO_RAN_IU_IP")" ]; then
-  echo "No interface has IP address $TO_RAN_IU_IP! Hit enter to 'ip addr add $TO_RAN_IU_IP/32 dev $dev'"
+if [ -z "$(ip addr show | grep "${TO_RAN_IU_IP}")" ]; then
+  echo "No interface has IP address ${TO_RAN_IU_IP}! Hit enter to 'ip addr add ${TO_RAN_IU_IP}/32 dev $dev'"
   read enter_to_continue
-  sudo ip addr add $TO_RAN_IU_IP/32 dev $dev
+  sudo ip addr add ${TO_RAN_IU_IP}/32 dev $dev
 fi
 
 logdir="current_log"
