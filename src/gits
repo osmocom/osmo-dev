@@ -261,7 +261,7 @@ def rebase(git_dir):
 
     upstream_branch = git_branch_upstream(git_dir, orig_branch)
 
-    print('Rebasing %r onto %r' % (orig_branch, upstream_branch))
+    print('Checking for rebase of %r onto %r' % (orig_branch, upstream_branch))
     ahead, behind = git_ahead_behind(git_dir, orig_branch, upstream_branch)
 
     if git_has_modifications(git_dir):
