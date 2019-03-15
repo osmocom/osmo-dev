@@ -320,6 +320,30 @@ def rebase(git_dir):
 
         ask_reset_hard_or_push_f(git_dir, orig_branch, upstream_branch)
 
+    if git_has_modifications(git_dir):
+        raise SkipThisRepo()
+
+    # Rebase onto origin/master? Only when this isn't already the master branch
+    if upstream_branch != 'origin/master':
+        ahead, behind = git_ahead_behind(git_dir, orig_branch, 'origin/master')
+
+        if ahead and behind:
+            do_rebase = ask(git_dir, '%r diverged from master. git rebase -i origin/master?' % orig_branch,
+                            "<empty>  don't rebase",
+                            'ok  rebase onto origin/master',
+                            valid_answers=('', 'ok'))
+
+            if do_rebase == 'ok':
+                git(git_dir, 'rebase', '-i', 'origin/master')
+                # On conflicts, we'll exit with error implicitly
+
+                do_push = ask(git_dir, 'git push -f to overwrite %r?' % upstream_branch,
+                              "<empty>  don't overwrite upstream",
+                              'P   `push -f` to overwrite upstream (P in caps!)',
+                              valid_answers=('', 'P'))
+                if do_push == 'P':
+                    git(git_dir, 'push', '-f')
+
     return orig_branch
 
 
