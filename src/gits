@@ -337,12 +337,13 @@ def rebase(git_dir):
                 git(git_dir, 'rebase', '-i', 'origin/master')
                 # On conflicts, we'll exit with error implicitly
 
-                do_push = ask(git_dir, 'git push -f to overwrite %r?' % upstream_branch,
-                              "<empty>  don't overwrite upstream",
-                              'P   `push -f` to overwrite upstream (P in caps!)',
-                              valid_answers=('', 'P'))
-                if do_push == 'P':
-                    git(git_dir, 'push', '-f')
+                if upstream_branch is not None:
+                    do_push = ask(git_dir, 'git push -f to overwrite %r?' % upstream_branch,
+                                  "<empty>  don't overwrite upstream",
+                                  'P   `push -f` to overwrite upstream (P in caps!)',
+                                  valid_answers=('', 'P'))
+                    if do_push == 'P':
+                        git(git_dir, 'push', '-f')
 
     return orig_branch
 
