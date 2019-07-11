@@ -167,7 +167,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
   return r'''
 ### {proj} ###
 
-{proj}_configure_files := $(shell find {src_proj} -name "Makefile.am" -or -name "*.in" -and -not -name "Makefile.in" )
+{proj}_configure_files := $(shell find {src_proj} -name "Makefile.am" -or -name "*.in" -and -not -name "Makefile.in" -and -not -name "config.h.in" )
 {proj}_files := $(shell find {src_proj} -name "*.[hc]" -or -name "*.py" -or -name "*.cpp" -or -name "*.tpl" -or -name "*.map")
 
 .make.{proj}.clone:
