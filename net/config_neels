@@ -57,8 +57,8 @@ HLR_IP=127.0.0.1
 
 MSC_PC="0.23.1"
 MSC_MNCC_SOCKET="/tmp/mncc_socket"
-MSC_MNCC="internal"
-# MSC_MNCC="external ${MSC_MNCC_SOCKET}"
+#MSC_MNCC="internal"
+MSC_MNCC="external ${MSC_MNCC_SOCKET}"
 
 AUTH=required
 ENCR_A5=3
