@@ -133,15 +133,9 @@ echo enter to close
 read enter_to_close
 echo Closing...
 
-if [ "x${MSC_MNCC}" != "xinternal" ]; then
-  kill %13 %14
-  killall osmo-sip-connector
-  killall kamailio
-fi
-
 #ssh bts neels/stop_remote.sh
 
-kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12
+kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14
 killall osmo-msc
 killall osmo-bsc
 killall osmo-gbproxy
@@ -152,6 +146,13 @@ killall osmo-hlr
 killall -9 osmo-stp
 sudo killall tcpdump
 killall osmo-ggsn
+
+if [ "x${MSC_MNCC}" != "xinternal" ]; then
+  # 'killall' seems to work only with the shortened name
+  killall osmo-sip-connec
+  killall kamailio
+fi
+
 
 set +e
 cp *.cfg "$logdir"/
