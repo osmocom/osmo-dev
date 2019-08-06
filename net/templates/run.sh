@@ -66,6 +66,12 @@ find_term
 
 hnbgw="osmo-hnbgw"
 msc="gdb -ex run --args $(which osmo-msc)"
+# To enable udtrace on osmo-msc MNCC socket, use this with adjusted /path/to/udtrace:
+# - LD_LIBRARY_PATH allows linking to titan if udtrace was compiled with titan support.
+# - LD_PRELOAD of libasan allows building osmo-msc with the sanitize.opts.
+# - the tee saves the stderr logging as well as the udtrace output to new file current_log/osmo-msc.out, since udtrace
+#   will not show in osmo-msc.log
+#msc="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/path/to/udtrace/libudtrace.so osmo-msc 2>&1 | tee -a current_log/osmo-msc.out"
 gbproxy="osmo-gbproxy"
 sgsn="osmo-sgsn"
 ggsn="osmo-ggsn"
