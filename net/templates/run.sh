@@ -85,7 +85,6 @@ bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
-  msc="$msc -M ${MSC_MNCC_SOCKET}"
 
   # Require kamailio (PATH hack is needed for Debian)
   kamailio="$(PATH="$PATH:/usr/sbin:/sbin" which kamailio)"
