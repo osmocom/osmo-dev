@@ -71,7 +71,7 @@ hnbgw="osmo-hnbgw"
 # - LD_PRELOAD of libasan allows building osmo-msc with the sanitize.opts.
 # - the tee saves the stderr logging as well as the udtrace output to new file current_log/osmo-msc.out, since udtrace
 #   will not show in osmo-msc.log
-msc="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/path/to/udtrace/libudtrace.so osmo-msc 2>&1 | tee -a current_log/osmo-msc.out"
+msc="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/n/s/udtrace/libudtrace.so osmo-msc 2>&1 | tee -a current_log/osmo-msc.out"
 gbproxy="osmo-gbproxy"
 sgsn="osmo-sgsn"
 ggsn="osmo-ggsn"
