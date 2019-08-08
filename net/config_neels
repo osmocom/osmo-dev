@@ -2,8 +2,8 @@ ETH_DEV=eth0
 APN_DEV=apn0
 
 TO_RAN_IP="192.168.178.74"
-TO_RAN_IU_IP="192.168.178.66"
-TO_SIP_IP=${TO_RAN_IP}
+TO_RAN_IU_IP="192.168.178.82"
+TO_SIP_IP=172.20.2.4
 
 STATSD_IP="127.0.0.1"
 
@@ -83,7 +83,7 @@ MGW4BSC_VTY_IP="127.0.0.2"
 
 BSC_IP="${TO_RAN_IP}"
 BSC_PC="0.23.3"
-BSC_CODEC_LIST="fr3 fr2 fr1 hr3 hr1"
+BSC_CODEC_LIST="fr1 hr1"
 
 HNBGW_PC="0.3.0"
 HNBGW_IP="${TO_RAN_IP}"
@@ -109,13 +109,13 @@ GGSN_GTP_STATE_DIR=/tmp
 # Enabled only when MSC_MNCC != "internal"
 SIPCON_LOCAL="${TO_SIP_IP}"
 SIPCON_LOCAL_PORT="5060"
-SIPCON_REMOTE="${TO_SIP_IP}"
+SIPCON_REMOTE="172.20.1.10"
 SIPCON_REMOTE_PORT="5069"
 # SIPCON_SERVER:
 #  "kamailio" -- launch kamailio
 #  "freeswitch" -- launch freeswitch
 #  "none" -- launch no server, use remotely running SIP server
-SIPCON_SERVER="kamailio"
+SIPCON_SERVER="none"
 
 LOG_OUTPUT0_TYPE=stderr
 LOG_OUTPUT1_TYPE=file current_log/${_name}.log
