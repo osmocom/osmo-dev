@@ -166,19 +166,19 @@ def insert_foreach(tmpl, tmpl_dir, tmpl_src, match, local_config, arg):
       item_m = item_re.match(item)
       if not item_m:
         continue
-      items.add((item_m.group(1), item_m.group(2)))
+      items.add((int(item_m.group(2)), item_m.group(1)))
 
     items = sorted(list(items))
 
     expanded = [before_block]
-    for item, nr in items:
+    for nr, item in items:
       expanded_block = foreach_block
 
       while True:
         expanded_block_was = expanded_block
 
         expanded_block = expanded_block.replace('${%sn_' % arg, '${%s_' % item)
-        expanded_block = expanded_block.replace('${%sn}' % arg, nr)
+        expanded_block = expanded_block.replace('${%sn}' % arg, str(nr))
         expanded_block = replace_vars(expanded_block, tmpl_dir, tmpl_src, local_config)
 
         if expanded_block_was == expanded_block:
