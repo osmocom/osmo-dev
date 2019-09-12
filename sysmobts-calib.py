@@ -17,6 +17,8 @@ import subprocess
 import re
 import shlex
 import argparse
+import select
+import time
 
 calib_val_re = re.compile(r'clock-calibration +([0-9]+)')
 result_re = re.compile('The calibration value is: ([0-9]*)')
@@ -47,6 +49,26 @@ def call_output(*cmd):
     p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     o,e = p.communicate()
     return o.decode('utf-8')
+
+#    # read the command and echo nonblocking
+#    p_select = select.poll()
+#    p_select.register(p.stdout, select.POLLIN)
+#
+#    o = []
+#
+#    while True:
+#      if p_select.poll(1):
+#         if p.stdout.readable:
+#             output = p.stdout.readline().decode('utf-8')
+#             o.append(output)
+#             sys.stdout.write(output)
+#             sys.stdout.flush()
+#      else:
+#         time.sleep(.25)
+#      if p.poll() is not None:
+#        break
+#
+#    return ''.join(o)
 
 def call(*cmd):
     o = call_output(*cmd)
