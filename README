@@ -132,6 +132,26 @@ default is /usr/local.
 Find other useful scripts in src/, see src/README.
 
 
+=== ttcn3.sh
+
+Clone and build all dependencies, then run a given TTCN-3 testsuite and all
+required components. This is intended to make test-cycles as short as possible,
+without any manual configuration effort and without the need to rebuild the
+entire testsuite, SUT (subject under test, e.g. osmo-mgw) and dependencies from
+scratch for each code change. Instead, ttcn3.sh will make use of osmo-dev's
+generated global makefile and only build what actually changed.
+
+Example usage:
+
+  ./ttcn3.sh mgw
+
+Note that not all testsuites are supported at this point, see the output of
+ttcn3.sh without any argument for more information.
+
+More about the testsuites:
+https://osmocom.org/projects/cellular-infrastructure/wiki/Titan_TTCN3_Testsuites
+
+
 === Troubleshooting
 
 When using sanitize.opts, osmo-trx is not built with the address sanitizer

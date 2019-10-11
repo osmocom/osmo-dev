@@ -14,3 +14,9 @@ net/*
 !net/config_2g3g
 !net/README
 !net/fill_config.py
+
+# ttcn3.sh
+ttcn3_out/
+3G+2G_ttcn3.deps
+!src/fake_trx.sh
+!src/osmo-*-respawn.sh
