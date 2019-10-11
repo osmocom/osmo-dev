@@ -14,3 +14,6 @@ net/*
 !net/config_2g3g
 !net/README
 !net/fill_config.py
+ttcn3/3G+2G_ttcn3.deps
+ttcn3/out/
+ttcn3/make/
