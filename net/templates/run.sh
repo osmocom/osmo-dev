@@ -80,6 +80,7 @@ mgw4msc="osmo-mgw -c osmo-mgw-for-msc.cfg"
 #mgw4bsc="strace osmo-mgw -c osmo-mgw-for-bsc.cfg"
 mgw4bsc="osmo-mgw -c osmo-mgw-for-bsc.cfg"
 hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
+hlr_proxy="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade -c osmo-hlr-proxy.cfg --database hlr-proxy.db"
 stp="osmo-stp"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
 
@@ -123,6 +124,8 @@ term "$stp" STP &
 sleep .2
 term "$hlr" HLR &
 sleep .2
+term "$hlr_proxy" HLRproxy &
+sleep .2
 term "$sgsn" SGSN &
 sleep .2
 term "$gbproxy" GBPROXY &
@@ -156,7 +159,8 @@ echo Closing...
 
 #ssh bts neels/stop_remote.sh
 
-kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14
+jobs
+kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15
 killall osmo-msc
 killall osmo-bsc
 killall osmo-gbproxy
