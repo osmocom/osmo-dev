@@ -148,8 +148,7 @@ sudo killall tcpdump
 killall osmo-ggsn
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
-  # 'killall' seems to work only with the shortened name
-  killall osmo-sip-connec
+  killall osmo-sip-connector
   killall kamailio
 fi
 
