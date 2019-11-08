@@ -86,14 +86,32 @@ bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
 
-  # Require kamailio (PATH hack is needed for Debian)
-  kamailio="$(PATH="$PATH:/usr/sbin:/sbin" which kamailio)"
-  if [ -z "$kamailio" ]; then
-    echo "ERROR: kamailio is not installed, but it's required for external MNCC."
-    echo "After installing it, make sure that it does *not* run as daemon."
-    exit 1
-  fi
-  kamailio="$kamailio -f kamailio.cfg -D -e -E"
+  case "${SIPCON_SERVER}" in
+    "kamailio")
+      # Require kamailio (PATH hack is needed for Debian)
+      kamailio="$(PATH="$PATH:/usr/sbin:/sbin" which kamailio)"
+      if [ -z "$kamailio" ]; then
+        echo "ERROR: kamailio is not installed."
+        echo "After installing it, make sure that it does *not* run as daemon."
+        exit 1
+      fi
+      kamailio="$kamailio -f kamailio.cfg -D -e -E"
+      ;;
+   "freeswitch")
+      if [ -z "$(which freeswitch)" ]; then
+        echo "ERROR: freeswitch is not installed."
+        echo "Guide: https://freeswitch.org/confluence/display/FREESWITCH/Debian+10+Buster"
+        echo "After installing it, make sure that it does *not* run as daemon."
+        exit 1
+      fi
+      ;;
+   "none")
+      ;;
+   *)
+     echo "ERROR: unknown value "${SIPCON_SERVER}" for SIPCON_SERVER!"
+     exit 1
+     ;;
+  esac
 fi
 
 sudo tcpdump -i $dev -n -w current_log/$dev.single.pcap -U not port 22 &
@@ -123,7 +141,10 @@ if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sleep .2
   term "$sipcon" SIPCON &
   sleep .2
-  term "$kamailio" KAMAILIO &
+  case "${SIPCON_SERVER}" in
+    "kamailio") term "$kamailio" KAMAILIO &;;
+    "freeswitch") term "./freeswitch/freeswitch.sh" FREESWITCH &;;
+  esac
 fi
 
 #ssh bts rm /tmp/bts.log /tmp/pcu.log
@@ -150,7 +171,7 @@ killall osmo-ggsn
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   # 'killall' seems to work only with the shortened name
   killall osmo-sip-connec
-  killall kamailio
+  killall "${SIPCON_SERVER}"
 fi
 
 

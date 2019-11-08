@@ -1,0 +1,7 @@
+*
+!*/
+!.gitignore
+!conf/**
+!python/**
+!/freeswitch.sh
+__pycache__

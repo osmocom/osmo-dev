@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<include>
+  <context name="public">
+    <extension name="dialplan-dgsm">
+      <condition field="to" expression="^(.*)$">
+        <action application="python" data="dialplan-dgsm"/>
+      </condition>
+    </extension>
+  </context>
+</include>
