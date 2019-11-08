@@ -224,6 +224,13 @@ for tmpl_name in sorted(os.listdir(tmpl_dir)):
   tmpl_src = os.path.join(tmpl_dir, tmpl_name)
   dst = tmpl_name
 
+  # subdirectories: must not contain config files, just copy them
+  if os.path.isdir(tmpl_src):
+    if os.path.exists(dst) and os.path.isdir(dst):
+      shutil.rmtree(dst)
+    shutil.copytree(tmpl_src, dst)
+    continue
+
   if args.check_stale:
     check_stale(local_config_file, dst)
     check_stale(tmpl_src, dst)
