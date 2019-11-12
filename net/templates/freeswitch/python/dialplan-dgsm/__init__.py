@@ -10,12 +10,13 @@ def handler(session, args):
 	print('[dialplan-dgsm] result: ' + str(result))
 
 	# This example only makes use of IPv4
-	if not result["v4"]:
-		print("[dialplan-dgsm] no IPv4 result from mslookup")
-		self.session.hangup('UNALLOCATED_NUMBER')
+	if not result['v4']:
+		print('[dialplan-dgsm] no IPv4 result from mslookup')
+		session.hangup('UNALLOCATED_NUMBER')
+		return
 
-	mncc_ip = result["v4"]["ip"]  # osmo-dev defaults: same as ${SIPCON_LOCAL}
-	mncc_port = result["v4"]["port"]  # osmo-dev defaults: same as ${SIPCON_LOCAL_PORT}
+	mncc_ip = result['v4']['ip']  # osmo-dev defaults: same as ${SIPCON_LOCAL}
+	mncc_port = result['v4']['port']  # osmo-dev defaults: same as ${SIPCON_LOCAL_PORT}
 	dial_str = 'sofia/internal/sip:{}@{}:{}'.format(msisdn, mncc_ip, mncc_port)
 	print('[dialplan-dgsm] dial_str: ' + str(dial_str))
 
