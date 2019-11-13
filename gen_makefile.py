@@ -148,6 +148,18 @@ def read_configure_opts(path):
     return {}
   return dict(read_projects_deps(path))
 
+def code_path_by_proj(proj):
+  if proj == "osmocom-bb_layer23":
+    return "src/host/layer23"
+  if proj == "osmocom-bb_trxcon":
+    return "src/host/trxcon"
+  return ""
+
+def proj_repo_by_proj(proj):
+  if proj.startswith("osmocom-bb_"):
+    return "osmocom-bb"
+  return proj
+
 def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
   src_proj = os.path.join(src_dir, proj)
   if proj == 'openbsc':
@@ -173,7 +185,8 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 .make.{proj}.clone:
 	@echo "\n\n\n===== $@\n"
 	test -d {src} || mkdir -p {src}
-	test -d {src_proj} || ( git -C {src} clone "{url}/{proj}" "{proj}" && git -C "{src}/{proj}" remote set-url --push origin "{push_url}/{proj}" )
+	test -d {src}/{proj_repo} || ( git -C {src} clone "{url}/{proj_repo}" "{proj_repo}" && git -C "{src}/{proj_repo}" remote set-url --push origin "{push_url}/{proj_repo}" )
+	test -e {src_proj} || ln -sf {src}/{proj_repo}/{code_path} {src_proj}
 	sync
 	touch $@
 
@@ -235,6 +248,8 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     no_ldconfig='#' if no_ldconfig else '',
     sudo_ldconfig='' if ldconfig_without_sudo else 'sudo ',
     check='check' if make_check else '',
+    proj_repo=proj_repo_by_proj(proj),
+    code_path=code_path_by_proj(proj),
     )
 
 

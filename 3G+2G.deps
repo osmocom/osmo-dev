@@ -17,3 +17,6 @@ osmo-sip-connector	libosmocore
 # When omitting --enable-sanitize from osmo-trx only, its 'make check' will fail.
 # So if you want osmo-trx, uncomment and use no sanitize.opts, or use LD_PRELOAD for osmo-trx binaries.
 #osmo-trx	libosmocore
+
+osmocom-bb_layer23	libosmocore
+osmocom-bb_trxcon	libosmocore
