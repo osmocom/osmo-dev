@@ -20,3 +20,4 @@ osmo-sip-connector	libosmocore
 
 osmocom-bb_layer23	libosmocore
 osmocom-bb_trxcon	libosmocore
+osmo-bts		libosmocore libosmo-abis

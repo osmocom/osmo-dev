@@ -59,7 +59,11 @@ term() {
   if [ -z "$title" ]; then
     title="$(basename $@)"
   fi
-  exec $terminal -title "CN:$title" -e sh -c "export LD_LIBRARY_PATH='/usr/local/lib'; $1; echo; while true; do echo 'q Enter to close'; read q_to_close; if [ \"x\$q_to_close\" = xq ]; then break; fi; done"
+  prefix="$3"
+  if [ -z "$prefix" ]; then
+    prefix="CN"
+  fi
+  exec $terminal -title "$prefix:$title" -e sh -c "export LD_LIBRARY_PATH='/usr/local/lib'; $1; echo; while true; do echo 'q Enter to close'; read q_to_close; if [ \"x\$q_to_close\" = xq ]; then break; fi; done"
 }
 
 find_term
@@ -82,6 +86,10 @@ mgw4bsc="osmo-mgw -c osmo-mgw-for-bsc.cfg"
 hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
 stp="osmo-stp"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
+btstrx="osmo-bts-trx"
+faketrx="../../src/osmocom-bb/src/target/trx_toolkit/fake_trx.py"
+trxcon="trxcon -s ${BTS_TRX_SOCKET}"
+mobile="mobile -c mobile.cfg"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
@@ -135,6 +143,15 @@ term "$hnbgw" HNBGW &
 sleep .2
 term "$bsc" BSC &
 
+sleep 2
+term "$btstrx" BTS-TRX "AN" &
+sleep .2
+term "$faketrx" FAKETRX "MS" &
+sleep .2
+term "$trxcon" TRXCON "MS" &
+sleep .2
+term "$mobile" MOBILE "MS" &
+
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sleep .2
   term "$sipcon" SIPCON &
@@ -154,7 +171,7 @@ echo Closing...
 
 #ssh bts neels/stop_remote.sh
 
-kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14
+kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15 %16 %17
 killall osmo-msc
 killall osmo-bsc
 killall osmo-gbproxy
@@ -165,6 +182,10 @@ killall osmo-hlr
 killall -9 osmo-stp
 sudo killall tcpdump
 killall osmo-ggsn
+killall osmo-bts-trx
+killall fake_trx.py
+killall trxcon
+killall -9 mobile
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   killall osmo-sip-connector
