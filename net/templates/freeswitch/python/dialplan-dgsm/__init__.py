@@ -1,12 +1,25 @@
-import mslookup
+import json
+import os
+import subprocess
 
+script_dir = os.path.dirname(__file__)
+timeout_ms = 5000
 
 def handler(session, args):
 	print('[dialplan-dgsm] handler')
 	msisdn = session.getVariable('destination_number')
 	print('[dialplan-dgsm] resolving: sip.voice.' + str(msisdn) + '.msisdn')
 
-	result = mslookup.resolve('msisdn', msisdn, 'sip.voice')
+	# Run mslookup.py. In theory, we should be able to import it and call mslookup.resolve() directly, however this
+	# has lead to hard-to-debug segfaults when calling it the second time. For now, use a separate python process.
+	result = {}
+	try:
+		result_json = subprocess.check_output([script_dir + '/mslookup.py', str(msisdn), '-t', str(timeout_ms)])
+		result = json.loads(result_json)
+	except:
+		print('[dialplan-dgsm]: failed to run mslookup.py!')
+		session.hangup('UNALLOCATED_NUMBER')
+
 	print('[dialplan-dgsm] result: ' + str(result))
 
 	# This example only makes use of IPv4

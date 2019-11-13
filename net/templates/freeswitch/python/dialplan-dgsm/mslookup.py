@@ -2,6 +2,7 @@
 # This can be started standalone for testing (see ./mslookup.py -h)
 import argparse
 import ctypes
+import json
 import time
 
 result = None
@@ -71,7 +72,7 @@ def main():
 	args = parser.parse_args()
 
 	result = resolve(args.id_type, args.id, args.service, args.timeout)
-	print('Result: ' + str(result))
+	print(json.dumps(result, indent=4, sort_keys=True))
 
 
 if __name__ == '__main__':
