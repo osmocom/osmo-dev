@@ -1,29 +1,27 @@
+import argparse
 import json
-import os
 import subprocess
 
-script_dir = os.path.dirname(__file__)
-timeout_ms = 2000
 
-def query_mslookup(query_str):
+def query_mslookup(service_type, id, id_type="msisdn"):
+	query_str = '{}.{}.{}'.format(service_type, id, id_type)
 	result_line = subprocess.check_output([
 		'osmo-mslookup-client', query_str, '-f', 'json'])
 	if isinstance(result_line, bytes):
 		result_line = result_line.decode('ascii')
 	return json.loads(result_line)
 
-def query_mslookup_msisdn(msisdn):
-	return query_mslookup('sip.voice.%s.msisdn' % str(msisdn))
 
 def handler(session, args):
+	""" Handle calls: bridge to the SIP server found with mslookup. """
 	print('[dialplan-dgsm] handler')
 	msisdn = session.getVariable('destination_number')
 	print('[dialplan-dgsm] resolving: sip.voice.' + str(msisdn) + '.msisdn')
 
-	# Run mslookup.py. In theory, we should be able to import it and call mslookup.resolve() directly, however this
-	# has lead to hard-to-debug segfaults when calling it the second time. For now, use a separate python process.
+	# Run osmo-mslookup-client binary. We have also tried to directly call the C functions with ctypes but this has
+	# lead to hard-to-debug segfaults.
 	try:
-		result = query_mslookup_msisdn(msisdn)
+		result = query_mslookup("sip.voice", msisdn)
 
 		print('[dialplan-dgsm] result: ' + str(result))
 
@@ -43,11 +41,25 @@ def handler(session, args):
 		session.hangup('UNALLOCATED_NUMBER')
 
 
-# Freeswitch refuses to load the module without this
+# def chat(message, args):
+#	""" Handle SMS: forward to the SMSC found with mslookup. """
+
+
 def fsapi(session, stream, env, args):
+	""" Freeswitch refuses to load the module without this. """
 	stream.write(env.serialize())
 
+
+def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('id', type=int)
+	parser.add_argument('-i', '--id-type', default='msisdn', help='default: "msisdn"')
+	parser.add_argument('-s', '--service', default='sip.voice', help='default: "sip.voice"')
+	args = parser.parse_args()
+
+	result = query_mslookup(args.service, args.id, args.id_type)
+	print(json.dumps(result))
+
+
 if __name__ == '__main__':
-	import json
-	import sys
-	print(json.dumps(query_mslookup(sys.argv[1])))
+	main()
