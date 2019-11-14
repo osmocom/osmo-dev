@@ -41,32 +41,6 @@ def handler(session, args):
 		session.hangup('UNALLOCATED_NUMBER')
 
 
-def chat(message, args):
-	""" Handle SMS: forward to the SMSC found with mslookup. """
-	print('[dialplan-dgsm] SMS handler')
-
-	message.addHeader("final_delivery", "true")
-	source = message.getHeader("from_user")
-	destination = message.getHeader("to_user")
-	text = message.getBody()
-	charset = 'UTF-8'
-	coding = '2'
-
-	print('[dialplan-dgsm] message from %s to %s: %s' % (source, destination, text))
-	try:
-		result = query_mslookup('smpp.sms', destination)
-
-		# This example only makes use of IPv4
-		if not result['v4']:
-			print('[dialplan-dgsm] no IPv4 result from mslookup')
-			return
-
-		smsc_ip, smsc_port = result['v4']
-		# TODO: send the message, best is probably an extra python process
-	except:
-		print('[dialplan-dgsm]: exception during SMS handler')
-
-
 def fsapi(session, stream, env, args):
 	""" Freeswitch refuses to load the module without this. """
 	stream.write(env.serialize())
