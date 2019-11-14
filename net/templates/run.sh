@@ -82,6 +82,7 @@ mgw4bsc="osmo-mgw -c osmo-mgw-for-bsc.cfg"
 hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
 stp="osmo-stp"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
+esme="${NET_DIR}/../../src/osmo-msc/contrib/esme_mslookup.py"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
@@ -143,6 +144,8 @@ if [ "x${MSC_MNCC}" != "xinternal" ]; then
     "kamailio") term "$kamailio" KAMAILIO &;;
     "freeswitch") term "./freeswitch/freeswitch.sh" FREESWITCH &;;
   esac
+  sleep .2
+  term "$esme" ESME &
 fi
 
 #ssh bts rm /tmp/bts.log /tmp/pcu.log
@@ -154,7 +157,7 @@ echo Closing...
 
 #ssh bts neels/stop_remote.sh
 
-kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14
+kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15
 killall osmo-msc
 killall osmo-bsc
 killall osmo-gbproxy
@@ -169,6 +172,7 @@ killall osmo-ggsn
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   killall osmo-sip-connector
   killall "${SIPCON_SERVER}"
+  killall esme_mslookup.py
 fi
 
 
