@@ -1,9 +1,14 @@
 #!/bin/sh
-NETDIR="$(cd $(dirname "$0")/..; pwd)"
+DIALPLANDIR="$(cd $(dirname "$0")/../../../src/osmo-hlr/contrib/dgsm; pwd)"
 (sleep 5; echo; echo; echo "NOTE: type 'shutdown' to quit"; echo) &
+
+if ! [ -e "$DIALPLANDIR/freeswitch_dialplan_dgsm.py" ]; then
+	echo "ERROR: freeswitch_dialplan_dgsm.py not found in: $DIALPLANDIR"
+	exit 1
+fi
 set -ex
 
-export PYTHONPATH="$NETDIR/freeswitch/python:$PYTHONPATH"
+export PYTHONPATH="$PYTHONPATH:$DIALPLANDIR"
 
 if ! [ -d /usr/lib/freeswitch/mod ]; then
 	echo "ERROR: missing dir /usr/lib/freeswitch/mod"
