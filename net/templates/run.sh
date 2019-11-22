@@ -82,7 +82,7 @@ mgw4bsc="osmo-mgw -c osmo-mgw-for-bsc.cfg"
 hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
 stp="osmo-stp"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
-esme="${NET_DIR}/../../src/osmo-msc/contrib/esme_mslookup.py"
+esme="${NET_DIR}/../../src/osmo-hlr/contrib/dgsm/esme_dgsm.py"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
