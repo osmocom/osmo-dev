@@ -72,8 +72,7 @@ hnbgw="osmo-hnbgw"
 # - the tee saves the stderr logging as well as the udtrace output to new file current_log/osmo-msc.out, since udtrace
 #   will not show in osmo-msc.log
 msc="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/n/s/udtrace/libudtrace.so osmo-msc 2>&1 | tee -a current_log/osmo-msc.out"
-#msc2="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/n/s/udtrace/libudtrace.so osmo-msc -c osmo-msc2.cfg -l sms2.db 2>&1 | tee -a current_log/osmo-msc2.out"
-msc2="gdb --args osmo-msc -c osmo-msc2.cfg -l sms2.db"
+msc2="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/n/s/udtrace/libudtrace.so osmo-msc -c osmo-msc2.cfg -l sms2.db 2>&1 | tee -a current_log/osmo-msc2.out"
 gbproxy="osmo-gbproxy"
 sgsn="osmo-sgsn"
 ggsn="osmo-ggsn"
