@@ -10,7 +10,7 @@ check_usage() {
 	if [ -z "$PROJECT" ]; then
 		echo "usage: $(basename $0) PROJECT"
 		echo "example: $(basename $0) hlr"
-		echo "known working projects: hlr, mgw, msc, pcu, pcu-sns, sgsn"
+		echo "known working projects: hlr, mgw, msc, pcu, pcu-sns, sip, sgsn"
 		echo "wip: bts, bts-oml"
 		echo ""
 		echo "notes (see docker-playground.git/ttcn3-*/jenkins.sh):"
@@ -59,6 +59,7 @@ get_programs() {
 		pcu-sns) echo "osmo-pcu" ;;
 		pcu) echo "osmo-pcu osmo-bsc osmo-bts-virtual virtphy" ;;
 		sgsn) echo "osmo-stp osmo-sgsn" ;;
+		sip) echo "osmo-sip-connector" ;;
 		*) echo "osmo-$PROJECT" ;;
 	esac
 }
