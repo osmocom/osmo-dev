@@ -89,8 +89,8 @@ for line in open(local_config_file):
   local_config[name] = val
 
 # replace variable names with above values recursively
-replace_re = re.compile('\$\{([A-Za-z0-9_]*)\}')
-command_re = re.compile('\$\{([A-Za-z0-9_]*)\(([^)]*)\)\}')
+replace_re = re.compile('\$\{([A-Z][A-Za-z0-9_]*)\}')
+command_re = re.compile('\$\{([a-z][A-Za-z0-9_]*)\(([^)]*)\)\}')
 
 idx = 0
 
@@ -198,16 +198,21 @@ def handle_commands(tmpl, tmpl_dir, tmpl_src, local_config):
         break;
       cmd = m.group(1)
       arg = m.group(2)
+      expanded = False
       if cmd == 'include':
         tmpl = insert_includes(tmpl, tmpl_dir, tmpl_src, local_config, arg)
+        expanded = True
       elif cmd == 'foreach':
         tmpl = insert_foreach(tmpl, tmpl_dir, tmpl_src, m, local_config, arg)
+        expanded = True
+      elif cmd == 'strftime':
+        pass
       else:
         print('Error: unknown command: %r in %r' % (cmd, tmpl_src))
-        exit(1)
+        break
 
-      # There was some command expansion. Go again.
-      continue
+      if not expanded:
+        break
 
     return tmpl
 
@@ -228,7 +233,7 @@ for tmpl_name in sorted(os.listdir(tmpl_dir)):
   if os.path.isdir(tmpl_src):
     if os.path.exists(dst) and os.path.isdir(dst):
       shutil.rmtree(dst)
-    shutil.copytree(tmpl_src, dst)
+    shutil.copytree(tmpl_src, dst, symlinks=True)
     continue
 
   if args.check_stale:
