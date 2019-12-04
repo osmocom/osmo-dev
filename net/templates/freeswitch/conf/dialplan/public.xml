@@ -36,6 +36,17 @@
 	<action application="info"/>
       </condition>
     </extension>
+    
+    <extension name="outbound">
+      <condition field="destination_number" expression=".*">
+	<action application="set" data="hangup_after_bridge=true"/>
+	<action application="set" data="session_in_hangup_hook=true"/>
+	<action application="set" data="api_hangup_hook=python dialplan-dgsm"/>
+	<action application="set" data="ringback=%(2000, 4000, 440.0, 480.0)"/>
+	<action application="python" data="dialplan-dgsm"/>
+	<!--<action application="bridge" data="{absolute_codec_string='G729'}sofia/gateway/provider/${destination_number}" />-->
+      </condition>
+    </extension>
 
  
     <!--
