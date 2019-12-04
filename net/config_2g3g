@@ -106,15 +106,17 @@ GGSN_NET="192.168.42.0/24"
 GGSN_GTP_STATE_DIR=/tmp
 
 # Enabled only when MSC_MNCC != "internal"
-SIPCON_LOCAL="${TO_SIP_IP}"
-SIPCON_LOCAL_PORT="5060"
-SIPCON_REMOTE="127.0.0.1"
-SIPCON_REMOTE_PORT="5069"
-# SIPCON_SERVER:
+SIPCON_SIP="${TO_SIP_IP}"
+SIPCON_SIP_PORT="5060"
+
+# PBX_SERVER:
 #  "kamailio" -- launch kamailio
 #  "freeswitch" -- launch freeswitch
 #  "none" -- launch no server, use remotely running SIP server
-SIPCON_SERVER="kamailio"
+PBX_SERVER="kamailio"
+PBX_SIP="${TO_SIP_IP}"
+PBX_SIP_PORT=5069
+PBX_LO_IP=127.0.0.1
 
 LOG_OUTPUT0_TYPE=stderr
 LOG_OUTPUT1_TYPE=file current_log/${_name}.log

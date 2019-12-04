@@ -86,7 +86,7 @@ bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
 
-  case "${SIPCON_SERVER}" in
+  case "${PBX_SERVER}" in
     "kamailio")
       # Require kamailio (PATH hack is needed for Debian)
       kamailio="$(PATH="$PATH:/usr/sbin:/sbin" which kamailio)"
@@ -108,7 +108,7 @@ if [ "x${MSC_MNCC}" != "xinternal" ]; then
    "none")
       ;;
    *)
-     echo "ERROR: unknown value "${SIPCON_SERVER}" for SIPCON_SERVER!"
+     echo "ERROR: unknown value ${PBX_SERVER} for SIPCON_SERVER!"
      exit 1
      ;;
   esac
@@ -141,7 +141,7 @@ if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sleep .2
   term "$sipcon" SIPCON &
   sleep .2
-  case "${SIPCON_SERVER}" in
+  case "${PBX_SERVER}" in
     "kamailio") term "$kamailio" KAMAILIO &;;
     "freeswitch") term "./freeswitch/freeswitch.sh" FREESWITCH &;;
   esac
@@ -171,7 +171,7 @@ killall osmo-ggsn
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   # 'killall' seems to work only with the shortened name
   killall osmo-sip-connec
-  killall "${SIPCON_SERVER}"
+  killall "${PBX_SERVER}"
 fi
 
 
