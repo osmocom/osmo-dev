@@ -72,7 +72,7 @@ hnbgw="osmo-hnbgw"
 # - the tee saves the stderr logging as well as the udtrace output to new file current_log/osmo-msc.out, since udtrace
 #   will not show in osmo-msc.log
 msc="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/n/s/udtrace/libudtrace.so osmo-msc 2>&1 | tee -a current_log/osmo-msc.out"
-msc2="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/n/s/udtrace/libudtrace.so osmo-msc -c osmo-msc2.cfg 2>&1 | tee -a current_log/osmo-msc2.out"
+msc2="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/n/s/udtrace/libudtrace.so osmo-msc -c osmo-msc2.cfg -l sms2.db 2>&1 | tee -a current_log/osmo-msc2.out"
 gbproxy="osmo-gbproxy"
 sgsn="osmo-sgsn"
 ggsn="osmo-ggsn"
@@ -83,10 +83,12 @@ mgw4bsc="osmo-mgw -c osmo-mgw-for-bsc.cfg"
 hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
 hlr_proxy="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade -c osmo-hlr-proxy.cfg --database hlr-proxy.db"
 hlr_proxy_proxy="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade -c osmo-hlr-proxy-proxy.cfg --database hlr-proxy-proxy.db"
-#hlr2="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade -c osmo-hlr2.cfg"
+hlr2="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade -c osmo-hlr2.cfg"
 stp="osmo-stp"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
 bsc2="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc2.cfg"
+esme="${NET_DIR}/../../src/osmo-msc/contrib/esme_mslookup.py --src-host ${MSC_SMPP_IP}"
+esme2="${NET_DIR}/../../src/osmo-msc/contrib/esme_mslookup.py --src-host ${MSC2_SMPP_IP}"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
@@ -121,6 +123,31 @@ fi
 
 if [ "x${MSC2_MNCC}" != "xinternal" ]; then
   sipcon2="osmo-sip-connector -c osmo-sip-connector2.cfg"
+
+  case "${PBX2_SERVER}" in
+    "kamailio")
+      # Require kamailio (PATH hack is needed for Debian)
+      kamailio2="$(PATH="$PATH:/usr/sbin:/sbin" which kamailio)"
+      if [ -z "$kamailio" ]; then
+        echo "ERROR: kamailio is not installed."
+        echo "After installing it, make sure that it does *not* run as daemon."
+        exit 1
+      fi
+      kamailio2="$kamailio -f kamailio2.cfg -D -e -E"
+      ;;
+   "freeswitch")
+      if [ -z "$(which freeswitch)" ]; then
+        echo "ERROR: freeswitch is not installed."
+        echo "Guide: https://freeswitch.org/confluence/display/FREESWITCH/Debian+10+Buster"
+        echo "After installing it, make sure that it does *not* run as daemon."
+        exit 1
+      fi
+      ;;
+   *)
+     echo "ERROR: unknown value ${PBX2_SERVER} for SIPCON_SERVER!"
+     exit 1
+     ;;
+  esac
 fi
 
 sudo tcpdump -i $dev -n -w current_log/$dev.single.pcap -U not port 22 &
@@ -131,13 +158,13 @@ sleep .2
 term "$stp" STP &
 sleep .2
 term "$hlr" HLR &
-sleep .2
-term "$hlr_proxy" HLRproxy &
-sleep .2
-term "$hlr_proxy_proxy" HLRproxyproxy &
-sleep .2
-#term "$hlr2" HLR2 &
 #sleep .2
+#term "$hlr_proxy" HLRproxy &
+#sleep .2
+#term "$hlr_proxy_proxy" HLRproxyproxy &
+sleep .2
+term "$hlr2" HLR2 &
+sleep .2
 term "$sgsn" SGSN &
 sleep .2
 term "$gbproxy" GBPROXY &
@@ -147,9 +174,13 @@ sleep .2
 term "$mgw4bsc" MGW4BSC &
 sleep .2
 term "$msc" MSC &
-sleep 2
+sleep .2
+term "$esme" ESME &
+sleep .2
 term "$msc2" MSC2 &
-sleep 2
+sleep .2
+term "$esme2" ESME2 &
+sleep .2
 term "$hnbgw" HNBGW &
 sleep .2
 term "$bsc" BSC &
@@ -169,6 +200,11 @@ fi
 if [ "x${MSC2_MNCC}" != "xinternal" ]; then
   sleep .2
   term "$sipcon2" SIPCON2 &
+  sleep .2
+  case "${PBX2_SERVER}" in
+    "kamailio") term "$kamailio2" KAMAILIO2 &;;
+    "freeswitch") term "./freeswitch2/freeswitch.sh" FREESWITCH2 &;;
+  esac
 fi
 
 #ssh bts rm /tmp/bts.log /tmp/pcu.log
@@ -181,7 +217,7 @@ echo Closing...
 #ssh bts neels/stop_remote.sh
 
 jobs
-kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15 %16 %17
+kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15 %16 %17 %18 %19 %20 %21 %22
 killall osmo-msc
 killall osmo-bsc
 killall osmo-gbproxy
@@ -197,6 +233,12 @@ if [ "x${MSC_MNCC}" != "xinternal" ]; then
   # 'killall' seems to work only with the shortened name
   killall osmo-sip-connec
   killall "${PBX_SERVER}"
+fi
+
+if [ "x${MSC2_MNCC}" != "xinternal" ]; then
+  # 'killall' seems to work only with the shortened name
+  killall osmo-sip-connec
+  killall "${PBX2_SERVER}"
 fi
 
 
