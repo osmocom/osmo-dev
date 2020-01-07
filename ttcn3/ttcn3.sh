@@ -131,7 +131,15 @@ setup_dir_make() {
           echo "osmo-ttcn3-hacks"
 	  echo "osmocom-bb") > ttcn3/3G+2G_ttcn3.deps
 
-	./gen_makefile.py ttcn3/3G+2G_ttcn3.deps default.opts iu.opts no_systemd.opts ttcn3/ttcn3.opts -I -m "$DIR_MAKE"
+	./gen_makefile.py \
+		ttcn3/3G+2G_ttcn3.deps \
+		default.opts \
+		iu.opts \
+		no_systemd.opts \
+		no_doxygen.opts \
+		no_dahdi.opts \
+		no_optimization.opts \
+		ttcn3/ttcn3.opts -I -m "$DIR_MAKE"
 }
 
 # $1: name of repository (e.g. osmo-ttcn3-hacks)
