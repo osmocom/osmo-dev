@@ -87,8 +87,8 @@ hlr2="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade -c
 stp="osmo-stp"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
 bsc2="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc2.cfg"
-esme="${NET_DIR}/../../src/osmo-msc/contrib/esme_mslookup.py --src-host ${MSC_SMPP_IP}"
-esme2="${NET_DIR}/../../src/osmo-msc/contrib/esme_mslookup.py --src-host ${MSC2_SMPP_IP}"
+esme="${NET_DIR}/../../src/osmo-hlr/contrib/dgsm/esme_dgsm.py --src-host ${MSC_SMPP_IP}"
+esme2="${NET_DIR}/../../src/osmo-hlr/contrib/dgsm/esme_dgsm.py --src-host ${MSC2_SMPP_IP}"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
