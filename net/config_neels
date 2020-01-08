@@ -149,7 +149,7 @@ SIPCON_SIP_PORT="5060"
 #  "kamailio" -- launch kamailio
 #  "freeswitch" -- launch freeswitch
 #  "none" -- launch no server, use remotely running SIP server
-PBX_SERVER="kamailio"
+PBX_SERVER="freeswitch"
 PBX_SIP="${TO_SIP_IP}"
 PBX_SIP_PORT=5069
 PBX_LO_IP=127.0.0.1
