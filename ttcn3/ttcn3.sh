@@ -10,12 +10,6 @@ check_usage() {
 	if [ -z "$PROJECT" ]; then
 		echo "usage: $(basename $0) PROJECT"
 		echo "example: $(basename $0) hlr"
-		echo "known working projects: hlr, mgw, msc, pcu, pcu-sns, sip, sgsn"
-		echo "wip: bts, bts-oml"
-		echo ""
-		echo "notes (see docker-playground.git/ttcn3-*/jenkins.sh):"
-		echo "- bts: classic test suite with BSC for OML and trxcon+fake_trx"
-		echo "- bts-oml: OML tests (without BSC)"
 		exit 1
 	fi
 }
@@ -49,8 +43,15 @@ get_testsuite_config() {
 	esac
 }
 
-# Programs that need to be built, launched and killed. To add programs to only one of the steps, modify the appropriate
-# function below (build_osmo_programs, run_osmo_programs, kill_osmo_programs).
+get_testsuite_dir_docker() {
+	local dp="${DIR_OSMODEV}/src/docker-playground"
+
+	case "$PROJECT" in
+		*) echo "$dp/ttcn3-$PROJECT-test" ;;
+	esac
+}
+
+# Programs that need to be built
 get_programs() {
 	case "$PROJECT" in
 		bsc) echo "osmo-stp osmo-bsc osmo-bts-omldummy" ;;
@@ -61,24 +62,6 @@ get_programs() {
 		sgsn) echo "osmo-stp osmo-sgsn" ;;
 		sip) echo "osmo-sip-connector" ;;
 		*) echo "osmo-$PROJECT" ;;
-	esac
-}
-
-# $1: program name
-get_program_config() {
-	case "$1" in
-		fake_trx.py) ;; # no config
-		osmo-bts-*) echo "osmo-bts.cfg" ;;
-		osmo-pcu)
-			if [ "$PROJECT" = "pcu-sns" ]; then
-				echo "osmo-pcu-sns.cfg"
-			else
-				echo "osmo-pcu.cfg"
-			fi
-			;;
-		trxcon) ;; # no config
-		virtphy) ;; # no config
-		*) echo "$1.cfg" ;;
 	esac
 }
 
@@ -104,21 +87,6 @@ check_ttcn3_install() {
 	fi
 }
 
-kill_osmo_programs() {
-	programs="$(get_programs)"
-
-	# Kill wrappers first
-	for program in $programs; do
-		case "$program" in
-			osmo-pcu) killall osmo-pcu-respawn.sh || true ;;
-			osmo-bts-trx) killall osmo-bts-trx-respawn.sh || true ;;
-			fake_trx.py) killall fake_trx.sh || true ;;
-		esac
-	done
-
-	killall $programs || true
-}
-
 setup_dir_make() {
 	cd "$DIR_OSMODEV"
 
@@ -128,7 +96,8 @@ setup_dir_make() {
 	  echo "osmo-bts	libosmocore libosmo-abis"
 	  echo "osmo-pcu	libosmocore"
 	  # just clone these, building is handled by ttcn3.sh
-          echo "osmo-ttcn3-hacks"
+	  echo "docker-playground"
+	  echo "osmo-ttcn3-hacks"
 	  echo "osmocom-bb") > ttcn3/3G+2G_ttcn3.deps
 
 	./gen_makefile.py \
@@ -147,38 +116,26 @@ clone_repo() {
 	make -C "$DIR_MAKE" ".make.${1}.clone"
 }
 
-# Require testsuite dir, with testsuite and all program configs
+# Require testsuite dir and docker-playground dir
 check_dir_testsuite() {
 	local program
 	local config_testsuite
 	local dir_testsuite="$(get_testsuite_dir)"
+	local dir_testsuite_docker="$(get_testsuite_dir_docker)"
 
 	if ! [ -d "$dir_testsuite" ]; then
 		echo "ERROR: project '$PROJECT' is invalid, resulting path not found: $dir_testsuite"
 		exit 1
 	fi
 
-	for program in $(get_programs); do
-		local config="$(get_program_config "$program")"
-		if [ -z "$config" ]; then
-			continue
-		fi
-		config="$dir_testsuite/$config"
-		if ! [ -e "$config" ]; then
-			echo "ERROR: config not found: $config"
-			echo "Copy it from docker-playground.git, and change IPs to 127.0.0.*."
-			echo "Make sure that everything works, then submit a patch with the config."
-			echo "If $program's config has a different name or is not needed at all, edit"
-			echo "get_program_config() in ttcn3.sh."
-			exit 1
-		fi
-	done
+	if ! [ -d "$dir_testsuite_docker" ]; then
+		echo "ERROR: could not find docker dir for project: $PROJECT. Adjust get_testsuite_dir_docker?"
+		exit 1
+	fi
 
-	config_testsuite="$dir_testsuite/$(get_testsuite_config)"
-	if ! [ -e "$config_testsuite" ]; then
-		echo "ERROR: testsuite config not found: $config_testsuite"
-		echo "Copy it from docker-playground.git, change the paths to be relative and submit it as patch."
-		echo "If $program's testsuite has a different name, edit get_testsuite_name() in ttcn3.sh."
+	# Sanity check for jenkins.sh
+	if ! grep -q DOCKER_ARGS $dir_testsuite_docker/jenkins.sh; then
+		echo "ERROR: DOCKER_ARGS not found in $dir_testsuite_docker/jenkins.sh!"
 		exit 1
 	fi
 }
@@ -242,137 +199,53 @@ build_testsuite() {
 	make -j"$JOBS"
 }
 
-remove_old_logs() {
-	cd "$(get_testsuite_dir)"
-	rm *.log *.merged 2> /dev/null || true
-}
+run_docker() {
+	local hacks="${DIR_OSMODEV}/src/osmo-ttcn3-hacks"
+	local docker_dir="$(get_testsuite_dir_docker)"
+	local docker_name="$(basename "$docker_dir")"
+	local marker="${DIR_OSMODEV}/ttcn3/make/.docker.$docker_name"
 
-prepare_dir_output() {
-	local program
-	local dir_testsuite="$(get_testsuite_dir)"
-
-	rm -r "$DIR_OUTPUT"/* 2> /dev/null || true
-	mkdir -p "$DIR_OUTPUT"
-
-	for program in $(get_programs); do
-		local config="$(get_program_config "$program")"
-		if [ -n "$config" ]; then
-			cp "$dir_testsuite/$config" "$DIR_OUTPUT"
-		fi
-	done
-}
-
-# $1: log name
-# $2: command to run
-run_osmo_program() {
-	local pid
-	local log="$1"
-	shift
-
-	echo "Starting ($log): $@"
-	"$@" > "$log" 2>&1 &
-	pid="$!"
-
-	sleep 0.5
-	if ! kill -0 "$pid" 2> /dev/null; then
-		echo "ERROR: failed to start: $@"
-		cat "$log"
-		exit 1
+	# Skip building docker containers if this already ran
+	if [ -e "$marker" ]; then
+		echo "NOTE: skipping docker container build, because marker exists: $marker"
+		export NO_DOCKER_IMAGE_BUILD=1
 	fi
+
+	cd "$(get_testsuite_dir_docker)"
+	export DOCKER_ARGS="-v /usr/local:/usr/local:ro -v $hacks:/osmo-ttcn3-hacks:ro"
+	./jenkins.sh
+
+	touch "$marker"
 }
 
-run_osmo_programs() {
-	local program
-	local osmocom_bb="$DIR_OSMODEV/src/osmocom-bb"
-	local wrappers="$DIR_OSMODEV/ttcn3/wrappers"
-
-	cd "$DIR_OUTPUT"
-	for program in $(get_programs); do
-		case "$program" in
-			fake_trx.py)
-				run_osmo_program "fake_trx.log" \
-					"$wrappers/fake_trx.sh" \
-					--log-level DEBUG \
-					-b 127.0.0.21 \
-					-R 127.0.0.20 \
-					-r 127.0.0.22
-				;;
-			osmo-bts-omldummy)
-				for i in $(seq 0 2); do
-					run_osmo_program "osmo-bts-$i.log" osmo-bts-omldummy 127.0.0.1 $((i + 1234)) 1
-				done
-				;;
-			osmo-bts-trx)
-				run_osmo_program "$program.log" \
-					"$wrappers/osmo-bts-trx-respawn.sh" -i 127.0.0.10
-				;;
-			osmo-pcu)
-				run_osmo_program "$program.log" "$wrappers/osmo-pcu-respawn.sh" \
-					-c "$(get_program_config osmo-pcu)"
-				;;
-			trxcon)
-				run_osmo_program "$program.log" \
-					"$osmocom_bb/src/host/trxcon/trxcon" \
-					trxcon -i 127.0.0.21 \
-						-s /tmp/osmocom_l2
-				;;
-			virtphy)
-				run_osmo_program "$program.log" "$osmocom_bb/src/host/virt_phy/src/virtphy" \
-					-s /tmp/osmocom_l2
-				;;
-			*)
-				run_osmo_program "$program.log" "$program"
-				;;
-		esac
-	done
-}
-
-run_testsuite() {
-	local testsuite="$(get_testsuite_name)"
-	local cfg="$(get_testsuite_config)"
-
-	cd "$(get_testsuite_dir)"
-	../start-testsuite.sh "$testsuite" "$cfg" 2>&1 | tee "$DIR_OUTPUT/ttcn3_stdout.log"
+remove_old_logs() {
+	sudo rm -rf /tmp/tmp.* 2>/dev/null
 }
 
 collect_logs() {
 	# Merge and move logs
-	cd "$(get_testsuite_dir)"
-	../log_merge.sh $(get_testsuite_name) --rm
-	if ! mv *.merged "$DIR_OUTPUT"; then
-		echo "---"
-		echo "ERROR: no logs generated! Invalid test names in $(get_testsuite_config)?"
-		echo "---"
-		exit 1
-	fi
+	cd /tmp/logs/*-tester
 
 	# Format logs
-	cd "$DIR_OUTPUT"
 	for log in *.merged; do
 		ttcn3_logformat -o "${log}.log" "$log"
-		rm "$log"
+		sudo rm "$log"
 	done
 
 	# Print log path
 	echo "---"
-	echo "Logs: $DIR_OUTPUT"
+	echo "Logs: /tmp/logs"
 	echo "---"
 }
 
-# Tell glibc to print segfault output to stderr (OS#4212)
-export LIBC_FATAL_STDERR_=1
-
 check_usage
-kill_osmo_programs
 check_ttcn3_install
 setup_dir_make
 clone_repo "osmo-ttcn3-hacks"
+clone_repo "docker-playground"
 check_dir_testsuite
 build_osmo_programs
 build_testsuite
 remove_old_logs
-prepare_dir_output
-run_osmo_programs
-run_testsuite
-kill_osmo_programs
+run_docker
 collect_logs
