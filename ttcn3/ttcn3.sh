@@ -213,6 +213,13 @@ build_osmo_programs() {
 
 build_testsuite() {
 	cd "$(get_testsuite_dir)"
+
+	local deps_marker="${DIR_OSMODEV}/ttcn3/make/.ttcn3-deps"
+	if ! [ -e "$deps_marker" ]; then
+		make -C "${DIR_OSMODEV}/src/osmo-ttcn3-hacks/deps" -j"$JOBS"
+		touch "$deps_marker"
+	fi
+
 	./gen_links.sh
 	./regen_makefile.sh
 	make compile
