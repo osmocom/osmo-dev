@@ -140,6 +140,26 @@ check_dir_testsuite() {
 	fi
 }
 
+# Copy scripts from docker-playground to /usr/local/bin, so we don't miss them when mounting the outside /usr/local/bin
+# inside the docker container
+prepare_local_bin() {
+	local scripts="
+		${DIR_OSMODEV}/src/docker-playground/osmo-bts-master/respawn.sh
+	"
+
+	for script in $scripts; do
+		local script_path_localbin="/usr/local/bin/$(basename "$script")"
+		if [ -x "$script_path_localbin" ]; then
+			continue
+		fi
+
+		set -x
+		sudo cp "$script" "$script_path_localbin"
+		sudo chmod +x /usr/local/bin/respawn.sh
+		set +x
+	done
+}
+
 # Build a program that is in the subdir of a repository (e.g. trxcon in osmocom-bb.git).
 # $1: repository
 # $2: path in the repository
@@ -244,6 +264,7 @@ setup_dir_make
 clone_repo "osmo-ttcn3-hacks"
 clone_repo "docker-playground"
 check_dir_testsuite
+prepare_local_bin
 build_osmo_programs
 build_testsuite
 remove_old_logs
