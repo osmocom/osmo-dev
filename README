@@ -134,23 +134,29 @@ Find other useful scripts in src/, see src/README.
 
 === ttcn3/ttcn3.sh
 
-Clone and build all dependencies, then run a given TTCN-3 testsuite and all
-required components. This is intended to make test-cycles as short as possible,
-without any manual configuration effort and without the need to rebuild the
-entire testsuite, SUT (subject under test, e.g. osmo-mgw) and dependencies from
-scratch for each code change. Instead, ttcn3.sh will make use of osmo-dev's
-generated global makefile and only build what actually changed.
+Run a given testsuite with docker, so it behaves exactly the same as when
+jenkins runs it [1], but use osmo-dev to build all related Osmocom components
+and the testsuite, and mount them inside the docker containers. After building
+the docker containers for the first time (which takes rather long), this gives
+short test cycles: just modify something, run the script again and the relevant
+objects will be built directly, already built objects do not need to be
+rebuilt. (This is a big speed improvement over just using docker containers as
+you don't need to push your sources to a git server first, have the docker
+containers fetch the git sources and build the modified component from scratch
+again.)
+
+The docker containers are used, so we don't have to maintain a second set of
+configs which works without docker (that was tried before, and found not to be
+feasible).
 
 Example usage:
 
   ./ttcn3/ttcn3.sh mgw
 
-Note that not all testsuites are supported at this point, see the output of
-ttcn3.sh without any argument for more information.
-
 More about the testsuites:
 https://osmocom.org/projects/cellular-infrastructure/wiki/Titan_TTCN3_Testsuites
 
+[1] https://jenkins.osmocom.org/jenkins/view/TTCN3/
 
 === Troubleshooting
 
