@@ -89,7 +89,7 @@ for line in open(local_config_file):
   local_config[name] = val
 
 # replace variable names with above values recursively
-replace_re = re.compile('\$\{([A-Z][A-Za-z0-9_]*)\}')
+replace_re = re.compile('\$\{([A-Z_][A-Za-z0-9_]*)\}')
 command_re = re.compile('\$\{([a-z][A-Za-z0-9_]*)\(([^)]*)\)\}')
 
 idx = 0
