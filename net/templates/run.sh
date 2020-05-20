@@ -72,6 +72,7 @@ hnbgw="osmo-hnbgw"
 # - the tee saves the stderr logging as well as the udtrace output to new file current_log/osmo-msc.out, since udtrace
 #   will not show in osmo-msc.log
 msc="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/n/s/udtrace/libudtrace.so osmo-msc 2>&1 | tee -a current_log/osmo-msc.out"
+msc2="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/n/s/udtrace/libudtrace.so osmo-msc -c osmo-msc2.cfg 2>&1 | tee -a current_log/osmo-msc2.out"
 gbproxy="osmo-gbproxy"
 sgsn="osmo-sgsn"
 ggsn="osmo-ggsn"
@@ -114,6 +115,10 @@ if [ "x${MSC_MNCC}" != "xinternal" ]; then
   esac
 fi
 
+if [ "x${MSC2_MNCC}" != "xinternal" ]; then
+  sipcon2="osmo-sip-connector -c osmo-sip-connector2.cfg"
+fi
+
 sudo tcpdump -i $dev -n -w current_log/$dev.single.pcap -U not port 22 &
 sudo tcpdump -i lo -n -w current_log/lo.single.pcap -U not port 22 &
 
@@ -132,6 +137,8 @@ sleep .2
 term "$mgw4bsc" MGW4BSC &
 sleep .2
 term "$msc" MSC &
+sleep .2
+term "$msc2" MSC2 &
 sleep 2
 term "$hnbgw" HNBGW &
 sleep .2
@@ -147,6 +154,11 @@ if [ "x${MSC_MNCC}" != "xinternal" ]; then
   esac
 fi
 
+if [ "x${MSC2_MNCC}" != "xinternal" ]; then
+  sleep .2
+  term "$sipcon2" SIPCON2 &
+fi
+
 #ssh bts rm /tmp/bts.log /tmp/pcu.log
 #ssh bts neels/run_remote.sh &
 
@@ -156,7 +168,7 @@ echo Closing...
 
 #ssh bts neels/stop_remote.sh
 
-kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14
+kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15 %16
 killall osmo-msc
 killall osmo-bsc
 killall osmo-gbproxy

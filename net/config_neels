@@ -7,8 +7,8 @@ TO_SIP_IP=${TO_RAN_IP}
 
 STATSD_IP="127.0.0.1"
 
-MCC=262
-MNC=42
+MCC=901
+MNC=71
 
 TCH_TYPE1=TCH/F
 TCH_TYPE=TCH/F
@@ -56,10 +56,16 @@ BTS1_CODEC_SUPPORT=${BTS_CODEC_SUPPORT}
 
 HLR_IP=127.0.0.1
 
-MSC_PC="0.23.1"
+MSC_PC="0.0.1"
 MSC_MNCC_SOCKET="/tmp/mncc_socket"
 #MSC_MNCC="internal"
 MSC_MNCC="external ${MSC_MNCC_SOCKET}"
+MSC_VTY_CTRL_IP=127.0.0.1
+
+MSC2_PC="0.0.2"
+MSC2_MNCC_SOCKET="/tmp/mncc_socket2"
+MSC2_MNCC="external ${MSC2_MNCC_SOCKET}"
+MSC2_VTY_CTRL_IP=127.0.0.2
 
 AUTH=required
 ENCR_A5=3
@@ -109,6 +115,9 @@ GGSN_GTP_STATE_DIR=/tmp
 # Enabled only when MSC_MNCC != "internal"
 SIPCON_SIP="${TO_SIP_IP}"
 SIPCON_SIP_PORT="5060"
+
+SIPCON2_SIP="${TO_SIP_IP}"
+SIPCON2_SIP_PORT="5070"
 
 # PBX_SERVER:
 #  "kamailio" -- launch kamailio
