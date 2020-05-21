@@ -82,6 +82,7 @@ mgw4bsc="osmo-mgw -c osmo-mgw-for-bsc.cfg"
 hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
 stp="osmo-stp"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
+bsc2="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc2.cfg"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
@@ -136,6 +137,8 @@ sleep 2
 term "$hnbgw" HNBGW &
 sleep .2
 term "$bsc" BSC &
+sleep .2
+term "$bsc2" BSC2 &
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sleep .2
@@ -156,7 +159,7 @@ echo Closing...
 
 #ssh bts neels/stop_remote.sh
 
-kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14
+kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15
 killall osmo-msc
 killall osmo-bsc
 killall osmo-gbproxy
