@@ -68,6 +68,10 @@ def git_bool(git_dir, *args):
     except subprocess.CalledProcessError as e:
         return False
 
+def safe_branch_name(branch):
+    if '/' in branch:
+        return branch
+    return 'refs/heads/' + branch
 
 def git_ahead_behind(git_dir, branch, branch_upstream):
     ''' Count revisions ahead/behind of the remote branch.
@@ -77,8 +81,8 @@ def git_ahead_behind(git_dir, branch, branch_upstream):
     if not branch_upstream:
         return (0, 0)
 
-    behind = git_output(git_dir, 'rev-list', '--count', '%s..%s' % (branch, branch_upstream))
-    ahead = git_output(git_dir, 'rev-list', '--count', '%s..%s' % (branch_upstream, branch))
+    behind = git_output(git_dir, 'rev-list', '--count', '%s..%s' % (safe_branch_name(branch), branch_upstream))
+    ahead = git_output(git_dir, 'rev-list', '--count', '%s..%s' % (branch_upstream, safe_branch_name(branch)))
     return (int(ahead.rstrip()), int(behind.rstrip()))
 
 
@@ -240,16 +244,14 @@ def ask(git_dir, *question, valid_answers=('*',)):
 
 def ask_reset_hard_or_push_f(git_dir, orig_branch, upstream_branch):
     do_reset = ask(git_dir, 'Diverged.',
-                   '%s: git reset --hard %s?' % (
-                       orig_branch, upstream_branch),
-                   '<empty>  no',
-                   'OK  yes, reset to upstream (write OK in caps!)',
-                   'P   `push -f` to overwrite upstream (P in caps!)',
-                   valid_answers=('', 'OK', 'P'))
+                   '<empty>  skip',
+                   'RH  git reset --hard %s' % upstream_branch,
+                   'PF  `push -f` to overwrite upstream',
+                   valid_answers=('', 'RH', 'PF'))
 
-    if do_reset == 'OK':
+    if do_reset == 'RH':
         git(git_dir, 'reset', '--hard', upstream_branch)
-    elif do_reset == 'P':
+    elif do_reset == 'PF':
         git(git_dir, 'push', '-f')
 
 
@@ -262,13 +264,12 @@ def rebase(git_dir):
     upstream_branch = git_branch_upstream(git_dir, orig_branch)
 
     print('Checking for rebase of %r onto %r' % (orig_branch, upstream_branch))
-    ahead, behind = git_ahead_behind(git_dir, orig_branch, upstream_branch)
 
     if git_has_modifications(git_dir):
         do_commit = ask(git_dir, 'Local mods.',
                         'c  commit to this branch',
                         '<name>  commit to new branch',
-                        '<empty> skip')
+                        '<empty> skip this repo')
 
         if not do_commit:
             raise SkipThisRepo()
@@ -281,15 +282,32 @@ def rebase(git_dir):
             git(git_dir, 'checkout', orig_branch)
 
         if git_has_modifications(git_dir):
-            print('There still are local modifications')
-            raise SkipThisRepo()
+            error('There still are local modifications')
 
     # Missing upstream branch
     if not upstream_branch:
-        print('there is no upstream branch for %r' % orig_branch)
+        do_set_upstream = ask(git_dir, 'there is no upstream branch for %r' % orig_branch,
+                              '<empty>  skip',
+                              'p  create upstream branch (git push --set-upstream orgin %s)' % orig_branch,
+                              'm  checkout master',
+                              valid_answers=('', 'p', 'm'))
+
+        if do_set_upstream == 'p':
+            git(git_dir, 'push', '--set-upstream', 'origin', orig_branch);
+            upstream_branch = git_branch_upstream(git_dir, orig_branch)
+            if not upstream_branch:
+                error('There still is no upstream branch')
+        elif do_set_upstream == 'm':
+            git(git_dir, 'checkout', 'master')
+            return orig_branch
+        else:
+            print('skipping branch, because there is no upstream: %r' % orig_branch)
+            return orig_branch
+
+    ahead, behind = git_ahead_behind(git_dir, orig_branch, upstream_branch)
 
     # Diverged
-    elif ahead and behind:
+    if ahead and behind:
         ask_reset_hard_or_push_f(git_dir, orig_branch, upstream_branch)
 
     # Behind
@@ -300,11 +318,11 @@ def rebase(git_dir):
         else:
             do_merge = ask(git_dir, 'Behind. git merge?',
                            "<empty>  don't merge",
-                           'ok  git merge',
-                           valid_answers=('', 'ok')
+                           'm  git merge',
+                           valid_answers=('', 'm')
                            )
 
-            if do_merge == 'ok':
+            if do_merge == 'm':
                 git(git_dir, 'merge')
 
     # Ahead
@@ -321,7 +339,7 @@ def rebase(git_dir):
         ask_reset_hard_or_push_f(git_dir, orig_branch, upstream_branch)
 
     if git_has_modifications(git_dir):
-        raise SkipThisRepo()
+        error('There are local modifications')
 
     # Rebase onto origin/master? Only when this isn't already the master branch
     if upstream_branch != 'origin/master':
@@ -330,10 +348,10 @@ def rebase(git_dir):
         if ahead and behind:
             do_rebase = ask(git_dir, '%r diverged from master. git rebase -i origin/master?' % orig_branch,
                             "<empty>  don't rebase",
-                            'ok  rebase onto origin/master',
-                            valid_answers=('', 'ok'))
+                            'r  rebase onto origin/master',
+                            valid_answers=('', 'r'))
 
-            if do_rebase == 'ok':
+            if do_rebase == 'r':
                 git(git_dir, 'rebase', '-i', 'origin/master')
                 # On conflicts, we'll exit with error implicitly
 
