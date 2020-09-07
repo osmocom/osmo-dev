@@ -14,3 +14,4 @@ osmo-sgsn --enable-sanitize
 openbsc --enable-sanitize
 osmo-sip-connector --enable-sanitize
 osmo-bts --enable-sanitize
+osmo-smlc --enable-sanitize
