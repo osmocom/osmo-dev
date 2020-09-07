@@ -13,6 +13,7 @@ osmo-msc	osmo-iuh osmo-mgw libsmpp34 osmo-hlr
 osmo-bsc	libosmo-sccp osmo-mgw
 osmo-sgsn	osmo-iuh osmo-ggsn osmo-hlr
 osmo-sip-connector	libosmocore
+osmo-smlc	libosmo-sccp
 # osmo-trx can build with --enable-sanitize, but then won't work reliably.
 # When omitting --enable-sanitize from osmo-trx only, its 'make check' will fail.
 # So if you want osmo-trx, uncomment and use no sanitize.opts, or use LD_PRELOAD for osmo-trx binaries.
