@@ -73,19 +73,6 @@ def safe_branch_name(branch):
         return branch
     return 'refs/heads/' + branch
 
-def git_ahead_behind(git_dir, branch, branch_upstream):
-    ''' Count revisions ahead/behind of the remote branch.
-        returns: (ahead, behind) (e.g. (0, 5)) '''
-
-    # Missing remote branch
-    if not branch_upstream:
-        return (0, 0)
-
-    behind = git_output(git_dir, 'rev-list', '--count', '%s..%s' % (safe_branch_name(branch), branch_upstream))
-    ahead = git_output(git_dir, 'rev-list', '--count', '%s..%s' % (branch_upstream, safe_branch_name(branch)))
-    return (int(ahead.rstrip()), int(behind.rstrip()))
-
-
 def git_branches(git_dir, obj='refs/heads'):
     ret = git_output(git_dir, 'for-each-ref', obj, '--format', '%(refname:short)')
     return ret.splitlines()
@@ -114,24 +101,60 @@ def git_can_fast_forward(git_dir, branch, branch_upstream):
     return git_bool(git_dir, 'merge-base', '--is-ancestor', branch, branch_upstream)
 
 
-def format_branch_ahead_behind(branch, ahead, behind):
-    ''' branch: string like "master"
-        ahead, behind: integers like 5, 3
-        returns: string like "master", "master[+5]", "master[-3]", "master[+5|-3]" '''
-    # Just the branch
-    if not ahead and not behind:
-        return branch
+class AheadBehind:
+    ''' Count revisions ahead/behind of the remote branch.
+        returns: (ahead, behind) (e.g. (0, 5)) '''
+    def __init__(s, git_dir, local, remote):
+        s.git_dir = git_dir
+        s.local = local
+        s.remote = remote
+        s.can_ff = False
 
-    # Suffix with ahead/behind
-    ret = branch + '['
-    if ahead:
-        ret += '+' + str(ahead)
-        if behind:
-            ret += '|'
-    if behind:
-        ret += '-' + str(behind)
-    ret += ']'
-    return ret
+        if not remote:
+            s.ahead = 0
+            s.behind = 0
+        else:
+            behind_str = git_output(git_dir, 'rev-list', '--count', '%s..%s' % (safe_branch_name(local), remote))
+            ahead_str = git_output(git_dir, 'rev-list', '--count', '%s..%s' % (remote, safe_branch_name(local)))
+            s.ahead = int(ahead_str.rstrip())
+            s.behind = int(behind_str.rstrip())
+            s.can_ff = s.behind and git_can_fast_forward(git_dir, local, remote)
+
+
+
+    def is_diverged(s):
+        return s.ahead and s.behind
+
+    def is_behind(s):
+        return (not s.ahead) and s.behind
+
+    def is_ahead(s):
+        return s.ahead and not s.behind
+
+    def is_sync(s):
+        return s.ahead == 0 and s.behind == 0
+
+    def ff(s):
+        print('fast-forwarding %s to %s...' % (s.local, s.remote))
+        if git_branch_current(s.git_dir) != s.local:
+            git(s.git_dir, 'checkout', s.local)
+        git(s.git_dir, 'merge', s.remote)
+
+    def __str__(s):
+        # Just the branch
+        if not s.ahead and not s.behind:
+            return s.local
+
+        # Suffix with ahead/behind
+        ret = s.local + '['
+        if s.ahead:
+            ret += '+' + str(s.ahead)
+            if s.behind:
+                ret += '|'
+        if s.behind:
+            ret += '-' + str(s.behind)
+        ret += ']'
+        return ret
 
 
 def git_branch_summary(git_dir):
@@ -150,15 +173,14 @@ def git_branch_summary(git_dir):
         if not is_current and branch not in interesting_branch_names:
             continue
 
-        ahead, behind = git_ahead_behind(git_dir, branch,
-                                         git_branch_upstream(git_dir, branch))
+        ab = AheadBehind(git_dir, branch, git_branch_upstream(git_dir, branch))
 
-        if not ahead and not behind and not is_current:
+        if not ab.ahead and not ab.behind and not is_current:
             # skip branches that are "not interesting"
             continue
 
         # Branch with ahead/behind upstream info ("master[+1|-5]")
-        strs.append(format_branch_ahead_behind(branch, ahead, behind))
+        strs.append(str(ab))
     return strs
 
 
@@ -241,20 +263,6 @@ def ask(git_dir, *question, valid_answers=('*',)):
             if v == '+' and len(answer):
                 return answer
 
-
-def ask_reset_hard_or_push_f(git_dir, orig_branch, upstream_branch):
-    do_reset = ask(git_dir, 'Diverged.',
-                   '<empty>  skip',
-                   'RH  git reset --hard %s' % upstream_branch,
-                   'PF  `push -f` to overwrite upstream',
-                   valid_answers=('', 'RH', 'PF'))
-
-    if do_reset == 'RH':
-        git(git_dir, 'reset', '--hard', upstream_branch)
-    elif do_reset == 'PF':
-        git(git_dir, 'push', '-f')
-
-
 def rebase(git_dir):
     orig_branch = git_branch_current(git_dir)
     if orig_branch is None:
@@ -288,7 +296,7 @@ def rebase(git_dir):
     if not upstream_branch:
         do_set_upstream = ask(git_dir, 'there is no upstream branch for %r' % orig_branch,
                               '<empty>  skip',
-                              'p  create upstream branch (git push --set-upstream orgin %s)' % orig_branch,
+                              'P  create upstream branch (git push --set-upstream orgin %s)' % orig_branch,
                               'm  checkout master',
                               valid_answers=('', 'p', 'm'))
 
@@ -304,64 +312,91 @@ def rebase(git_dir):
             print('skipping branch, because there is no upstream: %r' % orig_branch)
             return orig_branch
 
-    ahead, behind = git_ahead_behind(git_dir, orig_branch, upstream_branch)
+    while True:
+        # bu: branch-to-upstream
+        # bm: branch-to-master
+        # um: upstream-to-master
 
-    # Diverged
-    if ahead and behind:
-        ask_reset_hard_or_push_f(git_dir, orig_branch, upstream_branch)
+        upstream_branch = git_branch_upstream(git_dir, orig_branch)
+        um = AheadBehind(git_dir, upstream_branch, 'origin/master')
 
-    # Behind
-    elif behind:
-        if git_can_fast_forward(git_dir, orig_branch, upstream_branch):
-            print('fast-forwarding...')
-            git(git_dir, 'merge')
-        else:
-            do_merge = ask(git_dir, 'Behind. git merge?',
-                           "<empty>  don't merge",
-                           'm  git merge',
-                           valid_answers=('', 'm')
-                           )
+        bm = AheadBehind(git_dir, orig_branch, 'origin/master')
 
-            if do_merge == 'm':
-                git(git_dir, 'merge')
+        if bm.can_ff:
+            bm.ff()
+            continue
 
-    # Ahead
-    elif ahead:
-        do_commit = ask(git_dir, 'Ahead. commit to new branch?',
-                        '<empty>  no',
-                        '<name>   create new branch',
-                        )
-        if do_commit:
-            git(git_dir, 'checkout', '-b', do_commit)
-            git(git_dir, 'commit', '-am', 'wip', may_fail=True)
-            git(git_dir, 'checkout', orig_branch)
+        bu = AheadBehind(git_dir, orig_branch, upstream_branch)
 
-        ask_reset_hard_or_push_f(git_dir, orig_branch, upstream_branch)
+        if bu.can_ff:
+            bu.ff()
+            continue
 
-    if git_has_modifications(git_dir):
-        error('There are local modifications')
+        if not bu.is_sync():
+            print(str(bu))
+        if not bm.is_sync():
+            print('to master: ' + str(bm))
+        if not um.is_sync():
+            print('upstream to master: ' + str(um))
 
-    # Rebase onto origin/master? Only when this isn't already the master branch
-    if upstream_branch != 'origin/master':
-        ahead, behind = git_ahead_behind(git_dir, orig_branch, 'origin/master')
+        options = ['----- %s' % git_dir,
+                   '<empty>  skip']
+        valid_answers = ['']
+        all_good = True
 
-        if ahead and behind:
-            do_rebase = ask(git_dir, '%r diverged from master. git rebase -i origin/master?' % orig_branch,
-                            "<empty>  don't rebase",
-                            'r  rebase onto origin/master',
-                            valid_answers=('', 'r'))
+        if um.is_diverged():
+            all_good = False
+            if bu.is_diverged():
+                options.append('rum  rebase onto upstream, then onto master')
+                valid_answers.append('rum')
 
-            if do_rebase == 'r':
-                git(git_dir, 'rebase', '-i', 'origin/master')
-                # On conflicts, we'll exit with error implicitly
+        #if bm.is_diverged():
+            options.append('rm  rebase onto master: git rebase -i origin/master')
+            valid_answers.append('rm')
 
-                if upstream_branch is not None:
-                    do_push = ask(git_dir, 'git push -f to overwrite %r?' % upstream_branch,
-                                  "<empty>  don't overwrite upstream",
-                                  'P   `push -f` to overwrite upstream (P in caps!)',
-                                  valid_answers=('', 'P'))
-                    if do_push == 'P':
-                        git(git_dir, 'push', '-f')
+        if bu.is_diverged():
+            all_good = False
+            options.append('ru  rebase onto upstream: git rebase -i %s' % upstream_branch)
+            valid_answers.append('ru')
+
+            options.append('RU  reset to upstream: git reset --hard %s' % upstream_branch)
+            valid_answers.append('RU')
+
+        if bu.is_diverged() or bu.is_ahead():
+            all_good = False
+            options.append('P  push to overwrite upstream: git push -f')
+            valid_answers.append('P')
+
+        if orig_branch == 'master' and (bm.is_ahead() or bm.is_diverged()):
+            all_good = False
+            options.append('<name>  create new branch')
+            valid_answers.append('+')
+
+        if all_good:
+            break
+
+        do = ask(git_dir, *options, valid_answers=valid_answers)
+
+        if not do:
+            break
+
+        if do == 'rum' or do == 'ru':
+            git(git_dir, 'rebase', '-i', upstream_branch)
+
+        if do == 'rum' or do == 'rm':
+            git(git_dir, 'rebase', '-i', 'origin/master')
+
+        if do == 'RU':
+            git(git_dir, 'reset', '--hard', upstream_branch)
+
+        if do == 'P':
+            git(git_dir, 'push', '-f')
+
+        if do not in valid_answers:
+            new_branch = do
+            # create new branch
+            print('''git(git_dir, 'checkout', '-b', new_branch)''')
+            #orig_branch = new_branch
 
     return orig_branch
 
@@ -375,9 +410,11 @@ def cmd_rebase():
 
             branch = rebase(git_dir)
             if branch != 'master':
-                git(git_dir, 'checkout', 'master')
-                rebase(git_dir)
-                git(git_dir, 'checkout', branch)
+                mm = AheadBehind(git_dir, 'master', 'origin/master')
+                if not mm.is_sync():
+                    git(git_dir, 'checkout', 'master')
+                    rebase(git_dir)
+                    git(git_dir, 'checkout', branch)
 
         except SkipThisRepo:
             print('\nSkipping %r' % git_dir)
