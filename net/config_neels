@@ -16,7 +16,7 @@ TCH_TYPE=TCH/H
 BTS_BAND=GSM-1800
 BTS_LAC=23
 BTS_MAX_POWER_RED=22
-BTS_CODEC_SUPPORT=fr hr
+BTS_CODEC_SUPPORT=fr hr amr efr
 BTS_200mW=23
 
 BTS0_DESCRIPTION="sysmobts-57-bts0"
@@ -58,8 +58,8 @@ HLR_IP=127.0.0.1
 
 MSC_PC="0.23.1"
 MSC_MNCC_SOCKET="/tmp/mncc_socket"
-#MSC_MNCC="internal"
-MSC_MNCC="external ${MSC_MNCC_SOCKET}"
+MSC_MNCC="internal"
+#MSC_MNCC="external ${MSC_MNCC_SOCKET}"
 
 AUTH=required
 ENCR_A5=3
@@ -83,7 +83,7 @@ MGW4BSC_VTY_IP="127.0.0.2"
 
 BSC_IP="${TO_RAN_IP}"
 BSC_PC="0.23.3"
-BSC_CODEC_LIST="fr1 hr1"
+BSC_CODEC_LIST="fr3 fr2 fr1 hr3 hr1"
 
 HNBGW_PC="0.3.0"
 HNBGW_IP="${TO_RAN_IP}"
