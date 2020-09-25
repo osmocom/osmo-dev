@@ -296,7 +296,7 @@ def rebase(git_dir):
     if not upstream_branch:
         do_set_upstream = ask(git_dir, 'there is no upstream branch for %r' % orig_branch,
                               '<empty>  skip',
-                              'P  create upstream branch (git push --set-upstream orgin %s)' % orig_branch,
+                              'p  create upstream branch (git push --set-upstream orgin %s)' % orig_branch,
                               'm  checkout master',
                               valid_answers=('', 'p', 'm'))
 
@@ -359,13 +359,13 @@ def rebase(git_dir):
             options.append('ru  rebase onto upstream: git rebase -i %s' % upstream_branch)
             valid_answers.append('ru')
 
-            options.append('RU  reset to upstream: git reset --hard %s' % upstream_branch)
-            valid_answers.append('RU')
-
         if bu.is_diverged() or bu.is_ahead():
             all_good = False
             options.append('P  push to overwrite upstream: git push -f')
             valid_answers.append('P')
+
+            options.append('RU  reset to upstream: git reset --hard %s' % upstream_branch)
+            valid_answers.append('RU')
 
         if orig_branch == 'master' and (bm.is_ahead() or bm.is_diverged()):
             all_good = False
