@@ -276,22 +276,29 @@ all_debug:
 # regenerate this Makefile, in case the deps or opts changed
 .PHONY: regen
 regen:
-	{script} {projects_and_deps} {configure_opts} -m {make_dir} -o {makefile} -s {src_dir} -b {build_dir} -u "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}
+	{script} \
+		{projects_and_deps} \
+		{configure_opts} \
+		-m {make_dir} \
+		-o {makefile} \
+		-s {src_dir} \
+		-b {build_dir} \
+		-u "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}
 
 '''.format(
     script=os.path.relpath(sys.argv[0], make_dir),
     projects_and_deps=os.path.relpath(args.projects_and_deps_file, make_dir),
-    configure_opts=' '.join([os.path.relpath(f, make_dir) for f in configure_opts_files]),
+    configure_opts=' \\\n\t\t'.join([os.path.relpath(f, make_dir) for f in configure_opts_files]),
     make_dir='.',
     makefile=args.output,
     src_dir=os.path.relpath(args.src_dir, make_dir),
     build_dir=os.path.relpath(build_dir, make_dir),
     url=args.url,
-    push_url=(" -p '%s'"%args.push_url) if args.push_url else '',
-    sudo_make_install=' -I' if args.sudo_make_install else '',
-    no_ldconfig=' -L' if args.no_ldconfig else '',
-    ldconfig_without_sudo=' --ldconfig-without-sudo' if args.ldconfig_without_sudo else '',
-    make_check='' if args.make_check else " --no-make-check",
+    push_url=(" \\\n\t\t-p '%s'"%args.push_url) if args.push_url else '',
+    sudo_make_install=' \\\n\t\t-I' if args.sudo_make_install else '',
+    no_ldconfig=' \\\n\t\t-L' if args.no_ldconfig else '',
+    ldconfig_without_sudo=' \\\n\t\t--ldconfig-without-sudo' if args.ldconfig_without_sudo else '',
+    make_check='' if args.make_check else " \\\n\t\t--no-make-check",
     ))
 
   # convenience target: clone all repositories first
