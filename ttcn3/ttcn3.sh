@@ -144,7 +144,7 @@ check_dir_testsuite() {
 # inside the docker container
 prepare_local_bin() {
 	local scripts="
-		${DIR_OSMODEV}/src/docker-playground/osmo-bts-master/respawn.sh
+		${DIR_OSMODEV}/src/docker-playground/common/respawn.sh
 	"
 
 	for script in $scripts; do
@@ -153,10 +153,7 @@ prepare_local_bin() {
 			continue
 		fi
 
-		set -x
-		sudo cp "$script" "$script_path_localbin"
-		sudo chmod +x /usr/local/bin/respawn.sh
-		set +x
+		install -v -Dm755 "$script" "$script_path_localbin"
 	done
 }
 
