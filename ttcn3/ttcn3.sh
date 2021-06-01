@@ -145,10 +145,18 @@ check_dir_testsuite() {
 prepare_local_bin() {
 	local scripts="
 		${DIR_OSMODEV}/src/docker-playground/common/respawn.sh
+		${DIR_OSMODEV}/src/docker-playground/debian-stretch-titan/ttcn3-docker-run.sh
 	"
 
 	for script in $scripts; do
-		local script_path_localbin="/usr/local/bin/$(basename "$script")"
+		local script_path_localbin
+		local name_install="$(basename "$script")"
+
+		case "$name_install" in
+			ttcn3-docker-run.sh) name_install="ttcn3-docker-run" ;;
+		esac
+
+		script_path_localbin="/usr/local/bin/$name_install"
 		if [ -x "$script_path_localbin" ]; then
 			continue
 		fi
