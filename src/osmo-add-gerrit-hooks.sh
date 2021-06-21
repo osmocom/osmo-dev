@@ -10,7 +10,7 @@
 set -x
 base="$PWD"
 
-for r in $(find . -name '.git'); do
+for r in $(find . -maxdepth 2 -name '.git'); do
   cd "$base/$r"
   if [ ! -f "hooks/commit-msg" ]; then
     scp go:hooks/commit-msg hooks/
