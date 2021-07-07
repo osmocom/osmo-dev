@@ -13,8 +13,9 @@ apn="${APN_DEV}"
 
 sudo true || exit 1
 
-if [ -z "$(sudo iptables -L -t nat | grep MASQUERADE)" ]; then
-  sudo iptables -t nat -A POSTROUTING -s ${GGSN_NET} -o $dev -j MASQUERADE
+if ! sudo iptables -t nat -C POSTROUTING -s ${GGSN_NET} -o $dev -j MASQUERADE 2>/dev/null; then
+  echo "Adding iptables rule for masquerade"
+  sudo iptables -t nat -I POSTROUTING -s ${GGSN_NET} -o $dev -j MASQUERADE
 fi
 
 if [ "$(sudo cat /proc/sys/net/ipv4/ip_forward)" = "0" ]; then
