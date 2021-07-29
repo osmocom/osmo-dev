@@ -15,7 +15,7 @@ sudo apt install \
   libdbd-sqlite3 libsqlite3-dev libpcap-dev libc-ares-dev libgnutls28-dev \
   libsctp-dev sqlite3
 
-./gen_makefile.py 3G+2G.deps default.opts iu.opts -I -m make
+./gen_makefile.py default.opts iu.opts -I -m make
 
 cd make
 make
@@ -40,29 +40,39 @@ projects, but works generically.
 The idea is to have all your Osmocom git clones in ./src, while keeping one or
 more separate build trees in ./make-*.
 
-Run ./gen_makefile.py with a choice of projects (2G only or also 3G?)
-and a choice of configure options.
+Run ./gen_makefile.py with a choice of choice of configure options.
 
 
 Examples:
 
-Full 2G and 3G support:
+CN with full 2G and 3G support:
 
-  ./gen_makefile.py 3G+2G.deps default.opts iu.opts  -m make
+  ./gen_makefile.py default.opts iu.opts -m make
   cd make
-  make
+  make cn
 
-2G only, and a custom dir name of 'make-2G':
+Other make targets exist for specific use cases:
 
-  ./gen_makefile.py 2G.deps default.opts -m make-2G
-  cd make-2G
-  make
+  - 'usrp':
+    Build the CN, OsmoBSC, OsmoBTS and OsmoTRX (default, e.g. when connecting
+    to an USRP)
+
+  - 'cn-bsc':
+    Build the CN and OsmoBSC (e.g. when connecting to an external sysmoBTS)
+
+  - 'osmo-msc':
+    Build only the OsmoMSC project and its dependencies (this can be used for
+    any project in all.deps).
+
+  - '.make.osmo-ttcn3-hacks.clone'
+    Clone the osmo-ttcn3-hacks git repository (it cannot be built by osmo-dev,
+    but cloning it is still useful.)
 
 If you make modifications in one of the source trees, this Makefile will pick
-it up, rebuild the project and also rebuild all dependencies (according to the
-*.deps file the Makefile was generated from).
+it up, rebuild the project and also rebuild all dependencies (according to
+all.deps).
 
-If you modify the *.deps or *.opts file, you can easily run 'make regen' in a
+If you modify the all.deps or *.opts file, you can easily run 'make regen' in a
 make-* subdir to regenerate the Makefile from the same files.
 
 In your make-* subdir there are empty status files that are touched for every
@@ -72,7 +82,7 @@ You can manually remove them to force a rebuild of a specific target.
 For example, if you 'rm .make.libosmocore.autoconf', libosmocore and all
 projects depending on libosmocore will be rebuilt from scratch.
 
-For more details on the *.opts and *.deps syntax, read the docs at the top of
+For more details on the *.opts and all.deps syntax, read the docs at the top of
 ./gen_makefile.py.
 
 It is also easily possible to keep sources and build trees in various

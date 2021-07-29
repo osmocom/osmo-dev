@@ -17,5 +17,10 @@ osmo-bts	libosmo-netif
 osmo-smlc	libosmo-sccp
 # osmo-trx can build with --enable-sanitize, but then won't work reliably.
 # When omitting --enable-sanitize from osmo-trx only, its 'make check' will fail.
-# So if you want osmo-trx, uncomment and use no sanitize.opts, or use LD_PRELOAD for osmo-trx binaries.
-#osmo-trx	libosmocore
+# So if you want osmo-trx, use no sanitize.opts, or use LD_PRELOAD for osmo-trx binaries.
+osmo-trx	libosmocore
+osmo-pcu	libosmocore
+
+# can only clone these
+docker-playground
+osmo-ttcn3-hacks
