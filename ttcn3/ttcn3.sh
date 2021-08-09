@@ -71,6 +71,7 @@ get_program_repo() {
 	case "$1" in
 		fake_trx.py) echo "osmocom-bb" ;;
 		osmo-bts-*) echo "osmo-bts" ;;
+		osmo-pcap-*) echo "osmo-pcap" ;;
 		osmo-stp) echo "libosmo-sccp" ;;
 		trxcon) echo "osmocom-bb" ;;
 		virtphy) echo "osmocom-bb" ;;
