@@ -236,7 +236,7 @@ run_docker() {
 	local hacks="${DIR_OSMODEV}/src/osmo-ttcn3-hacks"
 	local docker_dir="$(get_testsuite_dir_docker)"
 	local docker_name="$(basename "$docker_dir")"
-	local marker="${DIR_OSMODEV}/ttcn3/make/.docker.$docker_name"
+	local marker="${DIR_OSMODEV}/ttcn3/make/.docker.$docker_name.$IMAGE_SUFFIX"
 
 	# Skip building docker containers if this already ran
 	if [ -e "$marker" ]; then

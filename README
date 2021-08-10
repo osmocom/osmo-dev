@@ -152,6 +152,7 @@ feasible).
 Example usage:
 
   ./ttcn3/ttcn3.sh mgw
+  IMAGE_SUFFIX=latest ./ttcn3/ttcn3.sh mgw
 
 More about the testsuites:
 https://osmocom.org/projects/cellular-infrastructure/wiki/Titan_TTCN3_Testsuites
