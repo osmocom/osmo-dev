@@ -107,6 +107,9 @@ parser.add_argument('-c', '--no-make-check', dest='make_check',
   default=True, action='store_false',
   help='''do not 'make check', just 'make' to build.''')
 
+parser.add_argument('--docker-cmd',
+    help='''prefix configure/make/make install calls with this command (used by ttcn3.sh)''')
+
 args = parser.parse_args()
 
 class listdict(dict):
@@ -189,19 +192,19 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	-chmod -R ug+w {build_proj}
 	-rm -rf {build_proj}
 	mkdir -p {build_proj}
-	cd {build_proj}; {build_to_src}/configure {configure_opts}
+	cd {build_proj}; {docker_cmd}{build_to_src}/configure {configure_opts}
 	sync
 	touch $@
 
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
 	@echo -e "\n\n\n===== $@\n"
-	$(MAKE) -C {build_proj} -j {jobs} {check}
+	{docker_cmd}$(MAKE) -C {build_proj} -j {jobs} {check}
 	sync
 	touch $@
 
 .make.{proj}.install: .make.{proj}.build
 	@echo -e "\n\n\n===== $@\n"
-	{sudo_make_install}$(MAKE) -C {build_proj} install
+	{docker_cmd}{sudo_make_install}$(MAKE) -C {build_proj} install
 	{no_ldconfig}{sudo_ldconfig}ldconfig
 	sync
 	touch $@
@@ -235,6 +238,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     no_ldconfig='#' if no_ldconfig else '',
     sudo_ldconfig='' if ldconfig_without_sudo else 'sudo ',
     check='check' if make_check else '',
+    docker_cmd=f'{args.docker_cmd} ' if args.docker_cmd else '',
     )
 
 
@@ -283,7 +287,7 @@ regen:
 		-o {makefile} \
 		-s {src_dir} \
 		-b {build_dir} \
-		-u "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}
+		-u "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}{docker_cmd}
 
 '''.format(
     script=os.path.relpath(sys.argv[0], make_dir),
@@ -299,6 +303,7 @@ regen:
     no_ldconfig=' \\\n\t\t-L' if args.no_ldconfig else '',
     ldconfig_without_sudo=' \\\n\t\t--ldconfig-without-sudo' if args.ldconfig_without_sudo else '',
     make_check='' if args.make_check else " \\\n\t\t--no-make-check",
+    docker_cmd=f' \\\n\t\t--docker-cmd "{args.docker_cmd}"' if args.docker_cmd else ''
     ))
 
   # convenience target: clone all repositories first
