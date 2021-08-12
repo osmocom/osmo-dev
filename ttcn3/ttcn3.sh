@@ -4,7 +4,14 @@ PROJECT_UPPER="$(echo "$PROJECT" | tr '[:lower:]' '[:upper:]')"
 DIR_OSMODEV="$(readlink -f "$(dirname $0)/..")"
 DIR_MAKE="${DIR_MAKE:-${DIR_OSMODEV}/ttcn3/make}"
 DIR_OUTPUT="${DIR_OUTPUT:-${DIR_OSMODEV}/ttcn3/out}"
+DIR_USR_LOCAL="$DIR_OSMODEV/ttcn3/usr_local"
 JOBS="${JOBS:-9}"
+
+# Osmocom libraries and programs relevant for the current testsuite will be
+# built in this container. It must have all build dependencies available and
+# be based on the same distribution that master-* containers are based on, so
+# there are no incompatibilities with shared libraries.
+DOCKER_IMG_BUILD="debian-stretch-jenkins"
 
 check_usage() {
 	if [ -z "$PROJECT" ]; then
@@ -101,6 +108,9 @@ setup_dir_make() {
 	  echo "osmo-ttcn3-hacks"
 	  echo "osmocom-bb") > ttcn3/3G+2G_ttcn3.deps
 
+	local docker_cmd="$DIR_OSMODEV/ttcn3/scripts/docker_configure_make.sh"
+	docker_cmd="$docker_cmd $USER/$DOCKER_IMG_BUILD"
+
 	./gen_makefile.py \
 		ttcn3/3G+2G_ttcn3.deps \
 		default.opts \
@@ -109,7 +119,10 @@ setup_dir_make() {
 		no_doxygen.opts \
 		no_dahdi.opts \
 		no_optimization.opts \
-		ttcn3/ttcn3.opts -I -m "$DIR_MAKE"
+		ttcn3/ttcn3.opts \
+		--docker-cmd "$docker_cmd" \
+		--make-dir "$DIR_MAKE" \
+		--no-ldconfig
 }
 
 # $1: name of repository (e.g. osmo-ttcn3-hacks)
@@ -157,7 +170,7 @@ prepare_local_bin() {
 			ttcn3-docker-run.sh) name_install="ttcn3-docker-run" ;;
 		esac
 
-		script_path_localbin="/usr/local/bin/$name_install"
+		script_path_localbin="$DIR_USR_LOCAL/bin/$name_install"
 		if [ -x "$script_path_localbin" ]; then
 			continue
 		fi
@@ -185,23 +198,32 @@ build_osmo_program_subdir() {
 # $1 program
 build_osmo_program_osmodev() {
 	local repo="$(get_program_repo "$program")"
+	local usr_local_bin="$DIR_USR_LOCAL/bin"
 	make -C "$DIR_MAKE" "$repo"
 
-	local path="$(command -v "$program")"
-	if [ -z "$path" ]; then
-		echo "ERROR: program was not installed to PATH: $program"
-		echo "Maybe you need to add /usr/local/bin to PATH?"
+	if [ -z "$(find "$usr_local_bin" -name "$program")" ]; then
+		echo "ERROR: program was not installed properly: $program"
+		echo "Expected it to be in path: $PATH_dest"
 		exit 1
 	fi
 
-	local pathdir="$(dirname "$path")"
 	local reference="$DIR_MAKE/.make.$repo.build"
-	if [ -z "$(find "$pathdir" -name "$program" -newer "$reference")" ]; then
+	if [ -z "$(find "$usr_local_bin" -name "$program" -newer "$reference")" ]; then
 		echo "ERROR: $path is outdated!"
 		echo "Maybe you need to pass a configure argument to $repo.git, so it builds and installs $program?"
-		echo "Or the order in PATH is wrong?"
 		exit 1
 	fi
+}
+
+prepare_docker_build_container() {
+	local marker="$DIR_OSMODEV/ttcn3/make/.ttcn3-docker-build"
+
+	if [ -e "$marker" ]; then
+		return
+	fi
+
+	make -C "$DIR_OSMODEV/src/docker-playground/$DOCKER_IMG_BUILD"
+	touch "$marker"
 }
 
 # Use osmo-dev to build one Osmocom program and its dependencies
@@ -247,7 +269,7 @@ run_docker() {
 	cd "$(get_testsuite_dir_docker)"
 	export DOCKER_ARGS="\
 		-e LD_LIBRARY_PATH=/usr/local/lib \
-		-v /usr/local:/usr/local:ro \
+		-v "$DIR_USR_LOCAL":/usr/local:ro \
 		-v $hacks:/osmo-ttcn3-hacks:ro \
 		"
 	export NO_LIST_OSMO_PACKAGES=1
@@ -283,6 +305,7 @@ clone_repo "osmo-ttcn3-hacks"
 clone_repo "docker-playground"
 check_dir_testsuite
 prepare_local_bin
+prepare_docker_build_container
 build_osmo_programs
 build_testsuite
 remove_old_logs

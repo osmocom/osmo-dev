@@ -17,3 +17,5 @@ net/*
 ttcn3/3G+2G_ttcn3.deps
 ttcn3/out/
 ttcn3/make/
+ttcn3/.run.sh
+ttcn3/usr_local
