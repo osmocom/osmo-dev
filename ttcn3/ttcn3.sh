@@ -62,10 +62,10 @@ get_testsuite_dir_docker() {
 get_programs() {
 	case "$PROJECT" in
 		bsc) echo "osmo-stp osmo-bsc osmo-bts-omldummy" ;;
-		bts) echo "osmo-bsc osmo-bts-trx fake_trx.py trxcon" ;;
+		bts) echo "osmo-bsc osmo-bts-trx" ;;
 		msc) echo "osmo-stp osmo-msc" ;;
 		pcu-sns) echo "osmo-pcu" ;;
-		pcu) echo "osmo-pcu osmo-bsc osmo-bts-virtual virtphy" ;;
+		pcu) echo "osmo-pcu osmo-bsc osmo-bts-virtual" ;;
 		sgsn) echo "osmo-stp osmo-sgsn" ;;
 		sip) echo "osmo-sip-connector" ;;
 		*) echo "osmo-$PROJECT" ;;
@@ -76,12 +76,9 @@ get_programs() {
 # $1: program name
 get_program_repo() {
 	case "$1" in
-		fake_trx.py) echo "osmocom-bb" ;;
 		osmo-bts-*) echo "osmo-bts" ;;
 		osmo-pcap-*) echo "osmo-pcap" ;;
 		osmo-stp) echo "libosmo-sccp" ;;
-		trxcon) echo "osmocom-bb" ;;
-		virtphy) echo "osmocom-bb" ;;
 		*) echo "$1" ;;
 	esac
 }
@@ -105,8 +102,7 @@ setup_dir_make() {
 	  echo "osmo-pcu	libosmocore"
 	  # just clone these, building is handled by ttcn3.sh
 	  echo "docker-playground"
-	  echo "osmo-ttcn3-hacks"
-	  echo "osmocom-bb") > ttcn3/3G+2G_ttcn3.deps
+	  echo "osmo-ttcn3-hacks" ) > ttcn3/3G+2G_ttcn3.deps
 
 	local docker_cmd="$DIR_OSMODEV/ttcn3/scripts/docker_configure_make.sh"
 	docker_cmd="$docker_cmd $USER/$DOCKER_IMG_BUILD"
@@ -179,21 +175,6 @@ prepare_local_bin() {
 	done
 }
 
-# Build a program that is in the subdir of a repository (e.g. trxcon in osmocom-bb.git).
-# $1: repository
-# $2: path in the repository
-build_osmo_program_subdir() {
-	clone_repo "$1"
-	cd "$DIR_OSMODEV/src/$1/$2"
-	if ! [ -e "./configure" ] && [ -e "configure.ac" ]; then
-		autoreconf -fi
-	fi
-	if ! [ -e "Makefile" ] && [ -e "Makefile.am" ]; then
-		./configure
-	fi
-	make -j"$JOBS"
-}
-
 # Use osmo-dev to build a typical Osmocom program, and run a few sanity checks.
 # $1 program
 build_osmo_program_osmodev() {
@@ -231,9 +212,6 @@ build_osmo_programs() {
 	local program
 	for program in $(get_programs); do
 		case "$program" in
-			fake_trx.py) clone_repo "osmocom-bb" ;;
-			trxcon) build_osmo_program_subdir "osmocom-bb" "src/host/trxcon" ;;
-			virtphy) build_osmo_program_subdir "osmocom-bb" "src/host/virt_phy" ;;
 			*) build_osmo_program_osmodev "$program" ;;
 		esac
 	done
