@@ -245,7 +245,11 @@ run_docker() {
 	fi
 
 	cd "$(get_testsuite_dir_docker)"
-	export DOCKER_ARGS="-v /usr/local:/usr/local:ro -v $hacks:/osmo-ttcn3-hacks:ro"
+	export DOCKER_ARGS="\
+		-e LD_LIBRARY_PATH=/usr/local/lib \
+		-v /usr/local:/usr/local:ro \
+		-v $hacks:/osmo-ttcn3-hacks:ro \
+		"
 	export NO_LIST_OSMO_PACKAGES=1
 	./jenkins.sh
 
