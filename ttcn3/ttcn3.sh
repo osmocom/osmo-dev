@@ -118,7 +118,8 @@ setup_dir_make() {
 		ttcn3/ttcn3.opts \
 		--docker-cmd "$docker_cmd" \
 		--make-dir "$DIR_MAKE" \
-		--no-ldconfig
+		--no-ldconfig \
+		--no-make-check
 }
 
 # $1: name of repository (e.g. osmo-ttcn3-hacks)
