@@ -20,6 +20,9 @@ osmo-smlc	libosmo-sccp
 # So if you want osmo-trx, use no sanitize.opts, or use LD_PRELOAD for osmo-trx binaries.
 osmo-trx	libosmocore
 osmo-pcu	libosmocore
+asn1c	libasn1c
+osmo-gbproxy	libosmocore
+osmo-pcap	libosmocore
 
 # can only clone these
 docker-playground
