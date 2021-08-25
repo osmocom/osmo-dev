@@ -116,6 +116,7 @@ setup_dir_make() {
 		no_dahdi.opts \
 		no_optimization.opts \
 		ttcn3/ttcn3.opts \
+		werror.opts \
 		--docker-cmd "$docker_cmd" \
 		--make-dir "$DIR_MAKE" \
 		--no-ldconfig \
