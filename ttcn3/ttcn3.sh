@@ -125,7 +125,9 @@ setup_dir_make() {
 
 # $1: name of repository (e.g. osmo-ttcn3-hacks)
 clone_repo() {
-	make -C "$DIR_MAKE" ".make.${1}.clone"
+	if ! [ -e "$DIR_OSMODEV/ttcn3/make/.make.${1}.clone" ]; then
+		make -C "$DIR_MAKE" ".make.${1}.clone"
+	fi
 }
 
 # Require testsuite dir and docker-playground dir
