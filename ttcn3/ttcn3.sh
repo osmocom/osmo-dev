@@ -177,27 +177,6 @@ prepare_local_bin() {
 	done
 }
 
-# Use osmo-dev to build a typical Osmocom program, and run a few sanity checks.
-# $1 program
-build_osmo_program_osmodev() {
-	local repo="$(get_program_repo "$program")"
-	local usr_local_bin="$DIR_USR_LOCAL/bin"
-	make -C "$DIR_MAKE" "$repo"
-
-	if [ -z "$(find "$usr_local_bin" -name "$program")" ]; then
-		echo "ERROR: program was not installed properly: $program"
-		echo "Expected it to be in path: $PATH_dest"
-		exit 1
-	fi
-
-	local reference="$DIR_MAKE/.make.$repo.build"
-	if [ -z "$(find "$usr_local_bin" -name "$program" -newer "$reference")" ]; then
-		echo "ERROR: $path is outdated!"
-		echo "Maybe you need to pass a configure argument to $repo.git, so it builds and installs $program?"
-		exit 1
-	fi
-}
-
 prepare_docker_build_container() {
 	local marker="$DIR_OSMODEV/ttcn3/make/.ttcn3-docker-build"
 
@@ -212,10 +191,35 @@ prepare_docker_build_container() {
 # Use osmo-dev to build one Osmocom program and its dependencies
 build_osmo_programs() {
 	local program
-	for program in $(get_programs); do
-		case "$program" in
-			*) build_osmo_program_osmodev "$program" ;;
-		esac
+	local programs="$(get_programs)"
+	local make_args="-C $DIR_MAKE"
+
+	for program in $programs; do
+		local repo="$(get_program_repo "$program")"
+		make_args="$make_args $repo"
+	done
+
+	set -x
+	make $make_args
+	set +x
+
+	for program in $programs; do
+		local repo="$(get_program_repo "$program")"
+		local usr_local_bin="$DIR_USR_LOCAL/bin"
+
+		if [ -z "$(find "$usr_local_bin" -name "$program")" ]; then
+			echo "ERROR: program was not installed properly: $program"
+			echo "Expected it to be in path: $PATH_dest"
+			exit 1
+		fi
+
+		local reference="$DIR_MAKE/.make.$repo.build"
+		if [ -z "$(find "$usr_local_bin" -name "$program" -newer "$reference")" ]; then
+			echo "ERROR: $path is outdated!"
+			echo "Maybe you need to pass a configure argument to $repo.git, so it builds and installs" \
+				"$program?"
+			exit 1
+		fi
 	done
 }
 
