@@ -110,6 +110,9 @@ parser.add_argument('--docker-cmd',
 parser.add_argument('-g', '--build-debug', dest='build_debug', default=False, action='store_true',
     help='''set 'CFLAGS=-g' when calling src/configure''')
 
+parser.add_argument('-a', '--auto-distclean', action='store_true',
+    help='''run "make distclean" automatically if source directory already configured''')
+
 args = parser.parse_args()
 
 class listdict(dict):
@@ -193,6 +196,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	touch $@
 
 .make.{proj}.autoconf: .make.{proj}.clone {src_proj}/configure.ac
+	if {distclean_cond}; then $(MAKE) {proj}-distclean; fi
 	@echo -e "\n\n\n===== $@\n"
 	-rm -f {src_proj}/.version
 	cd {src_proj}; autoreconf -fi
@@ -200,6 +204,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	touch $@
 	
 .make.{proj}.configure: .make.{proj}.autoconf {deps_installed} $({proj}_configure_files)
+	if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.autoconf; fi
 	@echo -e "\n\n\n===== $@\n"
 	-chmod -R ug+w {build_proj}
 	-rm -rf {build_proj}
@@ -209,6 +214,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	touch $@
 
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
+	if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.configure; fi
 	@echo -e "\n\n\n===== $@\n"
 	{docker_cmd}$(MAKE) -C {build_proj} -j {jobs} {check}
 	sync
@@ -234,6 +240,12 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	-chmod -R ug+w {build_proj}
 	-rm -rf {build_proj}
 	-rm -rf .make.{proj}.*
+
+.PHONY: {proj}-distclean
+{proj}-distclean: {proj}-clean
+	@echo -e "\n\n\n===== $@\n"
+	$(MAKE) -C {src_proj} distclean
+
 '''.format(
     url=url,
     push_url=push_url or url,
@@ -252,6 +264,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     check='check' if make_check else '',
     docker_cmd=f'{args.docker_cmd} ' if args.docker_cmd else '',
     cflags='CFLAGS=-g ' if args.build_debug else '',
+    distclean_cond=f'[ -e {make_to_src_proj}/config.status ]' if args.auto_distclean else 'false'
     )
 
 
@@ -328,7 +341,7 @@ regen:
 		-o {makefile} \
 		-s {src_dir} \
 		-b {build_dir} \
-		-u "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}{docker_cmd}{build_debug}
+		-u "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}{docker_cmd}{build_debug}{auto_distclean}
 
 '''.format(
     script=os.path.relpath(sys.argv[0], make_dir),
@@ -345,6 +358,7 @@ regen:
     make_check='' if args.make_check else " \\\n\t\t--no-make-check",
     docker_cmd=f' \\\n\t\t--docker-cmd "{args.docker_cmd}"' if args.docker_cmd else '',
     build_debug=f' \\\n\t\t--build-debug' if args.build_debug else '',
+    auto_distclean=' \\\n\t\t--auto-distclean' if args.auto_distclean else '',
     ))
 
   # convenience target: clone all repositories first
