@@ -176,11 +176,14 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     -and -not -name "Makefile.in" \
     -and -not -name "config.h.in" )
 {proj}_files := $(shell find {src_proj} \
-    -name "*.[hc]" \
-    -or -name "*.py" \
-    -or -name "*.cpp" \
-    -or -name "*.tpl" \
-    -or -name "*.map")
+    \( \
+      -name "*.[hc]" \
+      -or -name "*.py" \
+      -or -name "*.cpp" \
+      -or -name "*.tpl" \
+      -or -name "*.map" \
+    \) \
+    -and -not -name "config.h")
 
 .make.{proj}.clone:
 	@echo -e "\n\n\n===== $@\n"
