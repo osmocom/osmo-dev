@@ -110,7 +110,8 @@ setup_dir_make() {
 		--docker-cmd "$docker_cmd" \
 		--make-dir "$DIR_MAKE" \
 		--no-ldconfig \
-		--no-make-check
+		--no-make-check \
+		--auto-distclean
 }
 
 # $1: name of repository (e.g. osmo-ttcn3-hacks)
