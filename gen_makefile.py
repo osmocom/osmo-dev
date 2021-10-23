@@ -107,6 +107,9 @@ parser.add_argument('-c', '--no-make-check', dest='make_check',
 parser.add_argument('--docker-cmd',
     help='''prefix configure/make/make install calls with this command (used by ttcn3.sh)''')
 
+parser.add_argument('-g', '--build-debug', dest='build_debug', default=False, action='store_true',
+    help='''set 'CFLAGS=-g' when calling src/configure''')
+
 args = parser.parse_args()
 
 class listdict(dict):
@@ -198,7 +201,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 	-chmod -R ug+w {build_proj}
 	-rm -rf {build_proj}
 	mkdir -p {build_proj}
-	cd {build_proj}; {docker_cmd}{build_to_src}/configure {configure_opts}
+	cd {build_proj}; {cflags}{docker_cmd}{build_to_src}/configure {configure_opts}
 	sync
 	touch $@
 
@@ -245,6 +248,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     sudo_ldconfig='' if ldconfig_without_sudo else 'sudo ',
     check='check' if make_check else '',
     docker_cmd=f'{args.docker_cmd} ' if args.docker_cmd else '',
+    cflags='CFLAGS=-g ' if args.build_debug else '',
     )
 
 
@@ -321,7 +325,7 @@ regen:
 		-o {makefile} \
 		-s {src_dir} \
 		-b {build_dir} \
-		-u "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}{docker_cmd}
+		-u "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}{docker_cmd}{build_debug}
 
 '''.format(
     script=os.path.relpath(sys.argv[0], make_dir),
@@ -336,7 +340,8 @@ regen:
     no_ldconfig=' \\\n\t\t-L' if args.no_ldconfig else '',
     ldconfig_without_sudo=' \\\n\t\t--ldconfig-without-sudo' if args.ldconfig_without_sudo else '',
     make_check='' if args.make_check else " \\\n\t\t--no-make-check",
-    docker_cmd=f' \\\n\t\t--docker-cmd "{args.docker_cmd}"' if args.docker_cmd else ''
+    docker_cmd=f' \\\n\t\t--docker-cmd "{args.docker_cmd}"' if args.docker_cmd else '',
+    build_debug=f' \\\n\t\t--build-debug' if args.build_debug else '',
     ))
 
   # convenience target: clone all repositories first
