@@ -1,0 +1,2 @@
+osmo-trx --with-uhd
+osmo-bts --enable-trx
