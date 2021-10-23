@@ -11,3 +11,4 @@ osmo-hlr --enable-werror
 osmo-mgw --enable-werror
 osmo-msc --enable-werror
 osmo-sgsn --enable-werror
+osmo-bts --enable-werror
