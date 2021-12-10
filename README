@@ -13,9 +13,9 @@ sudo apt install \
   build-essential gcc g++ make automake autoconf libtool pkg-config \
   libtalloc-dev libpcsclite-dev libortp-dev libsctp-dev libssl-dev libdbi-dev \
   libdbd-sqlite3 libsqlite3-dev libpcap-dev libc-ares-dev libgnutls28-dev \
-  libsctp-dev sqlite3
+  libsctp-dev sqlite3 libusb-1.0-0-dev libmnl-dev libsofia-sip-ua-glib-dev
 
-./gen_makefile.py default.opts iu.opts -I -m make
+./gen_makefile.py default.opts iu.opts no_dahdi.opts -I -m make
 
 cd make
 make
