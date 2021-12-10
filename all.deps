@@ -23,6 +23,7 @@ osmo-pcu	libosmocore
 asn1c	libasn1c
 osmo-gbproxy	libosmocore
 osmo-pcap	libosmocore
+osmo-bsc-nat	libosmo-sccp
 
 # can only clone these
 docker-playground
