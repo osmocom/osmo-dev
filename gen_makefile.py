@@ -177,7 +177,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     -name "Makefile.am" \
     -or -name "*.in" \
     -and -not -name "Makefile.in" \
-    -and -not -name "config.h.in" )
+    -and -not -name "config.h.in" 2>/dev/null)
 {proj}_files := $(shell find {src_proj} \
     \( \
       -name "*.[hc]" \
@@ -186,7 +186,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
       -or -name "*.tpl" \
       -or -name "*.map" \
     \) \
-    -and -not -name "config.h")
+    -and -not -name "config.h" 2>/dev/null)
 
 .make.{proj}.clone:
 	@echo -e "\n\n\n===== $@\n"
