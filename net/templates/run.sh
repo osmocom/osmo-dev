@@ -81,8 +81,10 @@ mgw4msc="osmo-mgw -c osmo-mgw-for-msc.cfg"
 #mgw4bsc="strace osmo-mgw -c osmo-mgw-for-bsc.cfg"
 mgw4bsc="osmo-mgw -c osmo-mgw-for-bsc.cfg"
 hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
-stp="osmo-stp"
+stp4cn="osmo-stp -c osmo-stp-cn.cfg"
+stp4ran="osmo-stp -c osmo-stp-ran.cfg"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc.cfg"
+bscnat="osmo-bsc-nat"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
@@ -123,9 +125,23 @@ PIDS=""
 term "$ggsn" GGSN &
 PIDS="$PIDS $!"
 
-sleep .2
-term "$stp" STP &
-PIDS="$PIDS $!"
+if [ "${STP_CN_IP}" = "${STP_RAN_IP}" ]; then
+  sleep .2
+  term "$stp4cn" STP &
+  PIDS="$PIDS $!"
+else
+  sleep .2
+  term "$stp4cn" STP4CN &
+  PIDS="$PIDS $!"
+
+  sleep .2
+  term "$stp4ran" STP4RAN &
+  PIDS="$PIDS $!"
+
+  sleep .2
+  term "$bscnat" BSCNAT &
+  PIDS="$PIDS $!"
+fi
 
 sleep .2
 term "$hlr" HLR &
@@ -199,6 +215,7 @@ killall osmo-hlr
 killall -9 osmo-stp
 sudo killall tcpdump
 killall osmo-ggsn
+killall osmo-bsc-nat
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   # 'killall' seems to work only with the shortened name
