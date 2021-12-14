@@ -109,6 +109,18 @@ GGSN_GTP_STATE_DIR=/tmp
 SIPCON_SIP="${TO_SIP_IP}"
 SIPCON_SIP_PORT="5060"
 
+STP_CN_IP="127.0.0.1"
+STP_RAN_IP="127.0.0.1"
+# Set STP_CN_IP different from STP_RAN_IP, to run a second OsmoSTP and
+# OsmoBSCNAT to connect both
+# STP_RAN_IP="127.0.0.2"
+
+# Enabled only when STP_CN_IP != STP_RAN_IP
+BSCNAT_CN_PC="${BSC_PC}"
+BSCNAT_CN_IP="127.0.0.3"
+BSCNAT_RAN_PC="${MSC_PC}"
+BSCNAT_RAN_IP="127.0.0.4"
+
 # PBX_SERVER:
 #  "kamailio" -- launch kamailio
 #  "freeswitch" -- launch freeswitch
