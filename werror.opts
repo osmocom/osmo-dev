@@ -1,4 +1,4 @@
-libasn1c --enable-werror
+# libasn1c --enable-werror
 libosmo-abis --enable-werror
 libosmocore --enable-werror
 libosmo-netif --enable-werror
