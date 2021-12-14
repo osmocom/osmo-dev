@@ -118,33 +118,62 @@ fi
 sudo tcpdump -i $dev -n -w current_log/$dev.single.pcap -U not port 22 &
 sudo tcpdump -i lo -n -w current_log/lo.single.pcap -U not port 22 &
 
+PIDS=""
+
 term "$ggsn" GGSN &
+PIDS="$PIDS $!"
+
 sleep .2
 term "$stp" STP &
+PIDS="$PIDS $!"
+
 sleep .2
 term "$hlr" HLR &
+PIDS="$PIDS $!"
+
 sleep .2
 term "$sgsn" SGSN &
+PIDS="$PIDS $!"
+
 sleep .2
 term "$gbproxy" GBPROXY &
+PIDS="$PIDS $!"
+
 sleep .2
 term "$mgw4msc" MGW4MSC &
+PIDS="$PIDS $!"
+
 sleep .2
 term "$mgw4bsc" MGW4BSC &
+PIDS="$PIDS $!"
+
 sleep .2
 term "$msc" MSC &
+PIDS="$PIDS $!"
+
 sleep 2
 term "$hnbgw" HNBGW &
+PIDS="$PIDS $!"
+
 sleep .2
 term "$bsc" BSC &
+PIDS="$PIDS $!"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sleep .2
   term "$sipcon" SIPCON &
+  PIDS="$PIDS $!"
+
   sleep .2
   case "${PBX_SERVER}" in
-    "kamailio") term "$kamailio" KAMAILIO &;;
-    "freeswitch") term "./freeswitch/freeswitch.sh" FREESWITCH &;;
+    "kamailio")
+      term "$kamailio" KAMAILIO &
+      PIDS="$PIDS $!"
+      ;;
+    "freeswitch")
+      term "./freeswitch/freeswitch.sh" FREESWITCH &
+      PIDS="$PIDS $!"
+      ;;
   esac
 fi
 
@@ -157,7 +186,9 @@ echo Closing...
 
 #ssh bts neels/stop_remote.sh
 
-kill %1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14
+for i in $PIDS; do
+  kill "$i"
+done
 killall osmo-msc
 killall osmo-bsc
 killall osmo-gbproxy
