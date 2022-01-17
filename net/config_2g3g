@@ -1,3 +1,7 @@
+# Terminal for launching Osmocom programs
+# Supported: urxvt, xterm
+TERMINAL="urxvt"
+
 ETH_DEV=eth0
 APN_DEV=apn0
 

@@ -44,14 +44,27 @@ mkdir -p "$logdir"
 find_term() {
   # Find a terminal program and write to the global "terminal" variable
   local programs="urxvt xterm"
-  local program
-  for program in $programs; do
-    terminal="$(which $program)"
-    [ -n "$terminal" ] && return
-  done
 
-  # No terminal found
-  echo "ERROR: Couldn't find terminal program! Looked for: $programs"
+  if [ -z "${TERMINAL}" ]; then
+    echo "ERROR: TERMINAL is not defined in your osmo-dev net config file. Please add it."
+    exit 1
+  fi
+
+  case " $programs " in
+    *" ${TERMINAL} "*)
+      terminal="${TERMINAL}"
+
+      if command -v "$terminal" >/dev/null; then
+        echo "Terminal: ${TERMINAL}"
+        return
+      fi
+
+      echo "ERROR: Terminal '${TERMINAL}' is configured, but not installed"
+      exit 1
+      ;;
+  esac
+
+  echo "ERROR: Terminal '${TERMINAL}' is not in list of supported terminals ($programs)"
   exit 1
 }
 
