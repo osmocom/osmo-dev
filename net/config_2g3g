@@ -1,5 +1,5 @@
 # Terminal for launching Osmocom programs
-# Supported: urxvt, xterm
+# Supported: urxvt, xterm, tmux
 TERMINAL="urxvt"
 
 ETH_DEV=eth0

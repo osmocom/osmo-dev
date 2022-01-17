@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# tmux: start this script inside a new session
+tmux_session="CN"
+if [ "${TERMINAL}" = "tmux" ] && [ "$1" != "inside-tmux" ]; then
+  echo "Starting tmux session '$tmux_session'"
+  unset TMUX
+  exec tmux new-session -s "$tmux_session" -n "RUN" "$0" "inside-tmux"
+fi
+
 if ! ../fill_config.py --check-stale; then
 	echo
 	echo "WARNING: STALE CONFIGS - your net configs are older than the templates they should be based on!"
@@ -46,7 +54,7 @@ mkdir -p "$logdir" "$piddir" "$launcherdir"
 
 find_term() {
   # Find a terminal program and write to the global "terminal" variable
-  local programs="urxvt xterm"
+  local programs="urxvt xterm tmux"
 
   if [ -z "${TERMINAL}" ]; then
     echo "ERROR: TERMINAL is not defined in your osmo-dev net config file. Please add it."
@@ -118,12 +126,19 @@ done
 EOF
   chmod +x "$launcher"
 
-  $terminal \
-    -title "CN:$title" \
-    -e sh -c "$launcher" \
-    &
+  case "$terminal" in
+    tmux)
+      tmux new-window -d -n "$title" "$launcher &; echo \$! > $pidfile_term; fg; wait"
+      ;;
+    *)
+      $terminal \
+        -title "CN:$title" \
+        -e sh -c "$launcher" \
+        &
 
-  echo "$!" > "$pidfile_term"
+      echo "$!" > "$pidfile_term"
+      ;;
+  esac
 }
 
 kill_pids() {
