@@ -39,7 +39,8 @@ if [ -z "$(ip addr show | grep "${TO_RAN_IU_IP}")" ]; then
 fi
 
 logdir="current_log"
-mkdir -p "$logdir"
+piddir="run/pids"
+mkdir -p "$logdir" "$piddir"
 
 find_term() {
   # Find a terminal program and write to the global "terminal" variable
@@ -68,15 +69,68 @@ find_term() {
   exit 1
 }
 
+pidfiles_must_not_exist() {
+  local pidfile
+
+  for pidfile in "$@"; do
+    if [ -e "$pidfile" ]; then
+      echo
+      echo "ERROR: pidfile exists: $pidfile"
+      echo
+      kill_pids
+      exit 1
+    fi
+  done
+}
+
 term() {
   title="$2"
   if [ -z "$title" ]; then
     title="$(basename $@)"
   fi
-  exec $terminal -title "CN:$title" -e sh -c "export LD_LIBRARY_PATH='/usr/local/lib'; $1; echo; while true; do echo 'q Enter to close'; read q_to_close; if [ \"x\$q_to_close\" = xq ]; then break; fi; done"
+
+  local pidfile="$piddir/$title.pid"
+  local pidfile_term="$piddir/$title.term.pid"
+  pidfiles_must_not_exist "$pidfile" "$pidfile_term"
+
+  $terminal \
+    -title "CN:$title" \
+    -e sh -c "export LD_LIBRARY_PATH='/usr/local/lib'
+              $1 &
+              echo \$! > $pidfile
+              wait
+              echo
+              while true; do
+                echo 'q Enter to close'
+                read q_to_close
+                if [ \"x\$q_to_close\" = xq ]; then
+                  break
+                fi
+              done" \
+    &
+
+  echo "$!" > "$pidfile_term"
+}
+
+kill_pids() {
+  local pidfile
+  local pid
+
+  for pidfile in "$piddir"/*.pid; do
+    if ! [ -e "$pidfile" ]; then
+      continue
+    fi
+
+    pid="$(cat "$pidfile")"
+
+    echo "killing $(basename "$pidfile") ($pid)"
+    sudo kill "$pid"
+    rm "$pidfile"
+  done
 }
 
 find_term
+kill_pids
 
 hnbgw="osmo-hnbgw"
 msc="gdb -ex run --args $(which osmo-msc)"
@@ -130,78 +184,66 @@ if [ "x${MSC_MNCC}" != "xinternal" ]; then
   esac
 fi
 
+PIDFILE_TCPDUMP_DEV="$piddir/tcpdump.$dev.pid"
+PIDFILE_TCPDUMP_LO="$piddir/tcpdump.lo.pid"
+pidfiles_must_not_exist "$PIDFILE_TCPDUMP_DEV" "$PIDFILE_TCPDUMP_LO"
+
 sudo tcpdump -i $dev -n -w current_log/$dev.single.pcap -U not port 22 &
+echo "$!" > "$PIDFILE_TCPDUMP_DEV"
 sudo tcpdump -i lo -n -w current_log/lo.single.pcap -U not port 22 &
+echo "$!" > "$PIDFILE_TCPDUMP_LO"
 
-PIDS=""
-
-term "$ggsn" GGSN &
-PIDS="$PIDS $!"
+term "$ggsn" GGSN
 
 if [ "${STP_CN_IP}" = "${STP_RAN_IP}" ]; then
   sleep .2
-  term "$stp4cn" STP &
-  PIDS="$PIDS $!"
+  term "$stp4cn" STP
 else
   sleep .2
-  term "$stp4cn" STP4CN &
-  PIDS="$PIDS $!"
+  term "$stp4cn" STP4CN
 
   sleep .2
-  term "$stp4ran" STP4RAN &
-  PIDS="$PIDS $!"
+  term "$stp4ran" STP4RAN
 
   sleep .2
-  term "$bscnat" BSCNAT &
-  PIDS="$PIDS $!"
+  term "$bscnat" BSCNAT
 fi
 
 sleep .2
-term "$hlr" HLR &
-PIDS="$PIDS $!"
+term "$hlr" HLR
 
 sleep .2
-term "$sgsn" SGSN &
-PIDS="$PIDS $!"
+term "$sgsn" SGSN
 
 sleep .2
-term "$gbproxy" GBPROXY &
-PIDS="$PIDS $!"
+term "$gbproxy" GBPROXY
 
 sleep .2
-term "$mgw4msc" MGW4MSC &
-PIDS="$PIDS $!"
+term "$mgw4msc" MGW4MSC
 
 sleep .2
-term "$mgw4bsc" MGW4BSC &
-PIDS="$PIDS $!"
+term "$mgw4bsc" MGW4BSC
 
 sleep .2
-term "$msc" MSC &
-PIDS="$PIDS $!"
+term "$msc" MSC
 
 sleep 2
-term "$hnbgw" HNBGW &
-PIDS="$PIDS $!"
+term "$hnbgw" HNBGW
 
 sleep .2
-term "$bsc" BSC &
-PIDS="$PIDS $!"
+term "$bsc" BSC
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sleep .2
-  term "$sipcon" SIPCON &
-  PIDS="$PIDS $!"
+  term "$sipcon" SIPCON
 
   sleep .2
   case "${PBX_SERVER}" in
     "kamailio")
-      term "$kamailio" KAMAILIO &
-      PIDS="$PIDS $!"
+      term "$kamailio" KAMAILIO
       ;;
     "freeswitch")
-      term "./freeswitch/freeswitch.sh" FREESWITCH &
-      PIDS="$PIDS $!"
+      term "./freeswitch/freeswitch.sh" FREESWITCH
       ;;
   esac
 fi
@@ -215,27 +257,7 @@ echo Closing...
 
 #ssh bts neels/stop_remote.sh
 
-for i in $PIDS; do
-  kill "$i"
-done
-killall osmo-msc
-killall osmo-bsc
-killall osmo-gbproxy
-killall osmo-sgsn
-#killall osmo-hnbgw
-killall osmo-mgw
-killall osmo-hlr
-killall -9 osmo-stp
-sudo killall tcpdump
-killall osmo-ggsn
-killall osmo-bsc-nat
-
-if [ "x${MSC_MNCC}" != "xinternal" ]; then
-  # 'killall' seems to work only with the shortened name
-  killall osmo-sip-connec
-  killall "${PBX_SERVER}"
-fi
-
+kill_pids
 
 set +e
 cp *.cfg "$logdir"/
