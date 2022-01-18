@@ -40,7 +40,9 @@ fi
 
 logdir="current_log"
 piddir="run/pids"
-mkdir -p "$logdir" "$piddir"
+launcherdir="run/launchers"
+rm -rf "$launcherdir"
+mkdir -p "$logdir" "$piddir" "$launcherdir"
 
 find_term() {
   # Find a terminal program and write to the global "terminal" variable
@@ -93,20 +95,32 @@ term() {
   local pidfile_term="$piddir/$title.term.pid"
   pidfiles_must_not_exist "$pidfile" "$pidfile_term"
 
+  local launcher="$launcherdir/$title.sh"
+
+  cat << EOF > "$launcher"
+#!/bin/sh
+
+export LD_LIBRARY_PATH='/usr/local/lib'
+
+$1 &
+echo \$! > $pidfile
+wait
+
+echo
+
+while true; do
+  echo 'q Enter to close'
+  read q_to_close
+  if [ "x\$q_to_close" = xq ]; then
+    break
+  fi
+done
+EOF
+  chmod +x "$launcher"
+
   $terminal \
     -title "CN:$title" \
-    -e sh -c "export LD_LIBRARY_PATH='/usr/local/lib'
-              $1 &
-              echo \$! > $pidfile
-              wait
-              echo
-              while true; do
-                echo 'q Enter to close'
-                read q_to_close
-                if [ \"x\$q_to_close\" = xq ]; then
-                  break
-                fi
-              done" \
+    -e sh -c "$launcher" \
     &
 
   echo "$!" > "$pidfile_term"
