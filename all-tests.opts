@@ -5,3 +5,4 @@ osmo-sgsn --enable-external-tests --enable-vty-tests
 osmo-mgw --enable-external-tests --enable-vty-tests
 osmo-hlr --enable-external-tests
 osmo-pcu --enable-vty-tests
+osmo-upf --enable-external-tests
