@@ -298,11 +298,13 @@ if [ -n "$log_name" ]; then
   newlogdir="log/$log_name"
   #scp "bts:/tmp/{bts,pcu}.log" "bts:neels/osmo-{bts,pcu}.cfg" "$logdir"
 else
-  newlogdir="autolog/log_$(date +%Y-%m-%d_%H-%M-%S)"
+  log_name="log_$(date +%Y-%m-%d_%H-%M-%S)"
+  newlogdir="autolog/$log_name"
 fi
 mkdir -p "$(dirname "$newlogdir")"
 
 mergecap -w "$logdir/trace.pcap" "$logdir/"*.single.pcap && rm -f "$logdir/"*.single.pcap
+mv "$logdir/trace.pcap" "$logdir/trace-$log_name.pcap"
 
 if [ -x "$newlogdir" ]; then
   echo "already exists, move it manually: $newlogdir"
