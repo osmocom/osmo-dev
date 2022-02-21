@@ -173,13 +173,13 @@ gbproxy="osmo-gbproxy"
 sgsn="osmo-sgsn"
 ggsn="osmo-ggsn"
 mgw4msc="osmo-mgw -c osmo-mgw-for-msc.cfg"
-#mgw4bsc="gdb -ex run --args osmo-mgw -c osmo-mgw-for-bsc-0.cfg"
-#mgw4bsc="strace osmo-mgw -c osmo-mgw-for-bsc-0.cfg"
-mgw4bsc="osmo-mgw -c osmo-mgw-for-bsc-0.cfg"
+#mgw4bsc="gdb -ex run --args osmo-mgw"
+#mgw4bsc="strace osmo-mgw"
+mgw4bsc="osmo-mgw"
 hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
 stp4cn="osmo-stp -c osmo-stp-cn.cfg"
 stp4ran="osmo-stp -c osmo-stp-ran.cfg"
-bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc -c osmo-bsc-0.cfg"
+bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc"
 bscnat="osmo-bsc-nat"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
@@ -251,16 +251,26 @@ sleep .2
 term "$mgw4msc" MGW4MSC
 
 sleep .2
-term "$mgw4bsc" MGW4BSC
-
-sleep .2
 term "$msc" MSC
 
 sleep 2
 term "$hnbgw" HNBGW
 
 sleep .2
-term "$bsc" BSC
+
+if [ "$BSC_COUNT" = 1 ]; then
+  term "$mgw4bsc -c osmo-mgw-for-bsc-0.cfg" MGW4BSC
+  sleep .2
+  term "$bsc -c osmo-bsc-0.cfg" BSC
+else
+  term "$mgw4bsc -c osmo-mgw-for-bsc-0.cfg" MGW4BSC0
+  sleep .2
+  term "$mgw4bsc -c osmo-mgw-for-bsc-1.cfg" MGW4BSC1
+  sleep .2
+  term "$bsc -c osmo-bsc-0.cfg" BSC0
+  sleep .2
+  term "$bsc -c osmo-bsc-1.cfg" BSC1
+fi
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sleep .2
