@@ -1,0 +1,26 @@
+line vty
+ no login
+
+phy 0
+ instance 0
+ osmotrx ip local 127.0.0.1
+ osmotrx ip remote 127.0.0.1
+
+bts 0
+ band ${BTS_BAND}
+ gsmtap-sapi ccch
+ gsmtap-sapi pdtch
+ trx 0
+  phy 0 instance 0
+
+${foreach(LOG_OUTPUT)}
+log ${LOG_OUTPUTn_TYPE}
+${include(common_logging)}
+ logging level set-all notice
+ logging level meas error
+ logging level pag error
+ logging level l1c error
+ logging level l1p error
+ logging level dsp error
+ logging level abis error
+${foreach_end}
