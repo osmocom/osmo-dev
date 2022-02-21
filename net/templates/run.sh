@@ -181,6 +181,7 @@ stp4cn="osmo-stp -c osmo-stp-cn.cfg"
 stp4ran="osmo-stp -c osmo-stp-ran.cfg"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc"
 bscnat="osmo-bsc-nat"
+bts="osmo-bts-virtual"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
@@ -271,6 +272,13 @@ else
   sleep .2
   term "$bsc -c osmo-bsc-1.cfg" BSC1
 fi
+
+${foreach(BTS)}
+if [ "${BTSn_RUN_IN_OSMO_DEV}" = 1 ]; then
+  term "$bts -c osmo-bts-${BTSn}.cfg" BTS${BTSn}
+fi
+${foreach_end}
+
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sleep .2

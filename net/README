@@ -149,11 +149,14 @@ connect it to the HNBGW as configured by the templates.
 
 === 2G BTS
 
-At the time of writing, there are no osmo-bts.cfg files, since this is intended
-for the core network and BSC components only. Feel free to add!
+You can either let osmo-dev run osmo-bts-virtual, or connect a real BTS to the
+BSC + CN started by osmo-dev.
 
-Typically you'd need to edit only the /etc/osmocom/osmo-bts.cfg to match your
-IP address and ipa unit-id:
+To start osmo-bts-virtual, set BTS0_RUN_IN_OSMO_DEV=1 and/or
+BTS1_RUN_IN_OSMO_DEV=1 in your copy of config_2g3g.
+
+To connect your real BTS, typically you'd need to edit only the
+/etc/osmocom/osmo-bts.cfg to match your IP address and ipa unit-id:
 
 bts 0
  oml remote-ip 192.168.0.23
