@@ -118,7 +118,7 @@ echo
 
 while true; do
   echo 'q Enter to close'
-  read q_to_close
+  read q_to_close < /dev/tty
   if [ "x\$q_to_close" = xq ]; then
     break
   fi
