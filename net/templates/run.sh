@@ -131,6 +131,7 @@ EOF
       tmux new-window -d -n "$title" "$launcher &; echo \$! > $pidfile_term; wait"
       ;;
     *)
+      sleep .2
       $terminal \
         -title "CN:$title" \
         -e sh -c "$launcher" \
@@ -226,50 +227,28 @@ echo "$!" > "$PIDFILE_TCPDUMP_LO"
 term "$ggsn" GGSN
 
 if [ "${STP_CN_IP}" = "${STP_RAN_IP}" ]; then
-  sleep .2
   term "$stp4cn" STP
 else
-  sleep .2
   term "$stp4cn" STP4CN
-
-  sleep .2
   term "$stp4ran" STP4RAN
-
-  sleep .2
   term "$bscnat" BSCNAT
 fi
 
-sleep .2
 term "$hlr" HLR
-
-sleep .2
 term "$sgsn" SGSN
-
-sleep .2
 term "$gbproxy" GBPROXY
-
-sleep .2
 term "$mgw4msc" MGW4MSC
-
-sleep .2
 term "$msc" MSC
-
-sleep 2
 term "$hnbgw" HNBGW
 
-sleep .2
 
 if [ "$BSC_COUNT" = 1 ]; then
   term "$mgw4bsc -c osmo-mgw-for-bsc-0.cfg" MGW4BSC
-  sleep .2
   term "$bsc -c osmo-bsc-0.cfg" BSC
 else
   term "$mgw4bsc -c osmo-mgw-for-bsc-0.cfg" MGW4BSC0
-  sleep .2
   term "$mgw4bsc -c osmo-mgw-for-bsc-1.cfg" MGW4BSC1
-  sleep .2
   term "$bsc -c osmo-bsc-0.cfg" BSC0
-  sleep .2
   term "$bsc -c osmo-bsc-1.cfg" BSC1
 fi
 
@@ -281,10 +260,8 @@ ${foreach_end}
 
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
-  sleep .2
   term "$sipcon" SIPCON
 
-  sleep .2
   case "${PBX_SERVER}" in
     "kamailio")
       term "$kamailio" KAMAILIO
