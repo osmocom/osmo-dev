@@ -154,16 +154,35 @@ def read_configure_opts(path):
     return {}
   return dict(read_projects_deps(path))
 
+def gen_makefile_clone(proj, src, src_proj, url, push_url):
+  if proj == "osmocom-bb_layer23":
+    return f'''
+.make.{proj}.clone: .make.osmocom-bb.clone
+	@echo -e "\\n\\n\\n===== $@\\n"
+	test -L {src_proj} || ln -s osmocom-bb/src/host/layer23 {src_proj}
+	touch $@
+  '''
+
+  return f'''
+.make.{proj}.clone:
+	@echo -e "\\n\\n\\n===== $@\\n"
+	test -d {src} || mkdir -p {src}
+	test -d {src_proj} || ( git -C {src} clone "{url}/{proj}" "{proj}" && git -C "{src}/{proj}" remote set-url --push origin "{push_url}/{proj}" )
+	sync
+	touch $@
+  '''
+
 def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
   src_proj = os.path.join(src_dir, proj)
   if proj == 'openbsc':
     src_proj = os.path.join(src_proj, 'openbsc')
   build_proj = os.path.join(build_dir, proj)
 
-  make_to_src = os.path.relpath(src_dir, make_dir)
-  make_to_src_proj = os.path.relpath(src_proj, make_dir)
+  src = os.path.relpath(src_dir, make_dir)
+  src_proj = os.path.relpath(src_proj, make_dir)
   make_to_build_proj = os.path.relpath(build_proj, make_dir)
   build_to_src = os.path.relpath(src_proj, build_proj)
+  push_url = push_url or url
 
   if configure_opts:
     configure_opts_str = ' '.join(configure_opts)
@@ -188,12 +207,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     \) \
     -and -not -name "config.h" 2>/dev/null)
 
-.make.{proj}.clone:
-	@echo -e "\n\n\n===== $@\n"
-	test -d {src} || mkdir -p {src}
-	test -d {src_proj} || ( git -C {src} clone "{url}/{proj}" "{proj}" && git -C "{src}/{proj}" remote set-url --push origin "{push_url}/{proj}" )
-	sync
-	touch $@
+{clone_rule}
 
 .make.{proj}.autoconf: .make.{proj}.clone {src_proj}/configure.ac
 	if {distclean_cond}; then $(MAKE) {proj}-distclean; fi
@@ -248,13 +262,14 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 
 '''.format(
     url=url,
-    push_url=push_url or url,
+    push_url=push_url,
     proj=proj,
     jobs=jobs,
-    src=make_to_src,
-    src_proj=make_to_src_proj,
+    src=src,
+    src_proj=src_proj,
     build_proj=make_to_build_proj,
     build_to_src=build_to_src,
+    clone_rule=gen_makefile_clone(proj, src, src_proj, url, push_url),
     deps_installed=' '.join(['.make.%s.install' % d for d in deps]),
     deps_reinstall=' '.join(['%s-reinstall' %d for d in deps]),
     configure_opts=configure_opts_str,
@@ -264,7 +279,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     check='check' if make_check else '',
     docker_cmd=f'{args.docker_cmd} ' if args.docker_cmd else '',
     cflags='CFLAGS=-g ' if args.build_debug else '',
-    distclean_cond=f'[ -e {make_to_src_proj}/config.status ]' if args.auto_distclean else 'false'
+    distclean_cond=f'[ -e {src_proj}/config.status ]' if args.auto_distclean else 'false'
     )
 
 
@@ -305,6 +320,9 @@ with open(output, 'w') as out:
   out.write(r'''
 default: usrp
 
+#
+# Convenience targets for whole networks
+#
 .PHONY: cn
 cn: \
 	osmo-ggsn \
@@ -330,6 +348,15 @@ usrp: \
 	osmo-trx \
 	$(NULL)
 
+#
+# Convenience targets for components in subdirs of repositories
+#
+.PHONY: mobile
+mobile: osmocom-bb_layer23
+
+#
+# Other convenience targets
+#
 .PHONY: all_debug
 all_debug:
 	$(MAKE) --dry-run -d all | grep "is newer than target"

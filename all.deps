@@ -30,3 +30,7 @@ osmo-upf	libosmocore libgtpnl
 # can only clone these
 docker-playground
 osmo-ttcn3-hacks
+osmocom-bb
+
+# configure.ac not in topdir of repository
+osmocom-bb_layer23	libosmocore
