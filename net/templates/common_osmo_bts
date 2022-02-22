@@ -3,8 +3,6 @@ line vty
 
 phy 0
  instance 0
- osmotrx ip local 127.0.0.1
- osmotrx ip remote 127.0.0.1
 
 bts 0
  band ${BTS_BAND}
