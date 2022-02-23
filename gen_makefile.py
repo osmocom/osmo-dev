@@ -305,6 +305,7 @@ with open(output, 'w') as out:
   out.write(r'''
 default: usrp
 
+.PHONY: cn
 cn: \
 	osmo-ggsn \
 	osmo-hlr \
@@ -316,11 +317,13 @@ cn: \
 	osmo-smlc \
 	$(NULL)
 
+.PHONY: cn-bsc
 cn-bsc: \
 	cn \
 	osmo-bsc \
 	$(NULL)
 
+.PHONY: usrp
 usrp: \
 	cn-bsc \
 	osmo-bts \
