@@ -142,6 +142,13 @@ BSCNAT_CN_IP="127.0.0.3"
 BSCNAT_RAN_PC="${MSC_PC}"
 BSCNAT_RAN_IP="127.0.0.4"
 
+# Set to 1 to have osmo-dev run mobile and virtphy from osmocom-bb
+MS_RUN_IN_OSMO_DEV=0
+MS_SUBSCR_ID="1337"
+MS_IMSI="001010000000000"
+MS_KI="00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
+MS_MSISDN="555"
+
 # PBX_SERVER:
 #  "kamailio" -- launch kamailio
 #  "freeswitch" -- launch freeswitch

@@ -183,6 +183,8 @@ stp4ran="osmo-stp -c osmo-stp-ran.cfg"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc"
 bscnat="osmo-bsc-nat"
 bts="osmo-bts-virtual"
+virtphy="virtphy"
+ms="mobile -c mobile.cfg"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
@@ -258,6 +260,10 @@ if [ "${BTSn_RUN_IN_OSMO_DEV}" = 1 ]; then
 fi
 ${foreach_end}
 
+if [ "${MS_RUN_IN_OSMO_DEV}" = 1 ]; then
+  term "$virtphy" VIRTPHY
+  term "$ms" MS
+fi
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
   term "$sipcon" SIPCON
