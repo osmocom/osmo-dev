@@ -173,12 +173,12 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
   return r'''
 ### {proj} ###
 
-{proj}_configure_files := $(shell find {src_proj} \
+{proj}_configure_files := $(shell find -L {src_proj} \
     -name "Makefile.am" \
     -or -name "*.in" \
     -and -not -name "Makefile.in" \
     -and -not -name "config.h.in" 2>/dev/null)
-{proj}_files := $(shell find {src_proj} \
+{proj}_files := $(shell find -L {src_proj} \
     \( \
       -name "*.[hc]" \
       -or -name "*.py" \
