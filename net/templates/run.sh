@@ -128,7 +128,7 @@ EOF
 
   case "$terminal" in
     tmux)
-      tmux new-window -d -n "$title" "$launcher &; echo \$! > $pidfile_term; fg; wait"
+      tmux new-window -d -n "$title" "$launcher &; echo \$! > $pidfile_term; wait"
       ;;
     *)
       $terminal \
