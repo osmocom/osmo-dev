@@ -46,6 +46,18 @@ if [ -z "$(ip addr show | grep "${TO_RAN_IU_IP}")" ]; then
   sudo ip addr add ${TO_RAN_IU_IP}/32 dev $dev
 fi
 
+# Enable multicast on lo for virtual MS
+if [ "${MS_RUN_IN_OSMO_DEV}" = 1 ]; then
+  if [ -z "$(ip link show lo | grep MULTICAST)" ]; then
+    echo "Loopback device doesn't have multicast enabled! Hit enter to enable it"
+    read enter_to_continue
+    sudo ip link set lo multicast on
+  fi
+  if [ -z "$(ip route show dev lo | grep '224\.0\.0\.0/4')" ]; then
+    sudo ip route add 224.0.0.0/4 dev lo
+  fi
+fi
+
 logdir="current_log"
 piddir="run/pids"
 launcherdir="run/launchers"
@@ -183,7 +195,7 @@ stp4ran="osmo-stp -c osmo-stp-ran.cfg"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc"
 bscnat="osmo-bsc-nat"
 bts="osmo-bts-virtual"
-virtphy="virtphy"
+virtphy="virtphy -D lo"
 ms="mobile -c mobile.cfg"
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then

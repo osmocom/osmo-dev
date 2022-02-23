@@ -3,6 +3,7 @@ line vty
 
 phy 0
  instance 0
+ virtual-um net-device lo
 
 bts 0
  band ${BTS_BAND}
