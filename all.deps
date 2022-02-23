@@ -34,3 +34,4 @@ osmocom-bb
 
 # configure.ac not in topdir of repository
 osmocom-bb_layer23	libosmocore
+osmocom-bb_virtphy	libosmocore

@@ -163,6 +163,14 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
 	touch $@
   '''
 
+  if proj == "osmocom-bb_virtphy":
+    return f'''
+.make.{proj}.clone: .make.osmocom-bb.clone
+	@echo -e "\\n\\n\\n===== $@\\n"
+	test -L {src_proj} || ln -s osmocom-bb/src/host/virt_phy {src_proj}
+	touch $@
+  '''
+
   return f'''
 .make.{proj}.clone:
 	@echo -e "\\n\\n\\n===== $@\\n"
@@ -353,6 +361,9 @@ usrp: \
 #
 .PHONY: mobile
 mobile: osmocom-bb_layer23
+
+.PHONY: virtphy
+virtphy: osmocom-bb_virtphy
 
 #
 # Other convenience targets
