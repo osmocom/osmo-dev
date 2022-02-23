@@ -21,7 +21,7 @@ apn="${APN_DEV}"
 
 sudo true || exit 1
 
-if ! sudo iptables -t nat -C POSTROUTING -s ${GGSN_NET} -o $dev -j MASQUERADE 2>/dev/null; then
+if ! sudo iptables -t nat -C POSTROUTING -s ${GGSN_NET} -o $dev -j MASQUERADE >/dev/null 2>&1; then
   echo "Adding iptables rule for masquerade"
   sudo iptables -t nat -I POSTROUTING -s ${GGSN_NET} -o $dev -j MASQUERADE
 fi
