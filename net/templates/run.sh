@@ -238,7 +238,11 @@ fi
 
 term "$hlr" HLR
 term "$sgsn" SGSN
-term "$gbproxy" GBPROXY
+
+if [ "${GBPROXY_RUN_IN_OSMO_DEV}" = 1 ]; then
+  term "$gbproxy" GBPROXY
+fi
+
 term "$mgw4msc" MGW4MSC
 term "$msc" MSC
 term "$hnbgw" HNBGW
