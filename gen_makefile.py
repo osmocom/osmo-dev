@@ -349,6 +349,16 @@ cn-bsc: \
 	osmo-bsc \
 	$(NULL)
 
+.PHONY: cn-bsc-nat
+cn-bsc-nat: \
+  cn \
+  mobile \
+  osmo-bsc \
+  osmo-bsc-nat \
+  osmo-bts \
+  virtphy \
+  $(NULL)
+
 .PHONY: usrp
 usrp: \
 	cn-bsc \
