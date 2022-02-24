@@ -3,6 +3,7 @@ libosmo-abis --enable-werror
 libosmocore --enable-werror
 libosmo-netif --enable-werror
 libosmo-sccp --enable-werror
+libosmo-pfcp --enable-werror
 libsmpp34 --enable-werror
 osmo-bsc --enable-werror
 osmo-ggsn --enable-werror
@@ -16,3 +17,4 @@ osmo-bsc-nat --enable-werror
 osmo-upf --enable-werror
 osmo-cbc --enable-werror
 osmo-hnodeb --enable-werror
+osmo-hnbgw --enable-werror

@@ -3,6 +3,7 @@ libosmo-abis --enable-sanitize
 libosmocore --enable-sanitize
 libosmo-netif --enable-sanitize
 libosmo-sccp --enable-sanitize
+libosmo-pfcp --enable-sanitize
 libsmpp34 --enable-sanitize
 osmo-bsc --enable-sanitize
 osmo-ggsn --enable-sanitize
@@ -19,3 +20,4 @@ osmo-smlc --enable-sanitize
 osmo-pcu --enable-sanitize
 osmo-upf --enable-sanitize
 osmo-cbc --enable-sanitize
+osmo-hnbgw --enable-sanitize

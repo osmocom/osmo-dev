@@ -24,10 +24,14 @@ asn1c	libasn1c
 osmo-gbproxy	libosmocore
 osmo-pcap	libosmocore
 osmo-bsc-nat	libosmo-sccp osmo-mgw
+libosmo-pfcp	libosmocore
 libgtpnl
-osmo-upf	libosmocore libgtpnl
+libnftnl
+nftables	libnftnl
+osmo-upf	libosmocore libosmo-pfcp libgtpnl nftables
 osmo-cbc	libosmo-netif
 osmo-hnodeb	osmo-iuh
+osmo-hnbgw	osmo-iuh osmo-mgw libosmo-pfcp
 
 # can only clone these
 docker-playground
