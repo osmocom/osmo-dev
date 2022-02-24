@@ -75,9 +75,9 @@ ${foreach(BTS)}
    timeslot 4
     phys_chan_config ${TCH_TYPE}
    timeslot 5
-    phys_chan_config ${TCH_TYPE}
+    phys_chan_config ${TCH_TYPE2}
    timeslot 6
-    phys_chan_config ${TCH_TYPE}
+    phys_chan_config ${TCH_TYPE2}
    timeslot 7
     phys_chan_config PDCH
 ${foreach_end}
