@@ -185,10 +185,9 @@ msc="gdb -ex run --args $(which osmo-msc)"
 gbproxy="osmo-gbproxy"
 sgsn="osmo-sgsn"
 ggsn="osmo-ggsn"
-mgw4msc="osmo-mgw -c osmo-mgw-for-msc.cfg"
-#mgw4bsc="gdb -ex run --args osmo-mgw"
-#mgw4bsc="strace osmo-mgw"
-mgw4bsc="osmo-mgw"
+#mgw="gdb -ex run --args osmo-mgw"
+#mgw="strace osmo-mgw"
+mgw="osmo-mgw"
 hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
 stp4cn="osmo-stp -c osmo-stp-cn.cfg"
 stp4ran="osmo-stp -c osmo-stp-ran.cfg"
@@ -255,17 +254,17 @@ if [ "${GBPROXY_RUN_IN_OSMO_DEV}" = 1 ]; then
   term "$gbproxy" GBPROXY
 fi
 
-term "$mgw4msc" MGW4MSC
+term "$mgw -c osmo-mgw-for-msc.cfg" MGW4MSC
 term "$msc" MSC
 term "$hnbgw" HNBGW
 
 
 if [ "$BSC_COUNT" = 1 ]; then
-  term "$mgw4bsc -c osmo-mgw-for-bsc-0.cfg" MGW4BSC
+  term "$mgw -c osmo-mgw-for-bsc-0.cfg" MGW4BSC
   term "$bsc -c osmo-bsc-0.cfg" BSC
 else
-  term "$mgw4bsc -c osmo-mgw-for-bsc-0.cfg" MGW4BSC0
-  term "$mgw4bsc -c osmo-mgw-for-bsc-1.cfg" MGW4BSC1
+  term "$mgw -c osmo-mgw-for-bsc-0.cfg" MGW4BSC0
+  term "$mgw -c osmo-mgw-for-bsc-1.cfg" MGW4BSC1
   term "$bsc -c osmo-bsc-0.cfg" BSC0
   term "$bsc -c osmo-bsc-1.cfg" BSC1
 fi
