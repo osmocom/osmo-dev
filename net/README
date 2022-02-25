@@ -123,11 +123,12 @@ run.sh uses sudo to start tcpdump, configure ip forwarding and masquerading
 
 When you launch run.sh, many xterms are launched, and when hitting enter, all
 of them get destroyed again. This is obviously intended to be run on your
-desktop computer or laptop, not on a remote box. It may also make sense to
-launch all of them in the current shell, and maybe or maybe not switch off
-stderr logging; or to launch each component in a tmux window or whatnot -- if
-you figure out something in that line, I would be glad to get contributions and
-incorporate that.
+desktop computer or laptop, not on a remote box.
+
+It's also possible to set TERMINAL="tmux" in your network configuration, then
+run.sh starts a tmux session and runs each Osmocom program as own tmux window
+inside that session. Switch to the first window (^B + 0) and hit enter to close
+all windows and the whole tmux session. This does work over SSH.
 
 
 === Logging and pcaps
