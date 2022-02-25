@@ -52,7 +52,9 @@ local_config_file = os.path.realpath(local_config_file)
 tmpl_dir = os.path.realpath(tmpl_dir)
 net_dir = os.path.realpath(".")
 
-print('using config file %r\non templates %r\nwith NET_DIR %r' % (local_config_file, tmpl_dir, net_dir))
+print(f'using config file: {local_config_file}')
+print(f'on templates:      {tmpl_dir}')
+print(f'with NET_DIR:      {net_dir}')
 
 with open(LAST_LOCAL_CONFIG_FILE, 'w') as last_file:
   last_file.write(local_config_file)
