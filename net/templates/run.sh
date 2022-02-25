@@ -244,6 +244,7 @@ if [ "${STP_CN_IP}" = "${STP_RAN_IP}" ]; then
 else
   term "$stp4cn" STP4CN
   term "$stp4ran" STP4RAN
+  term "$mgw -c osmo-mgw-for-bsc-nat.cfg" MGW4BSCNAT
   term "$bscnat" BSCNAT
 fi
 
