@@ -8,7 +8,9 @@ import argparse
 def file_newer(path_a, than_path_b):
   return os.path.getmtime(path_a) > os.path.getmtime(than_path_b)
 
+DEFAULT_ORIG_CONFIG = os.path.normpath(os.path.realpath(__file__) + "/../config_2g3g")
 LAST_LOCAL_CONFIG_FILE = '.last_config'
+LAST_ORIG_CONFIG_FILE = '.last_config_orig'
 LAST_TMPL_DIR = '.last_templates'
 
 parser = argparse.ArgumentParser(description=__doc__,
@@ -18,10 +20,14 @@ parser.add_argument('sources', metavar='SRC', nargs='*',
 parser.add_argument('-s', '--check-stale', dest='check_stale', action='store_true',
                     help='only verify age of generated files vs. config and templates.'
                     ' Exit nonzero when any source file is newer. Do not write anything.')
+parser.add_argument('-o', '--original-config',
+                    help='get missing variables from this file, default is config_2g3g'
+                    ' or the file used previously to fill an existing template dir')
 
 args = parser.parse_args()
 
 local_config_file = None
+orig_config_file = args.original_config
 tmpl_dir = None
 
 for src in args.sources:
@@ -37,6 +43,12 @@ for src in args.sources:
 if local_config_file is None and os.path.isfile(LAST_LOCAL_CONFIG_FILE):
   local_config_file = open(LAST_LOCAL_CONFIG_FILE).read().strip()
 
+if orig_config_file is None:
+  if os.path.isfile(LAST_ORIG_CONFIG_FILE):
+    orig_config_file = open(LAST_ORIG_CONFIG_FILE).read().strip()
+  else:
+    orig_config_file = DEFAULT_ORIG_CONFIG
+
 if tmpl_dir is None and os.path.isfile(LAST_TMPL_DIR):
   tmpl_dir = open(LAST_TMPL_DIR).read().strip()
 
@@ -48,47 +60,57 @@ if not local_config_file or not os.path.isfile(local_config_file):
   print("No such config file: %r" % local_config_file)
   exit(1)
 
+if not os.path.isfile(orig_config_file):
+  print("No such config file: %r" % orig_config_file)
+  exit(1)
+
 local_config_file = os.path.realpath(local_config_file)
 tmpl_dir = os.path.realpath(tmpl_dir)
 net_dir = os.path.realpath(".")
 
 print(f'using config file: {local_config_file}')
+print(f'with original:     {orig_config_file}')
 print(f'on templates:      {tmpl_dir}')
 print(f'with NET_DIR:      {net_dir}')
 
 with open(LAST_LOCAL_CONFIG_FILE, 'w') as last_file:
   last_file.write(local_config_file)
+with open(LAST_ORIG_CONFIG_FILE, 'w') as last_file:
+  last_file.write(orig_config_file)
 with open(LAST_TMPL_DIR, 'w') as last_file:
   last_file.write(tmpl_dir)
 
-# read in variable values from config file
+# read in variable values from config files
 # NET_DIR is the folder where fill_config.py was started
 local_config = {"NET_DIR": net_dir}
 
-line_nr = 0
-for line in open(local_config_file):
-  line_nr += 1
-  line = line.strip('\n')
+for config_file in [orig_config_file, local_config_file]:
+  current_config_identifiers = ["NET_DIR"]
+  line_nr = 0
+  for line in open(config_file):
+    line_nr += 1
+    line = line.strip('\n')
 
-  if line.startswith('#'):
-    continue
+    if line.startswith('#'):
+      continue
 
-  if not '=' in line:
-    if line:
-      print("Error: %r line %d: %r" % (local_config_file, line_nr, line))
-      exit(1)
-    continue
+    if not '=' in line:
+      if line:
+        print("Error: %r line %d: %r" % (config_file, line_nr, line))
+        exit(1)
+      continue
 
-  split_pos = line.find('=')
-  name = line[:split_pos]
-  val = line[split_pos + 1:]
+    split_pos = line.find('=')
+    name = line[:split_pos]
+    val = line[split_pos + 1:]
 
-  if val.startswith('"') and val.endswith('"'):
-    val = val[1:-1]
+    if val.startswith('"') and val.endswith('"'):
+      val = val[1:-1]
 
-  if name in local_config:
-    print("Error: duplicate identifier in %r line %d: %r" % (local_config_file, line_nr, line))
-  local_config[name] = val
+    if name in current_config_identifiers:
+      print("Error: duplicate identifier in %r line %d: %r" % (config_file, line_nr, line))
+    local_config[name] = val
+    current_config_identifiers += [name]
 
 # replace variable names with above values recursively
 replace_re = re.compile('\$\{([A-Z_][A-Za-z0-9_]*)\}')
@@ -240,6 +262,7 @@ for tmpl_name in sorted(os.listdir(tmpl_dir)):
 
   if args.check_stale:
     check_stale(local_config_file, dst)
+    check_stale(orig_config_file, dst)
     check_stale(tmpl_src, dst)
 
   local_config['_fname'] = tmpl_name

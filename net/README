@@ -10,28 +10,55 @@ contributions of any improvements you may have!
 
 === Quick Start
 
-cp config_2g3g config_mine
-$EDITOR config_mine
-# update IP addresses and device names as required
+* Open config_2g3g in a text editor (original config)
+* Open a new file in a text editor (your config)
+* Copy over all lines you want to change in your config and edit them there
+* Your resulting minimal config could look like this:
 
-mkdir my_network
-cd my_network
-../fill_config.py ../config_mine ../templates
+  TERMINAL="tmux"
 
-./run.sh
-# Launches numerous x-terminals with one component running in each.
-# Logs and pcap traces are being taken automatically.
+  ETH_DEV=enp0s25
 
-# hit enter in the original first terminal to tear down all programs.
-# Enter a name to save logs, otherwise all logging will be stored
-# under autolog/<timestamp>
+  TO_RAN_IP="192.168.1.123"
+  TO_RAN_IU_IP="192.168.1.42"
 
-Then possibly modify the config and refresh:
+  MCC=999
+  MNC=99
 
-# tweak config?
-$EDITOR ../config_mine
-../fill_config.py
-# picks up same ../config_mine and ../templates from last time
+  BTS0_IPA_UNIT="1234 0"
+  BTS0_ARFCN=800
+
+* Create a network directory and generate configs:
+
+  $ mkdir my_network
+  $ cd my_network
+  $ ../fill_config.py ../config_mine ../templates
+
+* Run the network:
+
+  $ ./run.sh
+
+  This launches numerous terminals with one component running in each.
+  Logs and pcap traces are being taken automatically.
+
+* Tear down:
+
+  Hit enter in the original first terminal to tear down all programs.
+  Enter a name to save logs, otherwise all logging will be stored
+  under autolog/<timestamp>.
+
+* Regenerate configs:
+
+  Modify your config and regenerate the network configs as follows, the same
+  original config, your config and templates will be used as last time.
+
+  $ $EDITOR ../config_mine
+  $ ../fill_config.py
+
+  ('make regen' also works)
+
+
+=== Advanced usage / more examples
 
 # own templates?
 cp -r ../templates ../templates_mine
@@ -67,7 +94,7 @@ A *directory* contains template files that are filled with specific values by th
 fill_config.py script. See e.g. templates/.
 
 A *file* contains local config items as name=val pairs that are put into the
-templates. See e.g. config_2g3g.
+templates. It is usually a subset of config_2g3g.
 
 The fill_config.py script helps to fill the templates with the config values. Simply
 invoke fill_config.py with a dir argument (templates dir) and a file argument (specific
@@ -76,6 +103,11 @@ temporary files (sockets etc.) should be placed inside this folder.
 
 If one or both are omitted, the script tries to re-use the most recent paths,
 they were stored in local files '.last_config' and '.last_templates'.
+
+The -o parameter of fill_config.py can be used to supply a different original
+config file than config_2g3g. If it is omitted, the path is read from a
+'.last_config_orig' file inside the network directory if present, and config_2g3g
+is used otherwise.
 
 The result is a complete set of .cfg files that match your local machine and
 network config.
