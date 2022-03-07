@@ -171,6 +171,16 @@ kill_pids() {
   done
 }
 
+read_log_name() {
+  log_name_last="$(ls -Art "log" | tail -n1)"
+  if [ -n "$log_name_last" ]; then
+    log_name_last=" (last: $log_name_last)"
+  fi
+
+  echo "enter name to save log$log_name_last:"
+  read log_name
+}
+
 find_term
 kill_pids
 
@@ -309,8 +319,7 @@ set +e
 cp *.cfg "$logdir"/
 
 echo
-echo enter name to save log
-read log_name
+read_log_name
 if [ -n "$log_name" ]; then
   newlogdir="log/$log_name"
   #scp "bts:/tmp/{bts,pcu}.log" "bts:neels/osmo-{bts,pcu}.cfg" "$logdir"
