@@ -131,6 +131,31 @@ inside that session. Switch to the first window (^B + 0) and hit enter to close
 all windows and the whole tmux session. This does work over SSH.
 
 
+=== Wrap commands in gdb, valgrind, udtrace etc.
+
+During development it's useful to wrap Osmocom programs inside gdb, valgrind or
+other tools. For each program where you want to do this, copy the CMD_ line
+from config_2g3g to your config and adjust it accordingly.
+
+==== Examples: gdb, valgrind, strace
+
+CMD_MSC="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-msc"
+CMD_MSC="valgrind osmo-msc"
+CMD_MSC="strace osmo-msc"
+
+==== Example: udtrace
+
+To use udtrace on the MNCC socket, use the following with an adjusted
+/path/to/udtrace. Explanation of the enviornment variables:
+- LD_LIBRARY_PATH allows linking to titan if udtrace was compiled with titan
+  support
+- LD_PRELOAD of libasan allows building osmo-msc with the sanitize.opts
+- the tee saves the stderr logging as well as the udtrace output to new file
+  current_log/osmo-msc.out, since udtrace will not show in osmo-msc.log
+
+CMD_MSC="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/path/to/udtrace/libudtrace.so osmo-msc 2>&1 | tee -a current_log/osmo-msc.out"
+
+
 === Logging and pcaps
 
 The run.sh script automatically stores all configs, logs and pcap traces in

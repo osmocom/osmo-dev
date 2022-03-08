@@ -167,3 +167,22 @@ PBX_LO_IP=127.0.0.8
 LOG_OUTPUT0_TYPE=stderr
 LOG_OUTPUT1_TYPE=file current_log/${_name}.log
 LOG_OUTPUT2_TYPE=gsmtap 127.0.0.9
+
+# Commands to execute for various network components. In your config, you can
+# wrap these in gdb, valgrind, strace, udtrace etc. See README for details.
+CMD_BSC="osmo-bsc"
+CMD_BSCNAT="osmo-bsc-nat"
+CMD_BTS="osmo-bts-virtual"
+CMD_FREESWITCH="./freeswitch/freeswitch.sh"
+CMD_GBPROXY="osmo-gbproxy"
+CMD_GGSN="osmo-ggsn"
+CMD_HLR="osmo-hlr"
+CMD_HNBGW="osmo-hnbgw"
+CMD_KAMAILIO="kamailio"
+CMD_MGW="osmo-mgw"
+CMD_MS="mobile"
+CMD_MSC="osmo-msc"
+CMD_SGSN="osmo-sgsn"
+CMD_SIPCON="osmo-sip-connector"
+CMD_STP="osmo-stp"
+CMD_VIRTPHY="virtphy"

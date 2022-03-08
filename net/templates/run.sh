@@ -184,41 +184,15 @@ read_log_name() {
 find_term
 kill_pids
 
-hnbgw="osmo-hnbgw"
-msc="gdb -ex run --args $(which osmo-msc)"
-# To enable udtrace on osmo-msc MNCC socket, use this with adjusted /path/to/udtrace:
-# - LD_LIBRARY_PATH allows linking to titan if udtrace was compiled with titan support.
-# - LD_PRELOAD of libasan allows building osmo-msc with the sanitize.opts.
-# - the tee saves the stderr logging as well as the udtrace output to new file current_log/osmo-msc.out, since udtrace
-#   will not show in osmo-msc.log
-#msc="LD_LIBRARY_PATH=/usr/lib/titan LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5:/path/to/udtrace/libudtrace.so osmo-msc 2>&1 | tee -a current_log/osmo-msc.out"
-gbproxy="osmo-gbproxy"
-sgsn="osmo-sgsn"
-ggsn="osmo-ggsn"
-#mgw="gdb -ex run --args osmo-mgw"
-#mgw="strace osmo-mgw"
-mgw="osmo-mgw"
-hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
-stp="osmo-stp"
-bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc"
-bscnat="osmo-bsc-nat"
-bts="osmo-bts-virtual"
-virtphy="virtphy -D lo"
-ms="mobile -c mobile.cfg"
-
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
-  sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
-
   case "${PBX_SERVER}" in
     "kamailio")
       # Require kamailio (PATH hack is needed for Debian)
-      kamailio="$(PATH="$PATH:/usr/sbin:/sbin" which kamailio)"
-      if [ -z "$kamailio" ]; then
+      if [ -z "$(PATH="$PATH:/usr/sbin:/sbin" which kamailio)" ]; then
         echo "ERROR: kamailio is not installed."
         echo "After installing it, make sure that it does *not* run as daemon."
         exit 1
       fi
-      kamailio="$kamailio -f kamailio.cfg -D -e -E"
       ;;
    "freeswitch")
       if [ -z "$(which freeswitch)" ]; then
@@ -246,59 +220,59 @@ echo "$!" > "$PIDFILE_TCPDUMP_DEV"
 sudo tcpdump -i lo -n -w current_log/lo.single.pcap -U not port 22 &
 echo "$!" > "$PIDFILE_TCPDUMP_LO"
 
-term "$ggsn" GGSN
+term "${CMD_GGSN}" GGSN
 
 if [ "${STP_CN_IP}" = "${STP_RAN_IP}" ]; then
-  term "$stp -c osmo-stp-cn.cfg" STP
+  term "${CMD_STP} -c osmo-stp-cn.cfg" STP
 else
-  term "$stp -c osmo-stp-cn.cfg" STP4CN
-  term "$stp -c osmo-stp-ran.cfg" STP4RAN
-  term "$mgw -c osmo-mgw-for-bsc-nat.cfg" MGW4BSCNAT
-  term "$bscnat" BSCNAT
+  term "${CMD_STP} -c osmo-stp-cn.cfg" STP4CN
+  term "${CMD_STP} -c osmo-stp-ran.cfg" STP4RAN
+  term "${CMD_MGW} -c osmo-mgw-for-bsc-nat.cfg" MGW4BSCNAT
+  term "${CMD_BSCNAT}" BSCNAT
 fi
 
-term "$hlr" HLR
-term "$sgsn" SGSN
+term "${CMD_HLR} --db-upgrade" HLR
+term "${CMD_SGSN}" SGSN
 
 if [ "${GBPROXY_RUN_IN_OSMO_DEV}" = 1 ]; then
-  term "$gbproxy" GBPROXY
+  term "${CMD_GBPROXY}" GBPROXY
 fi
 
-term "$mgw -c osmo-mgw-for-msc.cfg" MGW4MSC
-term "$msc" MSC
-term "$hnbgw" HNBGW
+term "${CMD_MGW} -c osmo-mgw-for-msc.cfg" MGW4MSC
+term "${CMD_MSC}" MSC
+term "${CMD_HNBGW}" HNBGW
 
 
 if [ "$BSC_COUNT" = 1 ]; then
-  term "$mgw -c osmo-mgw-for-bsc-0.cfg" MGW4BSC
-  term "$bsc -c osmo-bsc-0.cfg" BSC
+  term "${CMD_MGW} -c osmo-mgw-for-bsc-0.cfg" MGW4BSC
+  term "${CMD_BSC} -c osmo-bsc-0.cfg" BSC
 else
-  term "$mgw -c osmo-mgw-for-bsc-0.cfg" MGW4BSC0
-  term "$mgw -c osmo-mgw-for-bsc-1.cfg" MGW4BSC1
-  term "$bsc -c osmo-bsc-0.cfg" BSC0
-  term "$bsc -c osmo-bsc-1.cfg" BSC1
+  term "${CMD_MGW} -c osmo-mgw-for-bsc-0.cfg" MGW4BSC0
+  term "${CMD_MGW} -c osmo-mgw-for-bsc-1.cfg" MGW4BSC1
+  term "${CMD_BSC} -c osmo-bsc-0.cfg" BSC0
+  term "${CMD_BSC} -c osmo-bsc-1.cfg" BSC1
 fi
 
 ${foreach(BTS)}
 if [ "${BTSn_RUN_IN_OSMO_DEV}" = 1 ]; then
-  term "$bts -c osmo-bts-${BTSn}.cfg" BTS${BTSn}
+  term "${CMD_BTS} -c osmo-bts-${BTSn}.cfg" BTS${BTSn}
 fi
 ${foreach_end}
 
 if [ "${MS_RUN_IN_OSMO_DEV}" = 1 ]; then
-  term "$virtphy" VIRTPHY
-  term "$ms" MS
+  term "${CMD_VIRTPHY} -D lo" VIRTPHY
+  term "${CMD_MS} -c mobile.cfg" MS
 fi
 
 if [ "x${MSC_MNCC}" != "xinternal" ]; then
-  term "$sipcon" SIPCON
+  term "${CMD_SIPCON} -c osmo-sip-connector.cfg" SIPCON
 
   case "${PBX_SERVER}" in
     "kamailio")
-      term "$kamailio" KAMAILIO
+      term "${CMD_KAMAILIO} -f kamailio.cfg -D -e -E" KAMAILIO
       ;;
     "freeswitch")
-      term "./freeswitch/freeswitch.sh" FREESWITCH
+      term "${CMD_FREESWITCH}" FREESWITCH
       ;;
   esac
 fi
