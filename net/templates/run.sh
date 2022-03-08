@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # tmux: start this script inside a new session
-tmux_session="CN"
+tmux_session="NET"
 if [ "${TERMINAL}" = "tmux" ] && [ "$1" != "inside-tmux" ]; then
   echo "Starting tmux session '$tmux_session'"
   unset TMUX
@@ -145,7 +145,7 @@ EOF
     *)
       sleep .2
       $terminal \
-        -title "CN:$title" \
+        -title "NET:$title" \
         -e sh -c "$launcher" \
         &
 
