@@ -199,8 +199,7 @@ ggsn="osmo-ggsn"
 #mgw="strace osmo-mgw"
 mgw="osmo-mgw"
 hlr="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-hlr --db-upgrade"
-stp4cn="osmo-stp -c osmo-stp-cn.cfg"
-stp4ran="osmo-stp -c osmo-stp-ran.cfg"
+stp="osmo-stp"
 bsc="LD_LIBRARY_PATH=/usr/local/lib gdb -ex run --args osmo-bsc"
 bscnat="osmo-bsc-nat"
 bts="osmo-bts-virtual"
@@ -250,10 +249,10 @@ echo "$!" > "$PIDFILE_TCPDUMP_LO"
 term "$ggsn" GGSN
 
 if [ "${STP_CN_IP}" = "${STP_RAN_IP}" ]; then
-  term "$stp4cn" STP
+  term "$stp -c osmo-stp-cn.cfg" STP
 else
-  term "$stp4cn" STP4CN
-  term "$stp4ran" STP4RAN
+  term "$stp -c osmo-stp-cn.cfg" STP4CN
+  term "$stp -c osmo-stp-ran.cfg" STP4RAN
   term "$mgw -c osmo-mgw-for-bsc-nat.cfg" MGW4BSCNAT
   term "$bscnat" BSCNAT
 fi
