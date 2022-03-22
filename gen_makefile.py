@@ -186,10 +186,10 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     src_proj = os.path.join(src_proj, 'openbsc')
   build_proj = os.path.join(build_dir, proj)
 
-  src = os.path.relpath(src_dir, make_dir)
-  src_proj = os.path.relpath(src_proj, make_dir)
   make_to_build_proj = os.path.relpath(build_proj, make_dir)
   build_to_src = os.path.relpath(src_proj, build_proj)
+  src = os.path.relpath(src_dir, make_dir)
+  src_proj = os.path.relpath(src_proj, make_dir)
   push_url = push_url or url
 
   if configure_opts:
