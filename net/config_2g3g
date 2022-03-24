@@ -147,6 +147,8 @@ BSCNAT_CN_PC="${BSC0_PC}"
 BSCNAT_CN_IP="127.0.0.3"
 BSCNAT_RAN_PC="${MSC_PC}"
 BSCNAT_RAN_IP="127.0.0.4"
+BSCNAT_MGW_PORT="2427"
+BSCNAT_MGW_IP="127.0.0.15"
 
 # Set to 1 to have osmo-dev run mobile and virtphy from osmocom-bb
 MS_RUN_IN_OSMO_DEV=0
