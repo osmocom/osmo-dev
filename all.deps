@@ -26,6 +26,7 @@ osmo-pcap	libosmocore
 osmo-bsc-nat	libosmo-sccp
 libgtpnl
 osmo-upf	libosmocore libgtpnl
+osmo-cbc	libosmo-netif
 
 # can only clone these
 docker-playground

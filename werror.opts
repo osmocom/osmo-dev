@@ -14,3 +14,4 @@ osmo-sgsn --enable-werror
 osmo-bts --enable-werror
 osmo-bsc-nat --enable-werror
 osmo-upf --enable-werror
+osmo-cbc --enable-werror

@@ -18,3 +18,4 @@ osmo-bts --enable-sanitize
 osmo-smlc --enable-sanitize
 osmo-pcu --enable-sanitize
 osmo-upf --enable-sanitize
+osmo-cbc --enable-sanitize
