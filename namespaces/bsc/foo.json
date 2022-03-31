@@ -1,0 +1,121 @@
+{
+    "global_data": {
+        "install_prefix": "/home/peta/osmo/bscnat/install",
+        "titandir": "/home/peta/osmo/titan",
+        "workdir": "/home/peta/osmo/namespaces/configs/bsc/workdir",
+        "testdir": "/home/peta/osmo/bscnat/osmo-ttcn3-hacks/bsc"
+    },
+    "interfaces": [
+        {
+            "name": "stp-cn",
+            "interfaces": [
+                {
+                    "ip4": "172.18.2.200/16",
+                    "ip6": "fd02:db8:2::200",
+                    "bridge": "br0"
+                }
+            ],
+            "cmd": "osmo-stp -c ./osmo-stp.cfg"
+        },
+        {
+            "name": "stp-ran",
+            "interfaces": [
+                {
+                    "ip4": "172.18.2.211/16",
+                    "ip6": "fd02:db8:2::211",
+                    "bridge": "br0"
+                }
+            ],
+            "cmd": "osmo-stp -c ./osmo-stp-ran.cfg"
+        },
+        {
+            "name": "mgw-nat",
+            "interfaces": [
+                {
+                    "ip4": "172.18.2.114/16",
+                    "ip6": "fd02:db8:2::114",
+                    "bridge": "br0"
+                }
+            ],
+            "cmd": "osmo-mgw -c ./osmo-mgw.cfg"
+        },
+        {
+            "name": "bscnat",
+            "interfaces": [
+                {
+                    "ip4": "172.18.2.111/16",
+                    "ip6": "fd02:db8:2::111",
+                    "bridge": "br0"
+                },
+                {
+                    "ip4": "172.18.2.112/16",
+                    "ip6": "fd02:db8:2::112",
+                    "bridge": "br0"
+                },
+                {
+                    "ip4": "172.18.2.113/16",
+                    "ip6": "fd02:db8:2::113",
+                    "bridge": "br0"
+                }
+            ],
+            "cmd": "osmo-bsc-nat"
+        },
+        {
+            "name": "bsc",
+            "interfaces": [
+                {
+                    "ip4": "172.18.2.20/16",
+                    "ip6": "fd02:db8:2::20",
+                    "bridge": "br0"
+                }
+            ],
+            "cmd": "osmo-bsc -c ./osmo-bsc.cfg"
+        },
+        {
+            "name": "oml0",
+            "interfaces": [
+                {
+                    "ip4": "172.18.2.100/16",
+                    "ip6": null,
+                    "bridge": "br0"
+                }
+            ],
+            "cmd": "./respawn.sh osmo-bts-omldummy 172.18.2.20 1234 1 >>/tmp/osmo-bts-omldummy-0.log 2>&1"
+        },
+        {
+            "name": "oml1",
+            "interfaces": [
+                {
+                    "ip4": "172.18.2.101/16",
+                    "ip6": null,
+                    "bridge": "br0"
+                }
+            ],
+            "cmd": "./respawn.sh osmo-bts-omldummy 172.18.2.20 1235 1 >>/tmp/osmo-bts-omldummy-1.log 2>&1"
+        },
+        {
+            "name": "oml2",
+            "interfaces": [
+                {
+                    "ip4": "172.18.2.102/16",
+                    "ip6": null,
+                    "bridge": "br0"
+                }
+            ],
+            "cmd": "./respawn.sh osmo-bts-omldummy 172.18.2.20 1236 1 >>/tmp/osmo-bts-omldummy-2.log 2>&1"
+        }
+    ],
+    "test_to_run": {
+        "name": "ttcn3",
+        "interfaces": [
+            {
+                "ip4": "172.18.2.203/16",
+                "ip6": "fd02:db8:2::203",
+                "bridge": "br0"
+            }
+        ],
+        "cmd": "ttcn3_start",
+        "test_binary": "BSC_Tests",
+        "cfgfile": "BSC_Tests.cfg"
+    }
+}

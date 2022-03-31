@@ -1,0 +1,34 @@
+This script runs ttcn3 tests without a docker setup locally, concurrently, wrapped in a (net)ns. It requires python >= 3.8 + byobu + tmux.
+It requires a matching config file, so every part of the cni gets the ip address it wants (according to its own cfg file).
+The only modification required to use docker cfg files is to adjust paths for sockets/other cfg files, i.e. top dirs /data/ -> /tmp/.
+All configs are copied to a private mounted /tmp dir, where the tests are exectued. Data is stored in a uniquely named directory in cwd after termination. Make sure not to run out of ram due to spawning too many tests!
+The usual network setup is one interface in the top anonymous namespace connected to a bridge, and the other end of that if lives in the sub-ns that is used to run a part of the cni and configured with a ip.
+The host namespace/network setup is not modified.
+Just run the python file within one of the config subdirs after adjusting the configs.
+
+args:
+--run-all-tests
+runs all tests (testsuite binary -l output is parsed)
+--parallel #num
+concurent exection of #num tests (for all tests)
+
+--test-to-run #name
+runs single test #name, i.e. MSC_Tests.TC_lu_imsi_auth_tmsi_encr_13_13
+--gui
+spawn setup in byobu+tmux
+if this is omitted output ends up in log files
+--ws
+spawns wireshark after test is done/tmux session is detached
+this still happens within the ns, so a generated hosts file is bind mounted that can be used by wireshark to get nice names for all adresses.
+
+
+see example configs in subdirs.
+
+test config is read from foo.json, gloval config part:
+install_prefix : added to path, install (prefix) dir of cni parts not already in path
+titandir: titan install dir
+workdir: tmp dir used for remounting X related stuff, etc.
+testdir: path to this current testsuite, i.e.  /foo/bar/osmo-ttcn3-hacks/msc
+
+interfaces list contains netns interface config + command to run in this ns
+test_to_run is derived from interface, but special, because in the non-gui case the whole execution waits for this command to complete

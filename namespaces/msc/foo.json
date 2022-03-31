@@ -1,0 +1,56 @@
+{
+    "global_data": {
+        "install_prefix": "~/osmo/bscnat/install",
+        "titandir": "~/osmo/titan",
+        "workdir": "~/osmo/namespaces/configs/msc/workdir",
+        "testdir": "~/osmo/bscnat/osmo-ttcn3-hacks/msc"
+    },
+    "interfaces": [
+        {
+            "name": "stp",
+            "interfaces": [
+                {
+                    "ip4": "172.18.20.200/16",
+                    "ip6": "fd02:db8:20::200",
+                    "bridge": "br0"
+                }
+            ],
+            "cmd": "osmo-stp -c ./osmo-stp.cfg"
+        },
+        {
+            "name": "stp-nat",
+            "interfaces": [
+                {
+                    "ip4": "172.18.20.201/16",
+                    "ip6": "fd02:db8:20::201",
+                    "bridge": "br0"
+                }
+            ],
+            "cmd": "osmo-stp -c ./osmo-stp-nat.cfg"
+        },
+        {
+            "name": "msc",
+            "interfaces": [
+                {
+                    "ip4": "172.18.20.10/16",
+                    "ip6": "fd02:db8:20::10",
+                    "bridge": "br0"
+                }
+            ],
+            "cmd": "osmo-msc -c ./osmo-msc.cfg"
+        }
+    ],
+    "test_to_run": {
+        "name": "ttcn3",
+        "interfaces": [
+            {
+                "ip4": "172.18.20.103/16",
+                "ip6": "fd02:db8:2::203",
+                "bridge": "br0"
+            }
+        ],
+        "cmd": "ttcn3_start",
+        "test_binary": "MSC_Tests",
+        "cfgfile": "MSC_Tests.cfg"
+    }
+}
