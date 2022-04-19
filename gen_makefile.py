@@ -84,7 +84,7 @@ parser.add_argument('-p', '--push-url', dest='push_url', default='',
 parser.add_argument('-o', '--output', dest='output', default='Makefile',
   help='''Makefile filename (default: 'Makefile').''')
 
-parser.add_argument('-j', '--jobs', dest='jobs', default='9',
+parser.add_argument('-j', '--jobs', dest='jobs', default='$(nproc)',
   help='''-j option to pass to 'make'.''')
 
 parser.add_argument('-I', '--sudo-make-install', dest='sudo_make_install',
