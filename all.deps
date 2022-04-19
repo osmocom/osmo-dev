@@ -27,6 +27,7 @@ osmo-bsc-nat	libosmo-sccp osmo-mgw
 libgtpnl
 osmo-upf	libosmocore libgtpnl
 osmo-cbc	libosmo-netif
+osmo-hnodeb	osmo-iuh
 
 # can only clone these
 docker-playground
