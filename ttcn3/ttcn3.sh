@@ -150,7 +150,7 @@ check_dir_testsuite() {
 prepare_local_bin() {
 	local scripts="
 		${DIR_OSMODEV}/src/docker-playground/common/respawn.sh
-		${DIR_OSMODEV}/src/docker-playground/debian-stretch-titan/ttcn3-docker-run.sh
+		${DIR_OSMODEV}/src/docker-playground/debian-bullseye-titan/ttcn3-docker-run.sh
 	"
 
 	for script in $scripts; do
