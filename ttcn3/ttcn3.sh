@@ -11,7 +11,7 @@ JOBS="${JOBS:-9}"
 # built in this container. It must have all build dependencies available and
 # be based on the same distribution that master-* containers are based on, so
 # there are no incompatibilities with shared libraries.
-DOCKER_IMG_BUILD="debian-stretch-jenkins"
+DOCKER_IMG_BUILD="debian-bullseye-build"
 
 check_usage() {
 	if [ -z "$PROJECT" ]; then
