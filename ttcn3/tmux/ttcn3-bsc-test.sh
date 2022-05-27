@@ -36,8 +36,8 @@ tmux split-window -t $SESSION:1 -v
 tmux send-keys -t $SESSION:1.0 "cd $SUITE_DIR/bsc" C-m
 tmux send-keys -t $SESSION:1.0 "osmo-stp -c osmo-stp.cfg" C-m
 # Start osmo-bts-omldummy
-tmux send-keys -t $SESSION:1.1 "$RESPAWN osmo-bts-omldummy 127.0.0.1 1234" C-m
-tmux send-keys -t $SESSION:1.2 "$RESPAWN osmo-bts-omldummy 127.0.0.1 1235" C-m
-tmux send-keys -t $SESSION:1.3 "$RESPAWN osmo-bts-omldummy 127.0.0.1 1236" C-m
+tmux send-keys -t $SESSION:1.1 "$RESPAWN osmo-bts-omldummy 127.0.0.1 1234 1" C-m
+tmux send-keys -t $SESSION:1.2 "$RESPAWN osmo-bts-omldummy 127.0.0.1 1235 1" C-m
+tmux send-keys -t $SESSION:1.3 "$RESPAWN osmo-bts-omldummy 127.0.0.1 1236 1" C-m
 
 tmux attach -t $SESSION:0
