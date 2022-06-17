@@ -171,7 +171,7 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
 	touch $@
   '''
 
-  if proj in ("libgtpnl", "libnftnl"):
+  if proj in ("libgtpnl", "libnftnl", "nftables"):
     url = "git://git.netfilter.org"
 
   return f'''
