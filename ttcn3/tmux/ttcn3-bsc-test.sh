@@ -39,6 +39,6 @@ tmux send-keys -t $SESSION:1.0 "osmo-stp -c osmo-stp.cfg" C-m
 BTS_FEATURES="-fCCN,EGPRS,GPRS,IPv6_NSVC,PAGING_COORDINATION"
 tmux send-keys -t $SESSION:1.1 "$RESPAWN osmo-bts-omldummy $BTS_FEATURES 127.0.0.1 1234 1" C-m
 tmux send-keys -t $SESSION:1.2 "$RESPAWN osmo-bts-omldummy $BTS_FEATURES 127.0.0.1 1235 1" C-m
-tmux send-keys -t $SESSION:1.3 "$RESPAWN osmo-bts-omldummy $BTS_FEATURES 127.0.0.1 1236 1" C-m
+tmux send-keys -t $SESSION:1.3 "$RESPAWN osmo-bts-omldummy $BTS_FEATURES 127.0.0.1 1236 4" C-m
 
 tmux attach -t $SESSION:0
