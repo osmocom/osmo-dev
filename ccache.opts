@@ -1,0 +1,1 @@
+ALL CC="/usr/lib/ccache/bin/gcc" CXX="/usr/lib/ccache/bin/g++"
