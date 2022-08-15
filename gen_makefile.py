@@ -391,11 +391,11 @@ all_debug:
 regen:
 	{script} \
 		{configure_opts} \
-		-m {make_dir} \
-		-o {makefile} \
-		-s {src_dir} \
-		-b {build_dir} \
-		-u "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}{docker_cmd}{build_debug}{auto_distclean}
+		--output {makefile} \
+		--src-dir {src_dir} \
+		--make-dir {make_dir} \
+		--build-dir {build_dir} \
+		--url "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}{docker_cmd}{build_debug}{auto_distclean}
 
 '''.format(
     script=os.path.relpath(sys.argv[0], make_dir),
@@ -405,9 +405,9 @@ regen:
     src_dir=os.path.relpath(args.src_dir, make_dir),
     build_dir=os.path.relpath(build_dir, make_dir),
     url=args.url,
-    push_url=(" \\\n\t\t-p '%s'"%args.push_url) if args.push_url else '',
-    sudo_make_install=' \\\n\t\t-I' if args.sudo_make_install else '',
-    no_ldconfig=' \\\n\t\t-L' if args.no_ldconfig else '',
+    push_url=(" \\\n\t\t--push-url '%s'"%args.push_url) if args.push_url else '',
+    sudo_make_install=' \\\n\t\t--sudo-make-install' if args.sudo_make_install else '',
+    no_ldconfig=' \\\n\t\t--no-ldconfig' if args.no_ldconfig else '',
     ldconfig_without_sudo=' \\\n\t\t--ldconfig-without-sudo' if args.ldconfig_without_sudo else '',
     make_check='' if args.make_check else " \\\n\t\t--no-make-check",
     docker_cmd=f' \\\n\t\t--docker-cmd "{args.docker_cmd}"' if args.docker_cmd else '',
