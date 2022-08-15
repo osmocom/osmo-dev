@@ -1,6 +1,7 @@
 libasn1c --enable-werror
 libosmo-abis --enable-werror
 libosmocore --enable-werror
+libosmo-gprs --enable-werror
 libosmo-netif --enable-werror
 libosmo-sccp --enable-werror
 libosmo-pfcp --enable-werror

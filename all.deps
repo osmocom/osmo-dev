@@ -1,6 +1,7 @@
 # project	build these first
 libosmocore
 libosmo-abis	libosmocore
+libosmo-gprs	libosmocore
 libosmo-netif	libosmo-abis
 libosmo-sccp	libosmo-netif
 libsmpp34
@@ -19,7 +20,7 @@ osmo-smlc	libosmo-sccp
 # When omitting --enable-sanitize from osmo-trx only, its 'make check' will fail.
 # So if you want osmo-trx, use no sanitize.opts, or use LD_PRELOAD for osmo-trx binaries.
 osmo-trx	libosmocore
-osmo-pcu	libosmocore
+osmo-pcu	libosmocore libosmo-gprs
 asn1c	libasn1c
 osmo-gbproxy	libosmocore
 osmo-pcap	libosmocore
