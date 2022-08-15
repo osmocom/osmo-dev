@@ -395,6 +395,7 @@ regen:
 		--src-dir {src_dir} \
 		--make-dir {make_dir} \
 		--build-dir {build_dir} \
+		--jobs {jobs} \
 		--url "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}{docker_cmd}{build_debug}{auto_distclean}
 
 '''.format(
@@ -404,6 +405,7 @@ regen:
     makefile=args.output,
     src_dir=os.path.relpath(args.src_dir, make_dir),
     build_dir=os.path.relpath(build_dir, make_dir),
+    jobs=args.jobs,
     url=args.url,
     push_url=(" \\\n\t\t--push-url '%s'"%args.push_url) if args.push_url else '',
     sudo_make_install=' \\\n\t\t--sudo-make-install' if args.sudo_make_install else '',
