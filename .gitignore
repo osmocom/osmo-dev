@@ -19,3 +19,11 @@ ttcn3/out/
 ttcn3/make/
 ttcn3/.run.sh
 ttcn3/usr_local
+current_log
+lastlog
+autolog
+*.db
+*.db-shm
+*.db-wal
+# log file created by udtrace
+virt-nitb/osmo-msc.log

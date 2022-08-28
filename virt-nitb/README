@@ -1,0 +1,40 @@
+This is runs a complete core network with a virtual 2G BTS and two virtual 2G phones.
+
+Steps:
+
+- build osmocom-bb
+    git clone https://git.osmocom.org/osmocom-bb
+    cd osmocom-bb/src
+    make nofirmware
+    cd ../..
+  Put programs virtphy and mobile in $PATH, e.g.
+    ln -s $PWD/osmocom-bb/src/host/virt_phy/src/virtphy ~/bin/
+    ln -s $PWD/osmocom-bb/src/host/layer23/src/mobile/mobile ~/bin/
+
+- also have these programs available in $PATH:
+  - osmo-hlr
+  - osmo-msc
+  - osmo-mgw
+  - osmo-stp
+  - osmo-bsc
+  - osmo-bts-virtual (from osmo-bts)
+  - did i miss one?
+
+- prepare HLR db; call this while no other osmo-hlr is running:
+    ./create_hlr_subscribers.sh
+
+- use run.sh to launch N terminals with one component each:
+    ./run.sh
+  when you hit enter in this terminal, the entire network is torn down. (so continue in another terminal)
+  - of course you can instead launch the ten-odd components manually...
+
+- Two virtual phones should subscribe to the network as soon as the two 'mobile' are launched.
+  Watch for 'bssap': "Location Updating Accept" with wireshark tracing 'lo'
+
+- Launch (the signalling of) a voice call:
+    ./call.sh
+    ...
+    ./hangup.sh
+  There will be no voice RTP stream, but the MGWs will be set up for it and the call will remain open.
+
+- ...
