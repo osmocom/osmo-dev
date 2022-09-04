@@ -3,6 +3,8 @@
 
 arg="$1"
 
+SIPCON_SERVER="kamailio"
+
 logdir="current_log"
 mkdir -p "$logdir"
 
@@ -52,8 +54,6 @@ bts="osmo-bts-virtual -c osmo-bts-virtual.cfg"
 virtphy="LD_PRELOAD=$asan virtphy"
 ms1="LD_PRELOAD=$asan mobile -c mobile.cfg"
 ms2="LD_PRELOAD=$asan mobile -c mobile2.cfg"
-
-SIPCON_SERVER="internal"
 
 if [ "x$SIPCON_SERVER" != "xinternal" ]; then
   sipcon="osmo-sip-connector -c osmo-sip-connector.cfg"
