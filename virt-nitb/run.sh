@@ -23,7 +23,7 @@ term() {
   if [ -z "$title" ]; then
     title="$(basename $@)"
   fi
-  exec $terminal -title "CN:$title" -e sh -c "$1; echo; while true; do echo 'q Enter to close'; read q_to_close; if [ \"x\$q_to_close\" = xq ]; then break; fi; done"
+  exec $terminal -title "CN:$title" -e sh -c "$1; echo; while sleep 1; do echo 'q Enter to close'; read q_to_close; if [ \"x\$q_to_close\" = xq ]; then break; fi; done"
 }
 
 find_term
@@ -104,7 +104,7 @@ sleep .2
 term "$virtphy" virtphy &
 sleep .2
 term "$ms1" MS1 &
-sleep .2
+sleep 3
 term "$ms2" MS2 &
 
 if [ "x$SIPCON_SERVER" != "xinternal" ]; then
@@ -124,6 +124,9 @@ echo enter to close
 read enter_to_close
 echo Closing...
 #set -x
+
+killall -2 mobile
+sleep 3
 
 if [ "x$SIPCON_SERVER" != "xinternal" ]; then
   kill %11
