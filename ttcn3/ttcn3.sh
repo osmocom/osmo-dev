@@ -58,6 +58,12 @@ get_testsuite_dir_docker() {
 	esac
 }
 
+get_testsuite_image() {
+	case "$PROJECT" in
+		*) echo "$USER/ttcn3-$PROJECT-test" ;;
+	esac
+}
+
 # Programs that need to be built
 get_programs() {
 	case "$PROJECT" in
@@ -181,6 +187,17 @@ prepare_docker_build_container() {
 	touch "$marker"
 }
 
+prepare_docker_testsuite_container() {
+	local marker="$DIR_OSMODEV/ttcn3/make/.ttcn3-docker-build-testsuite"
+
+	if [ -e "$marker" ]; then
+		return
+	fi
+
+	make -C "$(get_testsuite_dir_docker)"
+	touch "$marker"
+}
+
 # Use osmo-dev to build one Osmocom program and its dependencies
 build_osmo_programs() {
 	local program
@@ -225,10 +242,22 @@ build_testsuite() {
 		touch "$deps_marker"
 	fi
 
-	./gen_links.sh
-	./regen_makefile.sh
-	make compile
-	make -j"$JOBS"
+	# Build inside docker, so the resulting binary links against the
+	# libraries available in docker and not the ones from the host system,
+	# since we will run it inside docker later too.
+	local hacks="${DIR_OSMODEV}/src/osmo-ttcn3-hacks"
+
+	docker run \
+		--rm \
+		-v "$hacks:/osmo-ttcn3-hacks" \
+		"$(get_testsuite_image)" \
+		sh -exc "
+			cd /osmo-ttcn3-hacks/$(basename "$(get_testsuite_dir)");
+			./gen_links.sh;
+			./regen_makefile.sh;
+			make compile;
+			make -j"$JOBS"
+		"
 }
 
 run_docker() {
@@ -284,6 +313,7 @@ check_dir_testsuite
 prepare_local_bin
 prepare_docker_build_container
 build_osmo_programs
+prepare_docker_testsuite_container
 build_testsuite
 remove_old_logs
 run_docker
