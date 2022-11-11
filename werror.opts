@@ -9,7 +9,7 @@ libsmpp34 --enable-werror
 osmo-bsc --enable-werror
 osmo-ggsn --enable-werror
 osmo-hlr --enable-werror
-#osmo-iuh --enable-werror
+osmo-iuh --enable-werror
 osmo-mgw --enable-werror
 osmo-msc --enable-werror
 osmo-sgsn --enable-werror
