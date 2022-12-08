@@ -33,6 +33,7 @@ osmo-upf	libosmocore libosmo-pfcp libgtpnl nftables
 osmo-cbc	libosmo-netif
 osmo-hnodeb	osmo-iuh
 osmo-hnbgw	osmo-iuh osmo-mgw libosmo-pfcp
+osmo-e1d	libosmocore
 
 # can only clone these
 docker-playground
