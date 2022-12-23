@@ -178,7 +178,7 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
 .make.{proj}.clone:
 	@echo -e "\\n\\n\\n===== $@\\n"
 	test -d {src} || mkdir -p {src}
-	test -d {src_proj} || ( git -C {src} clone "{url}/{proj}" "{proj}" && git -C "{src}/{proj}" remote set-url --push origin "{push_url}/{proj}" )
+	test -d {src_proj} || ( git -C {src} clone --recurse-submodules "{url}/{proj}" "{proj}" && git -C "{src}/{proj}" remote set-url --push origin "{push_url}/{proj}" )
 	sync
 	touch $@
   '''
