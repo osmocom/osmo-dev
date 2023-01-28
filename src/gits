@@ -465,7 +465,7 @@ if __name__ == '__main__':
         print_status()
     elif args.action in ['fetch', 'f']:
         cmd_do(['fetch'] + args.remainder)
-    elif args.action in ['rebase', 'r']:
+    elif args.action in ['rebase', 'r', 're']:
         cmd_rebase()
     elif args.action == 'sh':
         cmd_sh(args.remainder)
