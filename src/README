@@ -7,7 +7,7 @@ There are some handy scripts I use for my daily Osmocom development:
 	gerrit commit-msg hook in each one. This requires an ~/.ssh/config
 	entry, see top comment in the script.
 
- fetch-gerrit-patch.sh
+ grd
 	Pass a patch number seen on gerrit to fetch the latest patch set into
 	your git clone. See top comment in the script.
 
@@ -34,22 +34,23 @@ commit-msg                                                             100% 4688
 -----------------------------------------------------------------------------
 
 
-cd osmo-msc
-../fetch-gerrit-patch.sh 3787
-+ git fetch origin refs/changes/87/3787/2
-From ssh://go/osmo-msc
- * branch            refs/changes/87/3787/2 -> FETCH_HEAD
-+ git checkout -b 3787_2 FETCH_HEAD
-Switched to a new branch '3787_2'
+$ cd osmo-msc
+$ ../grd 3787
+Download https://gerrit.osmocom.org/changes/osmo-msc~3787/detail
++ git fetch https://gerrit.osmocom.org/osmo-msc refs/changes/87/3787/5
+From https://gerrit.osmocom.org/osmo-msc
+ * branch                refs/changes/87/3787/5 -> FETCH_HEAD
++ git checkout -B gerrit/3787_5 FETCH_HEAD
+Switched to a new branch 'gerrit/3787_5'
 
 
 # or if you want an earlier patch set
-../fetch-gerrit-patch.sh 3787/1
-From ssh://go/osmo-msc
- * branch            refs/changes/87/3787/1 -> FETCH_HEAD
-+ git checkout -b 3787_1 FETCH_HEAD
-Switched to a new branch '3787_1'
-
+$ ../grd 3787 -r1
++ git fetch https://gerrit.osmocom.org/osmo-msc refs/changes/87/3787/1
+From https://gerrit.osmocom.org/osmo-msc
+ * branch                refs/changes/87/3787/1 -> FETCH_HEAD
++ git checkout -B gerrit/3787_1 FETCH_HEAD
+Switched to a new branch 'gerrit/3787_1'
 
 -----------------------------------------------------------------------------
 

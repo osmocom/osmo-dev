@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+# "git review download", like git review -d, but without need for ssh key. Run
+# this script inside a git repository with the gerrit review ID as argument to
+# fetch and checkout the patch.
+import argparse
+import configparser
+import json
+import os
+import subprocess
+import urllib.request
+
+
+def get_topdir():
+    try:
+        return subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                              check=True, capture_output=True,
+                              encoding="UTF-8").stdout.rstrip()
+    except subprocess.CalledProcessError:
+        print("ERROR: not running inside a git repository")
+        exit(1)
+
+
+def get_config_path():
+    ret = f"{get_topdir()}/.gitreview"
+    if not os.path.exists(ret):
+        print(f"ERROR: config not found: {ret}")
+        exit(1)
+    return ret
+
+
+def get_config():
+    config_path = get_config_path()
+    config = configparser.ConfigParser()
+    config.read(config_path)
+    return config["gerrit"]["host"], config["gerrit"]["project"]
+
+
+def get_gerrit_details(host, project, patch_id, verbose):
+    url = f"https://{host}/changes/{project}~{args.patch_id}/detail"
+    print(f"Download {url}")
+    with urllib.request.urlopen(url) as response:
+        content = response.read().decode()
+        content = "{" + content.split("{", 1)[1]
+        ret = json.loads(content)
+        if args.verbose:
+            print(json.dumps(ret, indent=4))
+    return ret
+
+
+def get_highest_revision(details):
+    ret = 1
+    for message in details["messages"]:
+        rev = message["_revision_number"]
+        if rev > ret:
+            ret = rev
+    return ret
+
+
+def git_fetch(host, project, patch_id, rev):
+    last_digits = str(patch_id)[-2:]
+    url = f"https://{host}/{project}"
+    ref = f"refs/changes/{last_digits}/{patch_id}/{rev}"
+    cmd = ["git", "fetch", url, ref]
+    print(f"+ {' '.join(cmd)}")
+
+    try:
+        return subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError:
+        exit(1)
+
+
+def git_checkout_fetch_head(patch_id, rev):
+    cmd = ["git", "checkout", "-B", f"gerrit/{patch_id}_{rev}", "FETCH_HEAD"]
+    print(f"+ {' '.join(cmd)}")
+
+    try:
+        return subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError:
+        exit(1)
+
+
+desc = "git review download: fetch and checkout a patch from gerrit"
+parser = argparse.ArgumentParser(description=desc)
+parser.add_argument("patch_id", type=int,
+                    help="gerrit review ID")
+parser.add_argument("-r", "--revision", type=int,
+                    help="patchset revision, default is latest")
+parser.add_argument("-v", "--verbose", action="store_true")
+args = parser.parse_args()
+
+host, project = get_config()
+rev = args.revision
+
+if not rev:
+    details = get_gerrit_details(host, project, args.patch_id, args.verbose)
+    rev = get_highest_revision(details)
+
+git_fetch(host, project, args.patch_id, rev)
+git_checkout_fetch_head(args.patch_id, rev)

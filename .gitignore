@@ -5,8 +5,8 @@ tags
 make-*
 make/*
 src/*
-!src/fetch-gerrit-patch.sh
 !src/gits
+!src/grd
 !src/osmo-add-gerrit-hooks.sh
 !src/README
 net/*
