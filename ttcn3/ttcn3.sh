@@ -140,7 +140,8 @@ check_dir_testsuite() {
 	fi
 
 	if ! [ -d "$dir_testsuite_docker" ]; then
-		echo "ERROR: could not find docker dir for project: $PROJECT. Adjust get_testsuite_dir_docker?"
+		echo "ERROR: could not find docker dir for project: $PROJECT: $dir_testsuite_docker"
+		echo "Adjust get_testsuite_dir_docker?"
 		exit 1
 	fi
 
