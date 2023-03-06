@@ -248,12 +248,15 @@ build_testsuite() {
 	# since we will run it inside docker later too.
 	local hacks="${DIR_OSMODEV}/src/osmo-ttcn3-hacks"
 
+	local testsuite_image="$(get_testsuite_image)"
+	echo "testsuite_image: $testsuite_image"
+
 	# -t: add a tty, so we get color output from the compiler
 	docker run \
 		--rm \
 		-t \
 		-v "$hacks:/osmo-ttcn3-hacks" \
-		"$(get_testsuite_image)" \
+		"$testsuite_image" \
 		sh -exc "
 			cd /osmo-ttcn3-hacks/$(basename "$(get_testsuite_dir)");
 			./gen_links.sh;
