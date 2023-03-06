@@ -14,9 +14,13 @@ JOBS="${JOBS:-9}"
 DOCKER_IMG_BUILD="debian-bullseye-build"
 
 check_usage() {
+	local name="$(basename $0)"
 	if [ -z "$PROJECT" ]; then
-		echo "usage: $(basename $0) PROJECT"
-		echo "example: $(basename $0) hlr"
+		echo "usage: $name PROJECT"
+		echo "examples:"
+		echo "  * $name bsc"
+		echo "  * $name bsc-sccplite"
+		echo "  * $name hlr"
 		exit 1
 	fi
 }
@@ -36,6 +40,7 @@ get_testsuite_dir() {
 
 	case "$PROJECT" in
 		bts-*) echo "$hacks/bts" ;;
+		bsc-*) echo "$hacks/bsc" ;;
 		pcu-sns) echo "$hacks/pcu" ;;
 		*) echo "$hacks/$PROJECT" ;;
 	esac
@@ -54,20 +59,30 @@ get_testsuite_dir_docker() {
 	local dp="${DIR_OSMODEV}/src/docker-playground"
 
 	case "$PROJECT" in
-		*) echo "$dp/ttcn3-$PROJECT-test" ;;
+		bsc-*)
+			echo "$dp/ttcn3-bsc-test-$(echo "$PROJECT" | cut -d - -f 2-)"
+			;;
+		*)
+			echo "$dp/ttcn3-$PROJECT-test"
+			;;
 	esac
 }
 
 get_testsuite_image() {
 	case "$PROJECT" in
-		*) echo "$USER/ttcn3-$PROJECT-test" ;;
+		bsc-*)
+			echo "$USER/ttcn3-bsc-test"
+			;;
+		*)
+			echo "$USER/ttcn3-$PROJECT-test"
+			;;
 	esac
 }
 
 # Programs that need to be built
 get_programs() {
 	case "$PROJECT" in
-		bsc) echo "osmo-stp osmo-bsc osmo-bts-omldummy" ;;
+		bsc|bsc-*) echo "osmo-stp osmo-bsc osmo-bts-omldummy" ;;
 		bts) echo "osmo-bsc osmo-bts-trx" ;;
 		msc) echo "osmo-stp osmo-msc" ;;
 		pcu-sns) echo "osmo-pcu" ;;
