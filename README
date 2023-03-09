@@ -167,6 +167,9 @@ Example usage:
 More about the testsuites:
 https://osmocom.org/projects/cellular-infrastructure/wiki/Titan_TTCN3_Testsuites
 
+Video explaining this script, related approaches and osmo-dev in general:
+https://media.ccc.de/v/osmodevcall-20211210-osmith-osmo-dev-ttcn3
+
 [1] https://jenkins.osmocom.org/jenkins/view/TTCN3/
 
 === ttcn3/tmux
