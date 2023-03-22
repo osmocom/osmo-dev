@@ -7,3 +7,4 @@ osmo-hlr --enable-external-tests
 osmo-pcu --enable-vty-tests
 osmo-upf --enable-external-tests
 osmo-bsc-nat --enable-external-tests
+osmo-sip-connector --enable-external-tests
