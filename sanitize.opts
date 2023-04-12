@@ -22,3 +22,4 @@ osmo-pcu --enable-sanitize
 osmo-upf --enable-sanitize
 osmo-cbc --enable-sanitize
 osmo-hnbgw --enable-sanitize
+osmo-gsm-shark --enable-sanitize
