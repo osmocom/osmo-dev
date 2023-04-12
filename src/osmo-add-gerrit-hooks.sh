@@ -13,7 +13,7 @@ base="$PWD"
 for r in $(find . -maxdepth 2 -name '.git'); do
   cd "$base/$r"
   if [ ! -f "hooks/commit-msg" ]; then
-    scp -P 29418 gerrit.osmocom.org:hooks/commit-msg hooks/
+    scp -O -P 29418 gerrit.osmocom.org:hooks/commit-msg hooks/
   fi
   sed -i 's/if (unprinted /if (0 \&\& unprinted /' hooks/commit-msg
 done
