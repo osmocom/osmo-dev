@@ -12,6 +12,7 @@ JOBS="${JOBS:-9}"
 # be based on the same distribution that master-* containers are based on, so
 # there are no incompatibilities with shared libraries.
 DOCKER_IMG_BUILD="debian-bullseye-build"
+DOCKER_IMG_TITAN="debian-bullseye-titan"
 
 check_usage() {
 	local name="$(basename $0)"
@@ -249,6 +250,10 @@ build_osmo_programs() {
 	done
 }
 
+docker_image_exists() {
+	test -n "$(docker images -q "$1")"
+}
+
 build_testsuite() {
 	cd "$(get_testsuite_dir)"
 
@@ -265,6 +270,18 @@ build_testsuite() {
 
 	local testsuite_image="$(get_testsuite_image)"
 	echo "testsuite_image: $testsuite_image"
+
+	if ! docker_image_exists "$testsuite_image"; then
+		if ! docker_image_exists "$USER/$DOCKER_IMG_TITAN"; then
+			echo "Building docker image: $USER/$DOCKER_IMG_TITAN"
+			local dp="${DIR_OSMODEV}/src/docker-playground"
+			make -C "$dp/$DOCKER_IMG_TITAN"
+		fi
+
+		echo "Building docker image: $testsuite_image"
+		local testsuite_dir="$(get_testsuite_dir_docker)"
+		make -C "$testsuite_dir"
+	fi
 
 	# -t: add a tty, so we get color output from the compiler
 	docker run \
