@@ -194,25 +194,32 @@ prepare_local_bin() {
 }
 
 prepare_docker_build_container() {
-	local marker="$DIR_OSMODEV/ttcn3/make/.ttcn3-docker-build"
+	local dp="${DIR_OSMODEV}/src/docker-playground"
 
-	if [ -e "$marker" ]; then
+	if docker_image_exists "$USER/$DOCKER_IMG_BUILD"; then
 		return
 	fi
 
-	make -C "$DIR_OSMODEV/src/docker-playground/$DOCKER_IMG_BUILD"
-	touch "$marker"
+	echo "Building docker image: $USER/$DOCKER_IMG_BUILD"
+	make -C "$dp/$DOCKER_IMG_BUILD"
 }
 
 prepare_docker_testsuite_container() {
-	local marker="$DIR_OSMODEV/ttcn3/make/.ttcn3-docker-build-testsuite"
+	local testsuite_image="$(get_testsuite_image)"
 
-	if [ -e "$marker" ]; then
+	if docker_image_exists "$testsuite_image"; then
 		return
 	fi
 
-	make -C "$(get_testsuite_dir_docker)"
-	touch "$marker"
+	if ! docker_image_exists "$USER/$DOCKER_IMG_TITAN"; then
+		echo "Building docker image: $USER/$DOCKER_IMG_TITAN"
+		local dp="${DIR_OSMODEV}/src/docker-playground"
+		make -C "$dp/$DOCKER_IMG_TITAN"
+	fi
+
+	echo "Building docker image: $testsuite_image"
+	local testsuite_dir="$(get_testsuite_dir_docker)"
+	make -C "$testsuite_dir"
 }
 
 # Use osmo-dev to build one Osmocom program and its dependencies
@@ -270,18 +277,6 @@ build_testsuite() {
 
 	local testsuite_image="$(get_testsuite_image)"
 	echo "testsuite_image: $testsuite_image"
-
-	if ! docker_image_exists "$testsuite_image"; then
-		if ! docker_image_exists "$USER/$DOCKER_IMG_TITAN"; then
-			echo "Building docker image: $USER/$DOCKER_IMG_TITAN"
-			local dp="${DIR_OSMODEV}/src/docker-playground"
-			make -C "$dp/$DOCKER_IMG_TITAN"
-		fi
-
-		echo "Building docker image: $testsuite_image"
-		local testsuite_dir="$(get_testsuite_dir_docker)"
-		make -C "$testsuite_dir"
-	fi
 
 	# -t: add a tty, so we get color output from the compiler
 	docker run \
