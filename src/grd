@@ -69,6 +69,14 @@ def git_fetch(host, project, patch_id, rev):
     except subprocess.CalledProcessError:
         exit(1)
 
+def git_cherry_pick_fetch_head():
+    cmd = ["git", "cherry-pick", "FETCH_HEAD"];
+    print(f"+ {' '.join(cmd)}")
+
+    try:
+        return subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError:
+        exit(1)
 
 def git_checkout_fetch_head(patch_id, rev):
     cmd = ["git", "checkout", "-B", f"gerrit/{patch_id}_{rev}", "FETCH_HEAD"]
@@ -84,6 +92,9 @@ desc = "git review download: fetch and checkout a patch from gerrit"
 parser = argparse.ArgumentParser(description=desc)
 parser.add_argument("patch_id", type=int,
                     help="gerrit review ID")
+parser.add_argument("-c", "--cherry-pick", action="store_true",
+                    help="cherry-pick into current branch instead of "
+                         "fetching into a branch")
 parser.add_argument("-r", "--revision", type=int,
                     help="patchset revision, default is latest")
 parser.add_argument("-v", "--verbose", action="store_true")
@@ -97,4 +108,7 @@ if not rev:
     rev = get_highest_revision(details)
 
 git_fetch(host, project, args.patch_id, rev)
-git_checkout_fetch_head(args.patch_id, rev)
+if args.cherry_pick:
+    git_cherry_pick_fetch_head()
+else:
+    git_checkout_fetch_head(args.patch_id, rev)
