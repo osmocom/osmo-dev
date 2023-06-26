@@ -141,6 +141,7 @@ EOF
   case "$terminal" in
     tmux)
       tmux new-window -d -n "$title" "$launcher &; echo \$! > $pidfile_term; wait"
+      stty sane
       ;;
     *)
       sleep .2
