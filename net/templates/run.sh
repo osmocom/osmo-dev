@@ -244,7 +244,7 @@ term "${CMD_MSC}" MSC
 term "${CMD_HNBGW}" HNBGW
 
 
-if [ "$BSC_COUNT" = 1 ]; then
+if [ "${BSC_COUNT}" = 1 ]; then
   term "${CMD_MGW} -c osmo-mgw-for-bsc-0.cfg" MGW4BSC
   term "${CMD_BSC} -c osmo-bsc-0.cfg" BSC
 else
