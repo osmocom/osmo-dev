@@ -8,6 +8,15 @@ if [ "${TERMINAL}" = "tmux" ] && [ "$1" != "inside-tmux" ]; then
   exec tmux new-session -s "$tmux_session" -n "RUN" "$0" "inside-tmux"
 fi
 
+exit_confirm() {
+  trap - EXIT INT TERM 0
+  if [ "${TERMINAL}" = "tmux" ]; then
+    echo "Hit enter to close tmux"
+    read enter_to_continue
+  fi
+}
+trap exit_confirm EXIT INT TERM 0
+
 if ! ../fill_config.py --check-stale; then
 	echo
 	echo "WARNING: STALE CONFIGS - your net configs are older than the templates they should be based on!"
