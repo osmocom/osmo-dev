@@ -171,6 +171,14 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
 	touch $@
   '''
 
+  if proj == "simtrace2_host":
+    return f'''
+.make.{proj}.clone: .make.simtrace2.clone
+	@echo -e "\\n\\n\\n===== $@\\n"
+	test -L {src_proj} || ln -s simtrace2/host {src_proj}
+	touch $@
+  '''
+
   if proj in ("libgtpnl", "libnftnl", "nftables"):
     url = "git://git.netfilter.org"
 

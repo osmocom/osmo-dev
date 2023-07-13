@@ -34,12 +34,15 @@ osmo-cbc	libosmo-netif
 osmo-hnodeb	osmo-iuh
 osmo-hnbgw	osmo-iuh osmo-mgw libosmo-pfcp
 osmo-e1d	libosmocore
+osmo-remsim	simtrace2_host libosmo-netif
 
 # can only clone these
 docker-playground
 osmo-ttcn3-hacks
 osmocom-bb
+simtrace2
 
 # configure.ac not in topdir of repository
 osmocom-bb_layer23	libosmocore
 osmocom-bb_virtphy	libosmocore
+simtrace2_host		libosmocore

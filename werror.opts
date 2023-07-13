@@ -19,3 +19,5 @@ osmo-upf --enable-werror
 osmo-cbc --enable-werror
 osmo-hnodeb --enable-werror
 osmo-hnbgw --enable-werror
+simtrace2_host --enable-werror
+osmo-remsim --enable-werror
