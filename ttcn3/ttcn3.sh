@@ -40,8 +40,9 @@ get_testsuite_dir() {
 	local hacks="${DIR_OSMODEV}/src/osmo-ttcn3-hacks"
 
 	case "$PROJECT" in
-		bts-*) echo "$hacks/bts" ;;
 		bsc-*) echo "$hacks/bsc" ;;
+		bts-*) echo "$hacks/bts" ;;
+		ggsn) echo "$hacks/ggsn_tests" ;;
 		pcu-sns) echo "$hacks/pcu" ;;
 		*) echo "$hacks/$PROJECT" ;;
 	esac
