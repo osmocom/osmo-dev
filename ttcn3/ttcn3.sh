@@ -81,6 +81,13 @@ get_testsuite_image() {
 	esac
 }
 
+# Dependencies not mentioned in all.deps
+get_extra_libraries() {
+	case "$PROJECT" in
+		ggsn) echo "libgtpnl" ;;  # needed for --enable-gtp-linux
+	esac
+}
+
 # Programs that need to be built
 get_programs() {
 	case "$PROJECT" in
@@ -123,11 +130,12 @@ setup_dir_make() {
 
 	./gen_makefile.py \
 		default.opts \
+		gtp_linux.opts \
 		iu.opts \
-		no_systemd.opts \
-		no_doxygen.opts \
 		no_dahdi.opts \
+		no_doxygen.opts \
 		no_optimization.opts \
+		no_systemd.opts \
 		ttcn3/ttcn3.opts \
 		werror.opts \
 		--docker-cmd "$docker_cmd" \
@@ -221,6 +229,19 @@ prepare_docker_testsuite_container() {
 	echo "Building docker image: $testsuite_image"
 	local testsuite_dir="$(get_testsuite_dir_docker)"
 	make -C "$testsuite_dir"
+}
+
+# Use osmo-dev to build libraries not mentioned in all.deps, for example the
+# libgtpnl dependency of osmo-ggsn that is only needed with --enable-gtp-linux.
+build_extra_libraries() {
+	local library
+	local libraries="$(get_extra_libraries)"
+
+	for library in $libraries; do
+		set -x
+		make -C "$DIR_MAKE" "$library"
+		set +x
+	done
 }
 
 # Use osmo-dev to build one Osmocom program and its dependencies
@@ -346,6 +367,7 @@ clone_repo "docker-playground"
 check_dir_testsuite
 prepare_local_bin
 prepare_docker_build_container
+build_extra_libraries
 build_osmo_programs
 prepare_docker_testsuite_container
 build_testsuite
