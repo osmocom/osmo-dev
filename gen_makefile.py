@@ -70,8 +70,8 @@ parser.add_argument('-b', '--build-dir', dest='build_dir',
   help='''Parent dir for all build trees (default:
 directly in the make-dir).''')
 
-parser.add_argument('-u', '--url', dest='url', default='https://git.osmocom.org',
-  help='''git clone base URL. Default is 'https://git.osmocom.org'.
+parser.add_argument('-u', '--url', dest='url', default='https://gerrit.osmocom.org',
+  help='''git clone base URL. Default is 'https://gerrit.osmocom.org'.
 e.g. with a config like this in your ~/.ssh/config:
   host go
   hostname gerrit.osmocom.org

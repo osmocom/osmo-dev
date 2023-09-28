@@ -3,7 +3,7 @@ This is runs a complete core network with a virtual 2G BTS and two virtual 2G ph
 Steps:
 
 - build osmocom-bb
-    git clone https://git.osmocom.org/osmocom-bb
+    git clone https://gerrit.osmocom.org/osmocom-bb
     cd osmocom-bb/src
     make nofirmware
     cd ../..
