@@ -1,6 +1,6 @@
 #!/bin/sh -e
-PROJECT="$1"
-PROJECT_UPPER="$(echo "$PROJECT" | tr '[:lower:]' '[:upper:]')"
+PROJECT=""
+PROJECT_UPPER=""
 DIR_OSMODEV="$(readlink -f "$(dirname $0)/..")"
 DIR_MAKE="${DIR_MAKE:-${DIR_OSMODEV}/ttcn3/make}"
 DIR_OUTPUT="${DIR_OUTPUT:-${DIR_OSMODEV}/ttcn3/out}"
@@ -14,15 +14,36 @@ JOBS="${JOBS:-9}"
 DOCKER_IMG_BUILD="debian-bookworm-build"
 DOCKER_IMG_TITAN="debian-bookworm-titan"
 
+parse_args() {
+	while getopts 'h' OPTION; do
+		case "$OPTION" in
+		h|*)
+			local name="$(basename $0)"
+			echo "usage: $name [-h] PROJECT"
+			echo "arguments:"
+			echo "  -h       show help"
+			echo "  PROJECT  the testsuite project to run"
+			echo "examples:"
+			echo "  $name bsc"
+			echo "  $name bsc-sccplite"
+			echo "  $name hlr"
+			exit 1
+			;;
+		esac
+	done
+	shift "$(($OPTIND - 1))"
+
+	if [ "$#" != "1" ]; then
+		parse_args -h
+	fi
+
+	PROJECT="$1"
+	PROJECT_UPPER="$(echo "$PROJECT" | tr '[:lower:]' '[:upper:]')"
+}
+
 check_usage() {
-	local name="$(basename $0)"
 	if [ -z "$PROJECT" ]; then
-		echo "usage: $name PROJECT"
-		echo "examples:"
-		echo "  * $name bsc"
-		echo "  * $name bsc-sccplite"
-		echo "  * $name hlr"
-		exit 1
+		parse_args -h
 	fi
 }
 
@@ -359,6 +380,7 @@ collect_logs() {
 	echo "---"
 }
 
+parse_args "$@"
 check_usage
 check_ttcn3_install
 setup_dir_make
