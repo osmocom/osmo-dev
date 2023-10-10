@@ -5,7 +5,7 @@ DIR_OSMODEV="$(readlink -f "$(dirname $0)/..")"
 DIR_MAKE="${DIR_MAKE:-${DIR_OSMODEV}/ttcn3/make}"
 DIR_OUTPUT="${DIR_OUTPUT:-${DIR_OSMODEV}/ttcn3/out}"
 DIR_USR_LOCAL="$DIR_OSMODEV/ttcn3/usr_local"
-JOBS="${JOBS:-9}"
+JOBS="$(nproc)"
 
 # Osmocom libraries and programs relevant for the current testsuite will be
 # built in this container. It must have all build dependencies available and
