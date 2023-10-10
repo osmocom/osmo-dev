@@ -14,12 +14,29 @@ JOBS="${JOBS:-9}"
 DOCKER_IMG_BUILD="debian-bookworm-build"
 DOCKER_IMG_TITAN="debian-bookworm-titan"
 
+clean() {
+	if [ "$1" != "clean" ]; then
+		return
+	fi
+	if [ "$#" != 1 ]; then
+		parse_args -h
+	fi
+
+	set -x
+	rm -rf \
+		"$DIR_MAKE" \
+		"$DIR_OUTPUT" \
+		"$DIR_USR_LOCAL"
+	exit 0
+}
+
 parse_args() {
 	while getopts 'h' OPTION; do
 		case "$OPTION" in
 		h|*)
 			local name="$(basename $0)"
 			echo "usage: $name [-h] PROJECT"
+			echo "   or: $name clean"
 			echo "arguments:"
 			echo "  -h       show help"
 			echo "  PROJECT  the testsuite project to run"
@@ -380,6 +397,7 @@ collect_logs() {
 	echo "---"
 }
 
+clean "$@"
 parse_args "$@"
 check_usage
 check_ttcn3_install
