@@ -15,6 +15,7 @@ net/*
 !net/README
 !net/fill_config.py
 ttcn3/3G+2G_ttcn3.deps
+ttcn3/ccache/
 ttcn3/out/
 ttcn3/make/
 ttcn3/.run.sh

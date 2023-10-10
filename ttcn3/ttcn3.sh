@@ -338,16 +338,19 @@ build_testsuite() {
 	local testsuite_image="$(get_testsuite_image)"
 	echo "testsuite_image: $testsuite_image"
 
+	mkdir -p "$"$DIR_OSMODEV/ttcn3/ccache/ttcn3
+
 	# -t: add a tty, so we get color output from the compiler
 	docker run \
 		--rm \
 		-t \
 		-v "$hacks:/osmo-ttcn3-hacks" \
+		-v "$DIR_OSMODEV/ttcn3/ccache/ttcn3:/root/.ccache" \
 		"$testsuite_image" \
 		sh -exc "
 			cd /osmo-ttcn3-hacks/$(basename "$(get_testsuite_dir)");
 			./gen_links.sh;
-			./regen_makefile.sh;
+			USE_CCACHE=1 ./regen_makefile.sh;
 			make compile;
 			make -j"$JOBS"
 		"

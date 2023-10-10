@@ -7,12 +7,13 @@
 DIR_OSMODEV="$(readlink -f "$(dirname $0)/../..")"
 DIR_MAKE="$DIR_OSMODEV/ttcn3/make"
 DIR_USR_LOCAL="$DIR_OSMODEV/ttcn3/usr_local"
+DIR_CCACHE="$DIR_OSMODEV/ttcn3/ccache/osmocom-programs"
 RUN_SCRIPT="$DIR_OSMODEV/ttcn3/.run.sh"
 DOCKER_IMG="$1"
 UID="$(id -u)"
 shift
 
-mkdir -p "$DIR_MAKE"
+mkdir -p "$DIR_MAKE" "$DIR_CCACHE"
 
 # Script running as user inside docker
 echo "#!/bin/sh -ex" > "$RUN_SCRIPT"
@@ -29,6 +30,7 @@ docker run \
 	-v "$DIR_OSMODEV:$DIR_OSMODEV" \
 	-v "$DIR_USR_LOCAL:/usr/local" \
 	-v "$RUN_SCRIPT:/tmp/run.sh:ro" \
+	-v "$DIR_CCACHE:/home/build/.ccache" \
 	"$DOCKER_IMG" \
 	sh -ex -c "
 		if ! id -u $UID 2>/dev/null; then

@@ -1,1 +1,2 @@
 osmo-bts --enable-trx
+ALL CC="/usr/lib/ccache/gcc" CXX="/usr/lib/ccache/g++"
