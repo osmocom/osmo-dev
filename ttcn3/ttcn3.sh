@@ -27,6 +27,11 @@ clean() {
 		"$DIR_MAKE" \
 		"$DIR_OUTPUT" \
 		"$DIR_USR_LOCAL"
+
+	if [ -d "$DIR_OSMODEV/src/osmo-ttcn3-hacks" ]; then
+		make -C "$DIR_OSMODEV/src/osmo-ttcn3-hacks" clean
+	fi
+
 	exit 0
 }
 
