@@ -6,6 +6,8 @@ DIR_MAKE="${DIR_MAKE:-${DIR_OSMODEV}/ttcn3/make}"
 DIR_OUTPUT="${DIR_OUTPUT:-${DIR_OSMODEV}/ttcn3/out}"
 DIR_USR_LOCAL="$DIR_OSMODEV/ttcn3/usr_local"
 JOBS="$(nproc)"
+KERNEL_DIR=""
+KERNEL_SKIP_MARKER="$DIR_MAKE/.kernel_built_from_source"
 
 # Osmocom libraries and programs relevant for the current testsuite will be
 # built in this container. It must have all build dependencies available and
@@ -36,19 +38,61 @@ clean() {
 }
 
 parse_args() {
-	while getopts 'h' OPTION; do
+	while getopts 'hdkf' OPTION; do
 		case "$OPTION" in
+		d)
+			if [ -n "$KERNEL_TEST" ]; then
+				echo "ERROR: use either -d or -k"
+				exit 1
+			fi
+			export KERNEL_TEST=1
+			;;
+		k)
+			if [ -n "$KERNEL_TEST" ]; then
+				echo "ERROR: use either -d or -k"
+				exit 1
+			fi
+			if [ -z "$KERNEL_DIR" ]; then
+				KERNEL_DIR="$(realpath "$DIR_OSMODEV/../linux")"
+			fi
+			if ! [ -e "$KERNEL_DIR/Kbuild" ]; then
+				echo "ERROR: KERNEL_DIR is invalid: $KERNEL_DIR"
+				exit 1
+			fi
+
+			export KERNEL_TEST=1
+			export KERNEL_BUILD=1
+			export KERNEL_SKIP_REBUILD=1
+			;;
+		f)
+			if [ -z "$KERNEL_BUILD" ]; then
+				echo "ERROR: don't use -f without -k"
+				exit 1
+			fi
+			rm -f "$KERNEL_SKIP_MARKER"
+			;;
 		h|*)
 			local name="$(basename $0)"
-			echo "usage: $name [-h] PROJECT"
+			echo "usage: $name [-h] [-d|-k [-f]] PROJECT"
 			echo "   or: $name clean"
+			echo
 			echo "arguments:"
 			echo "  -h       show help"
+			echo
+			echo "arguments for kernel tests:"
+			echo "  -d       run kernel tests with debian kernel"
+			echo "  -k       run kernel tests with kernel built from source"
+			echo "  -f       (use with -k) don't skip build if kernel already exists"
+			echo
 			echo "  PROJECT  the testsuite project to run"
+			echo
 			echo "examples:"
 			echo "  $name bsc"
 			echo "  $name bsc-sccplite"
 			echo "  $name hlr"
+			echo "  $name -d ggsn"
+			echo "  $name -k ggsn"
+			echo "  $name -k -f ggsn"
 			exit 1
 			;;
 		esac
@@ -361,6 +405,52 @@ build_testsuite() {
 		"
 }
 
+# Similar to update_kernel_config in docker-playground
+# scripts/kernel-test/kernel-build.sh
+update_kernel_config() {
+	local previous="$DIR_MAKE/.kernel.previous.config"
+	local fragment="$(get_testsuite_dir_docker)/fragment.config"
+
+	set -x
+	make defconfig
+	scripts/kconfig/merge_config.sh -m .config "$fragment"
+	make olddefconfig
+	set +x
+
+	if [ -e "$previous" ] && ! diff -q "$previous" .config; then
+		# Remove everything built with previous config
+		echo "Kernel config changed, running 'make clean'"
+		make clean
+	fi
+
+	cp .config "$previous"
+}
+
+build_kernel() {
+	local image="arch/x86/boot/bzImage"
+
+	if [ -z "$KERNEL_DIR" ]; then
+		return
+	fi
+
+	cd "$KERNEL_DIR"
+	if ! [ -e "$image" ]; then
+		rm -f "$KERNEL_SKIP_MARKER"
+	fi
+	if ! [ -e "$KERNEL_SKIP_MARKER" ]; then
+		update_kernel_config
+		make -j"$JOBS"
+	fi
+
+	# Copy the kernel to the path expected by
+	# docker-playground scripts/kernel-test/kernel-build.sh
+	local dest="$DIR_OSMODEV/src/docker-playground/_cache/linux/$image"
+	mkdir -p "$(dirname "$dest")"
+	cp "$image" "$dest"
+
+	touch "$KERNEL_SKIP_MARKER"
+}
+
 run_docker() {
 	local hacks="${DIR_OSMODEV}/src/osmo-ttcn3-hacks"
 	local docker_dir="$(get_testsuite_dir_docker)"
@@ -417,6 +507,7 @@ prepare_local_bin
 prepare_docker_build_container
 build_extra_libraries
 build_osmo_programs
+build_kernel
 prepare_docker_testsuite_container
 build_testsuite
 remove_old_logs
