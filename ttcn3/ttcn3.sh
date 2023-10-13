@@ -8,6 +8,7 @@ DIR_USR_LOCAL="$DIR_OSMODEV/ttcn3/usr_local"
 JOBS="$(nproc)"
 KERNEL_DIR=""
 KERNEL_SKIP_MARKER="$DIR_MAKE/.kernel_built_from_source"
+ARG_TEST_NAME=""
 
 # Osmocom libraries and programs relevant for the current testsuite will be
 # built in this container. It must have all build dependencies available and
@@ -38,8 +39,11 @@ clean() {
 }
 
 parse_args() {
-	while getopts 'hdkf' OPTION; do
+	while getopts 'ht:dkf' OPTION; do
 		case "$OPTION" in
+		t)
+			ARG_TEST_NAME="$OPTARG"
+			;;
 		d)
 			if [ -n "$KERNEL_TEST" ]; then
 				echo "ERROR: use either -d or -k"
@@ -73,11 +77,12 @@ parse_args() {
 			;;
 		h|*)
 			local name="$(basename $0)"
-			echo "usage: $name [-h] [-d|-k [-f]] PROJECT"
+			echo "usage: $name [-h] [-t] [-d|-k [-f]] PROJECT"
 			echo "   or: $name clean"
 			echo
 			echo "arguments:"
 			echo "  -h       show help"
+			echo "  -t       only run the test with this name"
 			echo
 			echo "arguments for kernel tests:"
 			echo "  -d       run kernel tests with debian kernel"
@@ -89,7 +94,7 @@ parse_args() {
 			echo "examples:"
 			echo "  $name bsc"
 			echo "  $name bsc-sccplite"
-			echo "  $name hlr"
+			echo "  $name -t TC_gsup_check_imei hlr"
 			echo "  $name -d ggsn"
 			echo "  $name -k ggsn"
 			echo "  $name -k -f ggsn"
@@ -464,11 +469,15 @@ run_docker() {
 	fi
 
 	cd "$(get_testsuite_dir_docker)"
-	export DOCKER_ARGS="\
+	DOCKER_ARGS="\
 		-e LD_LIBRARY_PATH=/usr/local/lib \
 		-v "$DIR_USR_LOCAL":/usr/local:ro \
 		-v $hacks:/osmo-ttcn3-hacks:ro \
 		"
+	if [ -n "$ARG_TEST_NAME" ]; then
+		DOCKER_ARGS="$DOCKER_ARGS -e TEST_NAME=$ARG_TEST_NAME"
+	fi
+	export DOCKER_ARGS
 	export NO_LIST_OSMO_PACKAGES=1
 	./jenkins.sh
 
