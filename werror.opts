@@ -6,6 +6,7 @@ libosmo-netif --enable-werror
 libosmo-sccp --enable-werror
 libosmo-pfcp --enable-werror
 libsmpp34 --enable-werror
+libgtpnl --enable-werror
 osmo-bsc --enable-werror
 osmo-ggsn --enable-werror
 osmo-hlr --enable-werror
