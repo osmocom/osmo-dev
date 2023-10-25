@@ -26,6 +26,7 @@ chmod +x "$RUN_SCRIPT"
 
 docker run \
 	--rm \
+	-t \
 	-e "LD_LIBRARY_PATH=/usr/local/lib" \
 	-v "$DIR_OSMODEV:$DIR_OSMODEV" \
 	-v "$DIR_USR_LOCAL:/usr/local" \
