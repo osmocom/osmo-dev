@@ -52,6 +52,7 @@ import argparse
 
 topdir = os.path.dirname(os.path.realpath(__file__))
 all_deps_file = os.path.join(topdir, "all.deps")
+all_urls_file = os.path.join(topdir, "all.urls")
 parser = argparse.ArgumentParser(epilog=__doc__, formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('configure_opts_files',
@@ -148,6 +149,18 @@ def read_projects_deps(path):
     l.append((tokens[0], tokens[1:]))
   return l
 
+def read_projects_urls(path):
+  'Read urls config and return dict {project_name: url, …}.'
+  ret = {}
+  for line in open(path):
+    line = line.strip()
+    if not line or line.startswith('#'):
+      continue
+    project, url = line.split()
+    assert project not in ret, f"project '{project} found twice in {path}"
+    ret[project] = url
+  return ret
+
 def read_configure_opts(path):
   'Read config opts file and return tuples of (project_name, config-opts).'
   if not path:
@@ -179,14 +192,21 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
 	touch $@
   '''
 
-  if proj in ("libgtpnl", "libnftnl", "nftables"):
-    url = "git://git.netfilter.org"
+  if proj in projects_urls:
+    url = projects_urls[proj]
+    cmd_set_push_url = "true"
+  else:
+    url = f"{url}/{proj}"
+    push_url = f"{push_url}/{proj}"
+    cmd_set_push_url = f'git -C "{src}/{proj}" remote set-url --push origin "{push_url}"'
+
+  cmd_clone = f'git -C {src} clone --recurse-submodules "{url}" "{proj}"'
 
   return f'''
 .make.{proj}.clone:
 	@echo -e "\\n\\n\\n===== $@\\n"
 	test -d {src} || mkdir -p {src}
-	test -d {src_proj} || ( git -C {src} clone --recurse-submodules "{url}/{proj}" "{proj}" && git -C "{src}/{proj}" remote set-url --push origin "{push_url}/{proj}" )
+	test -d {src_proj} || ( {cmd_clone} && {cmd_set_push_url} )
 	sync
 	touch $@
   '''
@@ -303,6 +323,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 
 
 projects_deps = read_projects_deps(all_deps_file)
+projects_urls = read_projects_urls(all_urls_file)
 configure_opts = listdict()
 configure_opts_files = sorted(args.configure_opts_files or [])
 for configure_opts_file in configure_opts_files:
