@@ -214,14 +214,88 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
 	touch $@
   '''
 
+def gen_makefile_autoconf(proj, src_proj, distclean_cond):
+  return f'''
+.make.{proj}.autoconf: .make.{proj}.clone {src_proj}/configure.ac
+	if {distclean_cond}; then $(MAKE) {proj}-distclean; fi
+	@echo -e "\\n\\n\\n===== $@\\n"
+	-rm -f {src_proj}/.version
+	cd {src_proj}; autoreconf -fi
+	sync
+	touch $@
+  '''
+
+def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
+                           cflags, docker_cmd, build_to_src, configure_opts):
+  return f'''
+.make.{proj}.configure: .make.{proj}.autoconf {deps_installed} $({proj}_configure_files)
+	if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.autoconf; fi
+	@echo -e "\\n\\n\\n===== $@\\n"
+	-chmod -R ug+w {build_proj}
+	-rm -rf {build_proj}
+	mkdir -p {build_proj}
+	cd {build_proj}; {cflags}{docker_cmd}{build_to_src}/configure {configure_opts}
+	sync
+	touch $@
+  '''
+
+def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
+                       check):
+  return f'''
+.make.{proj}.build: .make.{proj}.configure $({proj}_files)
+	if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.configure; fi
+	@echo -e "\\n\\n\\n===== $@\\n"
+	{docker_cmd}$(MAKE) -C {build_proj} -j {jobs} {check}
+	sync
+	touch $@
+  '''
+
+def gen_makefile_install(proj, docker_cmd, sudo_make_install, build_proj,
+                         no_ldconfig, sudo_ldconfig):
+  return f'''
+.make.{proj}.install: .make.{proj}.build
+	@echo -e "\\n\\n\\n===== $@\\n"
+	{docker_cmd}{sudo_make_install}$(MAKE) -C {build_proj} install
+	{no_ldconfig}{sudo_ldconfig}ldconfig
+	sync
+	touch $@
+  '''
+
+def gen_makefile_reinstall(proj, deps_reinstall, sudo_make_install,
+                           build_proj):
+  return f'''
+.PHONY: {proj}-reinstall
+{proj}-reinstall: {deps_reinstall}
+	{sudo_make_install}$(MAKE) -C {build_proj} install
+  '''
+
+def gen_makefile_clean(proj, build_proj):
+  return f'''
+.PHONY: {proj}-clean
+{proj}-clean:
+	@echo -e "\\n\\n\\n===== $@\\n"
+	-chmod -R ug+w {build_proj}
+	-rm -rf {build_proj}
+	-rm -rf .make.{proj}.*
+  '''
+
+def gen_makefile_distclean(proj, src_proj):
+  return f'''
+.PHONY: {proj}-distclean
+{proj}-distclean: {proj}-clean
+	@echo -e "\\n\\n\\n===== $@\\n"
+	$(MAKE) -C {src_proj} distclean
+  '''
+
 def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
   src_proj = os.path.join(src_dir, proj)
   if proj == 'openbsc':
     src_proj = os.path.join(src_proj, 'openbsc')
-  build_proj = os.path.join(build_dir, proj)
 
-  make_to_build_proj = os.path.relpath(build_proj, make_dir)
+  build_proj = os.path.join(build_dir, proj)
   build_to_src = os.path.relpath(src_proj, build_proj)
+  build_proj = os.path.relpath(build_proj, make_dir)
+
   src = os.path.relpath(src_dir, make_dir)
   src_proj = os.path.relpath(src_proj, make_dir)
   push_url = push_url or url
@@ -230,6 +304,16 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     configure_opts_str = ' '.join(configure_opts)
   else:
     configure_opts_str = ''
+
+  distclean_cond = f'[ -e {src_proj}/config.status ]' if args.auto_distclean else 'false'
+  deps_installed = ' '.join(['.make.%s.install' % d for d in deps])
+  deps_reinstall = ' '.join(['%s-reinstall' %d for d in deps])
+  cflags = 'CFLAGS=-g ' if args.build_debug else ''
+  docker_cmd = f'{args.docker_cmd} ' if args.docker_cmd else ''
+  check = 'check' if make_check else ''
+  no_ldconfig = '#' if no_ldconfig else ''
+  sudo_ldconfig = '' if ldconfig_without_sudo else 'sudo '
+  sudo_make_install = 'sudo ' if sudo_make_install else ''
 
   return r'''
 ### {proj} ###
@@ -251,77 +335,39 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 
 {clone_rule}
 
-.make.{proj}.autoconf: .make.{proj}.clone {src_proj}/configure.ac
-	if {distclean_cond}; then $(MAKE) {proj}-distclean; fi
-	@echo -e "\n\n\n===== $@\n"
-	-rm -f {src_proj}/.version
-	cd {src_proj}; autoreconf -fi
-	sync
-	touch $@
-	
-.make.{proj}.configure: .make.{proj}.autoconf {deps_installed} $({proj}_configure_files)
-	if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.autoconf; fi
-	@echo -e "\n\n\n===== $@\n"
-	-chmod -R ug+w {build_proj}
-	-rm -rf {build_proj}
-	mkdir -p {build_proj}
-	cd {build_proj}; {cflags}{docker_cmd}{build_to_src}/configure {configure_opts}
-	sync
-	touch $@
+{autoconf_rule}
 
-.make.{proj}.build: .make.{proj}.configure $({proj}_files)
-	if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.configure; fi
-	@echo -e "\n\n\n===== $@\n"
-	{docker_cmd}$(MAKE) -C {build_proj} -j {jobs} {check}
-	sync
-	touch $@
+{configure_rule}
 
-.make.{proj}.install: .make.{proj}.build
-	@echo -e "\n\n\n===== $@\n"
-	{docker_cmd}{sudo_make_install}$(MAKE) -C {build_proj} install
-	{no_ldconfig}{sudo_ldconfig}ldconfig
-	sync
-	touch $@
+{build_rule}
+
+{install_rule}
+
+{reinstall_rule}
+
+{clean_rule}
+
+{distclean_rule}
 
 .PHONY: {proj}
 {proj}: .make.{proj}.install
 
-.PHONY: {proj}-reinstall
-{proj}-reinstall: {deps_reinstall}
-	{sudo_make_install}$(MAKE) -C {build_proj} install
-
-.PHONY: {proj}-clean
-{proj}-clean:
-	@echo -e "\n\n\n===== $@\n"
-	-chmod -R ug+w {build_proj}
-	-rm -rf {build_proj}
-	-rm -rf .make.{proj}.*
-
-.PHONY: {proj}-distclean
-{proj}-distclean: {proj}-clean
-	@echo -e "\n\n\n===== $@\n"
-	$(MAKE) -C {src_proj} distclean
-
 '''.format(
-    url=url,
-    push_url=push_url,
     proj=proj,
-    jobs=jobs,
-    src=src,
     src_proj=src_proj,
-    build_proj=make_to_build_proj,
-    build_to_src=build_to_src,
     clone_rule=gen_makefile_clone(proj, src, src_proj, url, push_url),
-    deps_installed=' '.join(['.make.%s.install' % d for d in deps]),
-    deps_reinstall=' '.join(['%s-reinstall' %d for d in deps]),
-    configure_opts=configure_opts_str,
-    sudo_make_install='sudo ' if sudo_make_install else '',
-    no_ldconfig='#' if no_ldconfig else '',
-    sudo_ldconfig='' if ldconfig_without_sudo else 'sudo ',
-    check='check' if make_check else '',
-    docker_cmd=f'{args.docker_cmd} ' if args.docker_cmd else '',
-    cflags='CFLAGS=-g ' if args.build_debug else '',
-    distclean_cond=f'[ -e {src_proj}/config.status ]' if args.auto_distclean else 'false'
+    autoconf_rule=gen_makefile_autoconf(proj, src_proj, distclean_cond),
+    configure_rule=gen_makefile_configure(proj, deps_installed, distclean_cond,
+                                          build_proj, cflags, docker_cmd,
+                                          build_to_src, configure_opts_str),
+    build_rule=gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd,
+                                  jobs, check),
+    install_rule=gen_makefile_install(proj, docker_cmd, sudo_make_install,
+                                      build_proj, no_ldconfig, sudo_ldconfig),
+    reinstall_rule=gen_makefile_reinstall(proj, deps_reinstall,
+                                          sudo_make_install, build_proj),
+    clean_rule=gen_makefile_clean(proj, build_proj),
+    distclean_rule=gen_makefile_distclean(proj, src_proj),
     )
 
 
