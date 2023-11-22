@@ -450,8 +450,8 @@ run_docker() {
 	cd "$(get_testsuite_dir_docker)"
 	DOCKER_ARGS="\
 		-e LD_LIBRARY_PATH=/usr/local/lib \
-		-v "$DIR_USR_LOCAL":/usr/local:ro \
-		-v "$DIR_VAR_LOCAL":/var/local:ro \
+		-v "$DIR_USR_LOCAL":/usr/local \
+		-v "$DIR_VAR_LOCAL":/var/local \
 		-v $hacks:/osmo-ttcn3-hacks:ro \
 		"
 	if [ -n "$ARG_TEST_NAME" ]; then
