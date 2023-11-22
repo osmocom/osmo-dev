@@ -5,16 +5,11 @@ DIR_OSMODEV="$(readlink -f "$(dirname $0)/..")"
 DIR_MAKE="${DIR_MAKE:-${DIR_OSMODEV}/ttcn3/make}"
 DIR_OUTPUT="${DIR_OUTPUT:-${DIR_OSMODEV}/ttcn3/out}"
 DIR_USR_LOCAL="$DIR_OSMODEV/ttcn3/usr_local"
+DIR_VAR_LOCAL="$DIR_OSMODEV/ttcn3/var_local"
 JOBS="$(nproc)"
 KERNEL_DIR=""
 KERNEL_SKIP_MARKER="$DIR_MAKE/.kernel_built_from_source"
 ARG_TEST_NAME=""
-
-# Osmocom libraries and programs relevant for the current testsuite will be
-# built in this container. It must have all build dependencies available and
-# be based on the same distribution that master-* containers are based on, so
-# there are no incompatibilities with shared libraries.
-DOCKER_IMG_BUILD="debian-bookworm-build"
 DOCKER_IMG_TITAN="debian-bookworm-titan"
 
 clean() {
@@ -29,7 +24,8 @@ clean() {
 	rm -rf \
 		"$DIR_MAKE" \
 		"$DIR_OUTPUT" \
-		"$DIR_USR_LOCAL"
+		"$DIR_USR_LOCAL" \
+		"$DIR_VAR_LOCAL"
 
 	if [ -d "$DIR_OSMODEV/src/osmo-ttcn3-hacks" ]; then
 		make -C "$DIR_OSMODEV/src/osmo-ttcn3-hacks" clean
@@ -98,6 +94,7 @@ parse_args() {
 			echo "  $name -d ggsn"
 			echo "  $name -k ggsn"
 			echo "  $name -k -f ggsn"
+			echo "  $name ggsn-ogs"
 			exit 1
 			;;
 		esac
@@ -134,7 +131,7 @@ get_testsuite_dir() {
 	case "$PROJECT" in
 		bsc-*) echo "$hacks/bsc" ;;
 		bts-*) echo "$hacks/bts" ;;
-		ggsn) echo "$hacks/ggsn_tests" ;;
+		ggsn|ggsn-ogs) echo "$hacks/ggsn_tests" ;;
 		pcu-sns) echo "$hacks/pcu" ;;
 		*) echo "$hacks/$PROJECT" ;;
 	esac
@@ -145,6 +142,7 @@ get_testsuite_config() {
 		bts-gprs) echo "BTS_Tests_GPRS.cfg" ;;
 		bts-oml) echo "BTS_Tests_OML.cfg" ;;
 		pcu-sns) echo "PCU_Tests_SNS.cfg" ;;
+		ggsn-ogs) echo "GGSN_Tests.cfg" ;;
 		*) echo "$(get_testsuite_name).cfg" ;;
 	esac
 }
@@ -156,6 +154,9 @@ get_testsuite_dir_docker() {
 		bsc-*)
 			echo "$dp/ttcn3-bsc-test-$(echo "$PROJECT" | cut -d - -f 2-)"
 			;;
+		ggsn-ogs)
+			echo "$dp/ttcn3-ggsn-test-ogs"
+			;;
 		*)
 			echo "$dp/ttcn3-$PROJECT-test"
 			;;
@@ -166,6 +167,9 @@ get_testsuite_image() {
 	case "$PROJECT" in
 		bsc-*)
 			echo "$USER/ttcn3-bsc-test"
+			;;
+		ggsn-ogs)
+			echo "$USER/ttcn3-ggsn-test"
 			;;
 		*)
 			echo "$USER/ttcn3-$PROJECT-test"
@@ -185,6 +189,7 @@ get_programs() {
 	case "$PROJECT" in
 		bsc|bsc-*) echo "osmo-stp osmo-bsc osmo-bts-omldummy" ;;
 		bts) echo "osmo-bsc osmo-bts-trx" ;;
+		ggsn-ogs) echo "open5gs" ;;
 		msc) echo "osmo-stp osmo-msc" ;;
 		pcu-sns) echo "osmo-pcu" ;;
 		pcu) echo "osmo-pcu osmo-bsc osmo-bts-virtual" ;;
@@ -218,7 +223,6 @@ setup_dir_make() {
 	cd "$DIR_OSMODEV"
 
 	local docker_cmd="$DIR_OSMODEV/ttcn3/scripts/docker_configure_make.sh"
-	docker_cmd="$docker_cmd $USER/$DOCKER_IMG_BUILD"
 
 	./gen_makefile.py \
 		default.opts \
@@ -294,17 +298,6 @@ prepare_local_bin() {
 	done
 }
 
-prepare_docker_build_container() {
-	local dp="${DIR_OSMODEV}/src/docker-playground"
-
-	if docker_image_exists "$USER/$DOCKER_IMG_BUILD"; then
-		return
-	fi
-
-	echo "Building docker image: $USER/$DOCKER_IMG_BUILD"
-	make -C "$dp/$DOCKER_IMG_BUILD"
-}
-
 prepare_docker_testsuite_container() {
 	local testsuite_image="$(get_testsuite_image)"
 
@@ -352,6 +345,12 @@ build_osmo_programs() {
 	set +x
 
 	for program in $programs; do
+		if [ "$program" = "open5gs" ]; then
+			# open5gs binaries have different names (open5gs-mmed,
+			# etc.)
+			continue
+		fi
+
 		local repo="$(get_program_repo "$program")"
 		local usr_local_bin="$DIR_USR_LOCAL/bin"
 
@@ -472,6 +471,7 @@ run_docker() {
 	DOCKER_ARGS="\
 		-e LD_LIBRARY_PATH=/usr/local/lib \
 		-v "$DIR_USR_LOCAL":/usr/local:ro \
+		-v "$DIR_VAR_LOCAL":/var/local:ro \
 		-v $hacks:/osmo-ttcn3-hacks:ro \
 		"
 	if [ -n "$ARG_TEST_NAME" ]; then
@@ -513,7 +513,6 @@ clone_repo "osmo-ttcn3-hacks"
 clone_repo "docker-playground"
 check_dir_testsuite
 prepare_local_bin
-prepare_docker_build_container
 build_extra_libraries
 build_osmo_programs
 build_kernel

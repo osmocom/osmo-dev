@@ -364,7 +364,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
   deps_installed = ' '.join(['.make.%s.install' % d for d in deps])
   deps_reinstall = ' '.join(['%s-reinstall' %d for d in deps])
   cflags = 'CFLAGS=-g ' if args.build_debug else ''
-  docker_cmd = f'{args.docker_cmd} ' if args.docker_cmd else ''
+  docker_cmd = f'OSMODEV_PROJECT={proj} {args.docker_cmd} ' if args.docker_cmd else ''
   check = 'check' if make_check else ''
   no_ldconfig = '#' if no_ldconfig else ''
   sudo_ldconfig = '' if ldconfig_without_sudo else 'sudo '

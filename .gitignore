@@ -20,6 +20,7 @@ ttcn3/out/
 ttcn3/make/
 ttcn3/.run.sh
 ttcn3/usr_local
+ttcn3/var_local
 current_log
 lastlog
 autolog
