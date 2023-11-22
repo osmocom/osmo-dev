@@ -115,16 +115,6 @@ check_usage() {
 	fi
 }
 
-# Returns the name of the testsuite binary
-get_testsuite_name() {
-	case "$PROJECT" in
-		bts-*) echo "BTS_Tests" ;;
-		mgw) echo "MGCP_Test" ;;
-		pcu-sns) echo "PCU_Tests" ;;
-		*) echo "${PROJECT_UPPER}_Tests" ;;
-	esac
-}
-
 get_testsuite_dir() {
 	local hacks="${DIR_OSMODEV}/src/osmo-ttcn3-hacks"
 
@@ -134,16 +124,6 @@ get_testsuite_dir() {
 		ggsn|ggsn-ogs) echo "$hacks/ggsn_tests" ;;
 		pcu-sns) echo "$hacks/pcu" ;;
 		*) echo "$hacks/$PROJECT" ;;
-	esac
-}
-
-get_testsuite_config() {
-	case "$PROJECT" in
-		bts-gprs) echo "BTS_Tests_GPRS.cfg" ;;
-		bts-oml) echo "BTS_Tests_OML.cfg" ;;
-		pcu-sns) echo "PCU_Tests_SNS.cfg" ;;
-		ggsn-ogs) echo "GGSN_Tests.cfg" ;;
-		*) echo "$(get_testsuite_name).cfg" ;;
 	esac
 }
 
