@@ -1,0 +1,3 @@
+# Projects with buildsystems other than autotools
+# project	buildsystem
+open5gs		meson

@@ -54,6 +54,7 @@ import multiprocessing
 topdir = os.path.dirname(os.path.realpath(__file__))
 all_deps_file = os.path.join(topdir, "all.deps")
 all_urls_file = os.path.join(topdir, "all.urls")
+all_buildsystems_file = os.path.join(topdir, "all.buildsystems")
 parser = argparse.ArgumentParser(epilog=__doc__, formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('configure_opts_files',
@@ -152,8 +153,8 @@ def read_projects_deps(path):
     l.append((tokens[0], tokens[1:]))
   return l
 
-def read_projects_urls(path):
-  'Read urls config and return dict {project_name: url, …}.'
+def read_projects_dict(path):
+  'Read urls/buildsystems config and return dict {project_name: url, …}.'
   ret = {}
   for line in open(path):
     line = line.strip()
@@ -215,7 +216,9 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
   '''
 
 def gen_makefile_autoconf(proj, src_proj, distclean_cond):
-  return f'''
+  buildsystem = projects_buildsystems.get(proj, "autotools")
+  if buildsystem == "autotools":
+    return f'''
 .make.{proj}.autoconf: .make.{proj}.clone {src_proj}/configure.ac
 	if {distclean_cond}; then $(MAKE) {proj}-distclean; fi
 	@echo -e "\\n\\n\\n===== $@\\n"
@@ -223,11 +226,18 @@ def gen_makefile_autoconf(proj, src_proj, distclean_cond):
 	cd {src_proj}; autoreconf -fi
 	sync
 	touch $@
-  '''
+    '''
+  elif buildsystem == "meson":
+    return ""
+  else:
+    assert False, f"unknown buildsystem: {buildsystem}"
+
 
 def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
                            cflags, docker_cmd, build_to_src, configure_opts):
-  return f'''
+  buildsystem = projects_buildsystems.get(proj, "autotools")
+  if buildsystem == "autotools":
+    return f'''
 .make.{proj}.configure: .make.{proj}.autoconf {deps_installed} $({proj}_configure_files)
 	if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.autoconf; fi
 	@echo -e "\\n\\n\\n===== $@\\n"
@@ -237,29 +247,74 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
 	cd {build_proj}; {cflags}{docker_cmd}{build_to_src}/configure {configure_opts}
 	sync
 	touch $@
-  '''
+    '''
+  elif buildsystem == "meson":
+    return f'''
+.make.{proj}.configure: .make.{proj}.clone {deps_installed} $({proj}_configure_files)
+	@echo -e "\\n\\n\\n===== $@\\n"
+	-chmod -R ug+w {build_proj}
+	-rm -rf {build_proj}
+	mkdir -p {build_proj}
+	cd {build_proj}; {cflags}{docker_cmd}meson {build_to_src} .
+	sync
+	touch $@
+    '''
+  else:
+    assert False, f"unknown buildsystem: {buildsystem}"
 
 def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
                        check):
-  return f'''
+  buildsystem = projects_buildsystems.get(proj, "autotools")
+
+  if buildsystem == "autotools":
+    return f'''
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
 	if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.configure; fi
 	@echo -e "\\n\\n\\n===== $@\\n"
 	{docker_cmd}$(MAKE) -C {build_proj} -j {jobs} {check}
 	sync
 	touch $@
-  '''
+    '''
+  elif buildsystem == "meson":
+    target = "test" if check else "compile"
+    test_line = ""
+    # TODO: currently tests don't pass in this env
+    # if check:
+    #   test_line = f"{docker_cmd}meson test -C {build_proj} -v"
+    return f'''
+.make.{proj}.build: .make.{proj}.configure $({proj}_files)
+	@echo -e "\\n\\n\\n===== $@\\n"
+	{docker_cmd}meson compile -C {build_proj} -j {jobs}
+	{test_line}
+	sync
+	touch $@
+    '''
+  else:
+    assert False, f"unknown buildsystem: {buildsystem}"
 
 def gen_makefile_install(proj, docker_cmd, sudo_make_install, build_proj,
                          no_ldconfig, sudo_ldconfig):
-  return f'''
+  buildsystem = projects_buildsystems.get(proj, "autotools")
+  if buildsystem == "autotools":
+    return f'''
 .make.{proj}.install: .make.{proj}.build
 	@echo -e "\\n\\n\\n===== $@\\n"
 	{docker_cmd}{sudo_make_install}$(MAKE) -C {build_proj} install
 	{no_ldconfig}{sudo_ldconfig}ldconfig
 	sync
 	touch $@
-  '''
+    '''
+  elif buildsystem == "meson":
+    return f'''
+.make.{proj}.install: .make.{proj}.build
+	@echo -e "\\n\\n\\n===== $@\\n"
+	{docker_cmd}{sudo_make_install}ninja -C {build_proj} install
+	{no_ldconfig}{sudo_ldconfig}ldconfig
+	sync
+	touch $@
+    '''
+  else:
+    assert False, f"unknown buildsystem: {buildsystem}"
 
 def gen_makefile_reinstall(proj, deps_reinstall, sudo_make_install,
                            build_proj):
@@ -372,7 +427,8 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
 
 
 projects_deps = read_projects_deps(all_deps_file)
-projects_urls = read_projects_urls(all_urls_file)
+projects_urls = read_projects_dict(all_urls_file)
+projects_buildsystems = read_projects_dict(all_buildsystems_file)
 configure_opts = listdict()
 configure_opts_files = sorted(args.configure_opts_files or [])
 for configure_opts_file in configure_opts_files:

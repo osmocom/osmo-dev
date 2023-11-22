@@ -36,6 +36,8 @@ osmo-hnbgw	osmo-iuh osmo-mgw libosmo-pfcp
 osmo-e1d	libosmocore
 osmo-remsim	simtrace2_host libosmo-netif
 
+open5gs
+
 # can only clone these
 docker-playground
 osmo-ttcn3-hacks

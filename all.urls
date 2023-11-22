@@ -2,3 +2,4 @@
 # project	url
 libnftnl	https://git.netfilter.org/libnftnl/
 nftables	https://git.netfilter.org/nftables/
+open5gs		https://github.com/open5gs/open5gs
