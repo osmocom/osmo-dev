@@ -49,6 +49,7 @@ EXAMPLE:
 import sys
 import os
 import argparse
+import multiprocessing
 
 topdir = os.path.dirname(os.path.realpath(__file__))
 all_deps_file = os.path.join(topdir, "all.deps")
@@ -85,7 +86,9 @@ parser.add_argument('-p', '--push-url', dest='push_url', default='',
 parser.add_argument('-o', '--output', dest='output', default='Makefile',
   help='''Makefile filename (default: 'Makefile').''')
 
-parser.add_argument('-j', '--jobs', dest='jobs', default='$(nproc)', nargs='?', const='$(nproc)',
+parser.add_argument('-j', '--jobs', dest='jobs', type=int,
+  default=multiprocessing.cpu_count(), nargs='?',
+  const=multiprocessing.cpu_count(),
   help='''-j option to pass to 'make'.''')
 
 parser.add_argument('-I', '--sudo-make-install', dest='sudo_make_install',
