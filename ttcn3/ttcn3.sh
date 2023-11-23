@@ -79,7 +79,7 @@ parse_args() {
 			;;
 		h|*)
 			local name="$(basename $0)"
-			echo "usage: $name [-h] [-t] [-d|-k [-f]] PROJECT"
+			echo "usage: $name [-h] [-t TESTNAME] [-d|-k [-f]] PROJECT"
 			echo "   or: $name clean"
 			echo
 			echo "arguments:"
