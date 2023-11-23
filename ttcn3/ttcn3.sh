@@ -34,6 +34,12 @@ clean() {
 	exit 0
 }
 
+set_project() {
+	PROJECT="$1"
+	PROJECT_UPPER="$(echo "$PROJECT" | tr '[:lower:]' '[:upper:]')"
+	PROJECT_NO_OGS="$(echo "$PROJECT" | sed 's/-ogs$//')"
+}
+
 parse_args() {
 	while getopts 'ht:dkf' OPTION; do
 		case "$OPTION" in
@@ -95,7 +101,9 @@ parse_args() {
 			echo "  $name -k ggsn"
 			echo "  $name -k -f ggsn"
 			echo "  $name ggsn-ogs"
-			echo "  $name hss-ogs"
+			echo "  $name hss"
+			echo "  $name mme"
+			echo "  $name pgw"
 			exit 1
 			;;
 		esac
@@ -106,9 +114,16 @@ parse_args() {
 		parse_args -h
 	fi
 
-	PROJECT="$1"
-	PROJECT_UPPER="$(echo "$PROJECT" | tr '[:lower:]' '[:upper:]')"
-	PROJECT_NO_OGS="$(echo "$PROJECT" | sed 's/-ogs$//')"
+	set_project "$1"
+	if ! [ -d "$(get_testsuite_dir_docker)" ]; then
+		set_project "$1-ogs"
+		if ! [ -d "$(get_testsuite_dir_docker)" ]; then
+			echo "ERROR: can't find testsuite_dir, adjust" \
+				"get_testsuite_dir_docker"
+		fi
+	fi
+
+	echo "PROJECT: $PROJECT"
 }
 
 check_usage() {
