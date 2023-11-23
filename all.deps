@@ -35,6 +35,7 @@ osmo-hnodeb	osmo-iuh
 osmo-hnbgw	osmo-iuh osmo-mgw libosmo-pfcp
 osmo-e1d	libosmocore
 osmo-remsim	simtrace2_host libosmo-netif
+osmo-uecups	libosmocore
 
 open5gs
 

@@ -187,9 +187,13 @@ get_extra_libraries() {
 # Programs that need to be built
 get_programs() {
 	case "$PROJECT" in
+		# Open5gs
+		*-ogs) echo "open5gs" ;;
+		pgw) echo "open5gs osmo-uecups-daemon" ;;
+
+		# Osmocom
 		bsc|bsc-*) echo "osmo-stp osmo-bsc osmo-bts-omldummy" ;;
 		bts) echo "osmo-bsc osmo-bts-trx" ;;
-		*-ogs|pgw) echo "open5gs" ;;
 		msc) echo "osmo-stp osmo-msc" ;;
 		pcu-sns) echo "osmo-pcu" ;;
 		pcu) echo "osmo-pcu osmo-bsc osmo-bts-virtual" ;;
@@ -206,6 +210,7 @@ get_program_repo() {
 		osmo-bts-*) echo "osmo-bts" ;;
 		osmo-pcap-*) echo "osmo-pcap" ;;
 		osmo-stp) echo "libosmo-sccp" ;;
+		osmo-uecups-*) echo "osmo-uecups" ;;
 		*) echo "$1" ;;
 	esac
 }
