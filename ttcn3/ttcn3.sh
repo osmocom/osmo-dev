@@ -95,6 +95,7 @@ parse_args() {
 			echo "  $name -k ggsn"
 			echo "  $name -k -f ggsn"
 			echo "  $name ggsn-ogs"
+			echo "  $name hss-ogs"
 			exit 1
 			;;
 		esac
@@ -107,6 +108,7 @@ parse_args() {
 
 	PROJECT="$1"
 	PROJECT_UPPER="$(echo "$PROJECT" | tr '[:lower:]' '[:upper:]')"
+	PROJECT_NO_OGS="$(echo "$PROJECT" | sed 's/-ogs$//')"
 }
 
 check_usage() {
@@ -123,7 +125,7 @@ get_testsuite_dir() {
 		bts-*) echo "$hacks/bts" ;;
 		ggsn|ggsn-ogs) echo "$hacks/ggsn_tests" ;;
 		pcu-sns) echo "$hacks/pcu" ;;
-		*) echo "$hacks/$PROJECT" ;;
+		*) echo "$hacks/$PROJECT_NO_OGS" ;;
 	esac
 }
 
@@ -134,8 +136,8 @@ get_testsuite_dir_docker() {
 		bsc-*)
 			echo "$dp/ttcn3-bsc-test-$(echo "$PROJECT" | cut -d - -f 2-)"
 			;;
-		ggsn-ogs)
-			echo "$dp/ttcn3-ggsn-test-ogs"
+		*-ogs)
+			echo "$dp/ttcn3-$PROJECT_NO_OGS-test-ogs"
 			;;
 		*)
 			echo "$dp/ttcn3-$PROJECT-test"
@@ -150,6 +152,9 @@ get_testsuite_image() {
 			;;
 		ggsn-ogs)
 			echo "$USER/ttcn3-ggsn-test"
+			;;
+		*-ogs)
+			echo "$USER/ttcn3-$PROJECT_NO_OGS-test-ogs"
 			;;
 		*)
 			echo "$USER/ttcn3-$PROJECT-test"
@@ -169,7 +174,7 @@ get_programs() {
 	case "$PROJECT" in
 		bsc|bsc-*) echo "osmo-stp osmo-bsc osmo-bts-omldummy" ;;
 		bts) echo "osmo-bsc osmo-bts-trx" ;;
-		ggsn-ogs) echo "open5gs" ;;
+		*-ogs|pgw) echo "open5gs" ;;
 		msc) echo "osmo-stp osmo-msc" ;;
 		pcu-sns) echo "osmo-pcu" ;;
 		pcu) echo "osmo-pcu osmo-bsc osmo-bts-virtual" ;;
