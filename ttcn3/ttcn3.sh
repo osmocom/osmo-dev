@@ -28,6 +28,8 @@ clean() {
 		"$DIR_VAR_LOCAL"
 
 	if [ -d "$DIR_OSMODEV/src/osmo-ttcn3-hacks" ]; then
+		sudo chown -R "$(id -u):$(id -g)" \
+			"$DIR_OSMODEV/src/osmo-ttcn3-hacks"
 		make -C "$DIR_OSMODEV/src/osmo-ttcn3-hacks" clean
 	fi
 
