@@ -9,6 +9,7 @@ import json
 import os
 import subprocess
 import urllib.request
+import urllib.parse
 
 
 def get_topdir():
@@ -37,7 +38,8 @@ def get_config():
 
 
 def get_gerrit_details(host, project, patch_id, verbose):
-    url = f"https://{host}/changes/{project}~{args.patch_id}/detail"
+    project_q = urllib.parse.quote(project, "")
+    url = f"https://{host}/changes/{project_q}~{args.patch_id}/detail"
     print(f"Download {url}")
     with urllib.request.urlopen(url) as response:
         content = response.read().decode()
