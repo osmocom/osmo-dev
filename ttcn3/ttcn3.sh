@@ -297,9 +297,6 @@ prepare_local_bin() {
 		esac
 
 		script_path_localbin="$DIR_USR_LOCAL/bin/$name_install"
-		if [ -x "$script_path_localbin" ]; then
-			continue
-		fi
 
 		install -v -Dm755 "$script" "$script_path_localbin"
 	done
