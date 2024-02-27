@@ -195,7 +195,7 @@ get_programs() {
 
 		# Osmocom
 		bsc|bsc-*) echo "osmo-stp osmo-bsc osmo-bts-omldummy" ;;
-		bts) echo "osmo-bsc osmo-bts-trx" ;;
+		bts) echo "osmo-bsc osmo-bts-trx trxcon" ;;
 		msc) echo "osmo-stp osmo-msc" ;;
 		pcu-sns) echo "osmo-pcu" ;;
 		pcu) echo "osmo-pcu osmo-bsc osmo-bts-virtual" ;;
@@ -213,6 +213,7 @@ get_program_repo() {
 		osmo-pcap-*) echo "osmo-pcap" ;;
 		osmo-stp) echo "libosmo-sccp" ;;
 		osmo-uecups-*) echo "osmo-uecups" ;;
+		trxcon) echo "osmocom-bb_trxcon" ;;
 		*) echo "$1" ;;
 	esac
 }

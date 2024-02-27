@@ -188,6 +188,14 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
 	touch $@
   '''
 
+  if proj == "osmocom-bb_trxcon":
+    return f'''
+.make.{proj}.clone: .make.osmocom-bb.clone
+	@echo -e "\\n\\n\\n===== $@\\n"
+	test -L {src_proj} || ln -s osmocom-bb/src/host/trxcon {src_proj}
+	touch $@
+  '''
+
   if proj == "simtrace2_host":
     return f'''
 .make.{proj}.clone: .make.simtrace2.clone
@@ -511,6 +519,9 @@ mobile: osmocom-bb_layer23
 
 .PHONY: virtphy
 virtphy: osmocom-bb_virtphy
+
+.PHONY: trxcon
+trxcon: osmocom-bb_trxcon
 
 #
 # Other convenience targets
