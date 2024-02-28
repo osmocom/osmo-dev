@@ -10,6 +10,7 @@ JOBS="$(nproc)"
 KERNEL_DIR=""
 KERNEL_SKIP_MARKER="$DIR_MAKE/.kernel_built_from_source"
 ARG_TEST_NAME=""
+ARG_TEST_CONFIGS=""
 DOCKER_IMG_TITAN="debian-bookworm-titan"
 
 clean() {
@@ -43,10 +44,13 @@ set_project() {
 }
 
 parse_args() {
-	while getopts 'ht:dkf' OPTION; do
+	while getopts 'ht:c:dkf' OPTION; do
 		case "$OPTION" in
 		t)
 			ARG_TEST_NAME="$OPTARG"
+			;;
+		c)
+			ARG_TEST_CONFIGS="$OPTARG"
 			;;
 		d)
 			if [ -n "$KERNEL_TEST" ]; then
@@ -81,12 +85,13 @@ parse_args() {
 			;;
 		h|*)
 			local name="$(basename $0)"
-			echo "usage: $name [-h] [-t TESTNAME] [-d|-k [-f]] PROJECT"
+			echo "usage: $name [-h] [-t TESTNAME] [-c CONFIG] [-d|-k [-f]] PROJECT"
 			echo "   or: $name clean"
 			echo
 			echo "arguments:"
 			echo "  -h       show help"
 			echo "  -t       only run the test with this name"
+			echo "  -c       only run test configuration with this name"
 			echo
 			echo "arguments for kernel tests:"
 			echo "  -d       run kernel tests with debian kernel"
@@ -106,6 +111,7 @@ parse_args() {
 			echo "  $name hss"
 			echo "  $name mme"
 			echo "  $name pgw"
+			echo "  $name -t TC_est_dchan -c generic bts"
 			exit 1
 			;;
 		esac
@@ -482,8 +488,10 @@ run_docker() {
 	if [ -n "$ARG_TEST_NAME" ]; then
 		DOCKER_ARGS="$DOCKER_ARGS -e TEST_NAME=$ARG_TEST_NAME"
 	fi
+
 	export DOCKER_ARGS
 	export NO_LIST_OSMO_PACKAGES=1
+	export TEST_CONFIGS="$ARG_TEST_CONFIGS"
 	./jenkins.sh
 
 	touch "$marker"
