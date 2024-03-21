@@ -502,11 +502,8 @@ remove_old_logs() {
 }
 
 collect_logs() {
-	# Merge and move logs
-	cd /tmp/logs/*-tester
-
 	# Format logs
-	for log in *.merged; do
+	for log in /tmp/logs/*-tester*/*.merged; do
 		ttcn3_logformat -o "${log}.log" "$log"
 		sudo rm "$log"
 	done
