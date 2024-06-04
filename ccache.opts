@@ -1,1 +1,2 @@
-ALL CC="/usr/lib/ccache/bin/gcc" CXX="/usr/lib/ccache/bin/g++"
+# Find the ccache wrapper in /usr/lib/ccache and /usr/lib/ccache/bin
+ALL CC="$(find /usr/lib/ccache -name gcc | head -n1)" CXX="$(find /usr/lib/ccache -name g++ | head -n1)"
