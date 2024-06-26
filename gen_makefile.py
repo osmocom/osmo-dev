@@ -263,7 +263,7 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
 	-chmod -R ug+w {build_proj}
 	-rm -rf {build_proj}
 	mkdir -p {build_proj}
-	cd {build_proj}; {cflags}{docker_cmd}meson {build_to_src} .
+	cd {build_proj}; {cflags}{docker_cmd}meson setup {build_to_src} .
 	sync
 	touch $@
     '''
