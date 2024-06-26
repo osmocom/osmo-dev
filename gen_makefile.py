@@ -50,6 +50,7 @@ import sys
 import os
 import argparse
 import multiprocessing
+import shlex
 
 topdir = os.path.dirname(os.path.realpath(__file__))
 all_deps_file = os.path.join(topdir, "all.deps")
@@ -117,6 +118,9 @@ parser.add_argument('-g', '--build-debug', dest='build_debug', default=False, ac
 
 parser.add_argument('-a', '--auto-distclean', action='store_true',
     help='''run "make distclean" automatically if source directory already configured''')
+
+parser.add_argument('-i', '--install-prefix', default='/usr/local',
+                    help='''install there instead of /usr/local''')
 
 args = parser.parse_args()
 
@@ -252,7 +256,9 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
 	-chmod -R ug+w {build_proj}
 	-rm -rf {build_proj}
 	mkdir -p {build_proj}
-	cd {build_proj}; {cflags}{docker_cmd}{build_to_src}/configure {configure_opts}
+	cd {build_proj}; {cflags}{docker_cmd}{build_to_src}/configure \\
+		--prefix {shlex.quote(args.install_prefix)} \\
+		{configure_opts}
 	sync
 	touch $@
     '''
@@ -263,7 +269,8 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
 	-chmod -R ug+w {build_proj}
 	-rm -rf {build_proj}
 	mkdir -p {build_proj}
-	cd {build_proj}; {cflags}{docker_cmd}meson setup {build_to_src} .
+	cd {build_proj}; {cflags}{docker_cmd}meson setup {build_to_src} . \\
+		--prefix {shlex.quote(args.install_prefix)}
 	sync
 	touch $@
     '''
