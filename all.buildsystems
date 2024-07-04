@@ -1,3 +1,6 @@
 # Projects with buildsystems other than autotools
 # project	buildsystem
 open5gs		meson
+osmo-s1gw	erlang
+osmo-epdg	erlang
+osmo_dia2gsup	erlang

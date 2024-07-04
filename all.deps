@@ -37,6 +37,10 @@ osmo-e1d	libosmocore
 osmo-remsim	simtrace2_host libosmo-netif
 osmo-uecups	libosmocore
 
+osmo-s1gw
+osmo-epdg
+osmo_dia2gsup
+
 open5gs
 
 # can only clone these
