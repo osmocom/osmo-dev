@@ -179,7 +179,7 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
   if proj == "osmocom-bb_layer23":
     return f'''
 .make.{proj}.clone: .make.osmocom-bb.clone
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   test -L {src_proj} || ln -s osmocom-bb/src/host/layer23 {src_proj}
   touch $@
   '''
@@ -187,7 +187,7 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
   if proj == "osmocom-bb_virtphy":
     return f'''
 .make.{proj}.clone: .make.osmocom-bb.clone
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   test -L {src_proj} || ln -s osmocom-bb/src/host/virt_phy {src_proj}
   touch $@
   '''
@@ -195,7 +195,7 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
   if proj == "osmocom-bb_trxcon":
     return f'''
 .make.{proj}.clone: .make.osmocom-bb.clone
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   test -L {src_proj} || ln -s osmocom-bb/src/host/trxcon {src_proj}
   touch $@
   '''
@@ -203,7 +203,7 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
   if proj == "simtrace2_host":
     return f'''
 .make.{proj}.clone: .make.simtrace2.clone
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   test -L {src_proj} || ln -s simtrace2/host {src_proj}
   touch $@
   '''
@@ -220,7 +220,7 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
 
   return f'''
 .make.{proj}.clone:
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   test -d {src} || mkdir -p {src}
   test -d {src_proj} || ( {cmd_clone} && {cmd_set_push_url} )
   sync
@@ -233,7 +233,7 @@ def gen_makefile_autoconf(proj, src_proj, distclean_cond):
     return f'''
 .make.{proj}.autoconf: .make.{proj}.clone {src_proj}/configure.ac
   if {distclean_cond}; then $(MAKE) {proj}-distclean; fi
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   -rm -f {src_proj}/.version
   cd {src_proj}; autoreconf -fi
   sync
@@ -252,7 +252,7 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
     return f'''
 .make.{proj}.configure: .make.{proj}.autoconf {deps_installed} $({proj}_configure_files)
   if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.autoconf; fi
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   -chmod -R ug+w {build_proj}
   -rm -rf {build_proj}
   mkdir -p {build_proj}
@@ -265,7 +265,7 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
   elif buildsystem == "meson":
     return f'''
 .make.{proj}.configure: .make.{proj}.clone {deps_installed} $({proj}_configure_files)
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   -chmod -R ug+w {build_proj}
   -rm -rf {build_proj}
   mkdir -p {build_proj}
@@ -285,7 +285,7 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
     return f'''
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
   if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.configure; fi
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   {docker_cmd}$(MAKE) -C {build_proj} -j {jobs} {check}
   sync
   touch $@
@@ -298,7 +298,7 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
     #   test_line = f"{docker_cmd}meson test -C {build_proj} -v"
     return f'''
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   {docker_cmd}meson compile -C {build_proj} -j {jobs}
   {test_line}
   sync
@@ -313,7 +313,7 @@ def gen_makefile_install(proj, docker_cmd, sudo_make_install, build_proj,
   if buildsystem == "autotools":
     return f'''
 .make.{proj}.install: .make.{proj}.build
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   {docker_cmd}{sudo_make_install}$(MAKE) -C {build_proj} install
   {no_ldconfig}{sudo_ldconfig}ldconfig
   sync
@@ -322,7 +322,7 @@ def gen_makefile_install(proj, docker_cmd, sudo_make_install, build_proj,
   elif buildsystem == "meson":
     return f'''
 .make.{proj}.install: .make.{proj}.build
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   {docker_cmd}{sudo_make_install}ninja -C {build_proj} install
   {no_ldconfig}{sudo_ldconfig}ldconfig
   sync
@@ -343,7 +343,7 @@ def gen_makefile_clean(proj, build_proj):
   return f'''
 .PHONY: {proj}-clean
 {proj}-clean:
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   -chmod -R ug+w {build_proj}
   -rm -rf {build_proj}
   -rm -rf .make.{proj}.*
@@ -353,7 +353,7 @@ def gen_makefile_distclean(proj, src_proj):
   return f'''
 .PHONY: {proj}-distclean
 {proj}-distclean: {proj}-clean
-  @echo -e "\\n\\n\\n===== $@\\n"
+  @echo "\\n\\n\\n===== $@\\n"
   $(MAKE) -C {src_proj} distclean
   '''
 
