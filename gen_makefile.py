@@ -239,7 +239,7 @@ def gen_makefile_autoconf(proj, src_proj, distclean_cond):
   sync
   touch $@
     '''
-  elif buildsystem == "meson":
+  elif buildsystem in ["meson", "erlang"]:
     return ""
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
@@ -274,11 +274,13 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
   sync
   touch $@
     '''
+  elif buildsystem == "erlang":
+    return ""
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
 def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
-                       check):
+                       check, src_proj):
   buildsystem = projects_buildsystems.get(proj, "autotools")
 
   if buildsystem == "autotools":
@@ -304,6 +306,17 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
   sync
   touch $@
     '''
+  elif buildsystem == "erlang":
+    return f'''
+.make.{proj}.build: $({proj}_files)
+  @echo "\\n\\n\\n===== $@\\n"
+  set -x && \\
+    export REBAR_BASE_DIR="$$PWD/{build_proj}" && \\
+    mkdir -p "$$REBAR_BASE_DIR" && \\
+    $(MAKE) -C {src_proj} build {check}
+  sync
+  touch $@
+    '''
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
@@ -325,6 +338,16 @@ def gen_makefile_install(proj, docker_cmd, sudo_make_install, build_proj,
   @echo "\\n\\n\\n===== $@\\n"
   {docker_cmd}{sudo_make_install}ninja -C {build_proj} install
   {no_ldconfig}{sudo_ldconfig}ldconfig
+  sync
+  touch $@
+    '''
+  elif buildsystem == "erlang":
+    return f'''
+.make.{proj}.install: .make.{proj}.build
+  @echo "\\n\\n\\n===== $@\\n"
+  for i in {build_proj}/default/bin/*; do \\
+    install -v -Dm755 "$$i" -t {shlex.quote(args.install_prefix)}/bin/; \\
+  done
   sync
   touch $@
     '''
@@ -400,6 +423,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
       -or -name "*.cpp" \
       -or -name "*.tpl" \
       -or -name "*.map" \
+      -or -name "*.erl" \
     \) \
     -and -not -name "config.h" 2>/dev/null)
 
@@ -431,7 +455,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
                                           build_proj, cflags, docker_cmd,
                                           build_to_src, configure_opts_str),
     build_rule=gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd,
-                                  jobs, check),
+                                  jobs, check, src_proj),
     install_rule=gen_makefile_install(proj, docker_cmd, sudo_make_install,
                                       build_proj, no_ldconfig, sudo_ldconfig),
     reinstall_rule=gen_makefile_reinstall(proj, deps_reinstall,
