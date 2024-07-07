@@ -250,6 +250,7 @@ fi
 
 term "${CMD_MGW} -c osmo-mgw-for-msc.cfg" MGW4MSC
 term "${CMD_MSC}" MSC
+term "${CMD_MGW} -c osmo-mgw-for-hnbgw.cfg" MGW4HNBGW
 term "${CMD_HNBGW}" HNBGW
 
 
