@@ -225,10 +225,10 @@ PIDFILE_TCPDUMP_DEV="$piddir/tcpdump.$dev.pid"
 PIDFILE_TCPDUMP_LO="$piddir/tcpdump.lo.pid"
 pidfiles_must_not_exist "$PIDFILE_TCPDUMP_DEV" "$PIDFILE_TCPDUMP_LO"
 
-sudo tcpdump -i $dev -n -w current_log/$dev.single.pcap -U not port 22 &
-echo "$!" > "$PIDFILE_TCPDUMP_DEV"
-sudo tcpdump -i lo -n -w current_log/lo.single.pcap -U not port 22 &
-echo "$!" > "$PIDFILE_TCPDUMP_LO"
+#sudo tcpdump -i $dev -n -w current_log/$dev.single.pcap -U not port 22 &
+#echo "$!" > "$PIDFILE_TCPDUMP_DEV"
+#sudo tcpdump -i lo -n -w current_log/lo.single.pcap -U not port 22 &
+#echo "$!" > "$PIDFILE_TCPDUMP_LO"
 
 term "${CMD_GGSN}" GGSN
 
