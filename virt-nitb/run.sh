@@ -152,9 +152,9 @@ killall -2 mobile
 sleep 3
 
 if [ "x$SIPCON_SERVER" != "xinternal" ]; then
-  kill %11
+  kill %11 %12
   # 'killall' seems to work only with the shortened name
-  killall osmo-sip-connec
+  killall osmo-sip-connector
   killall "$SIPCON_SERVER"
 fi
 
