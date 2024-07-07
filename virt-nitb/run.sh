@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 #set -x
 
+arg="$1"
+
 logdir="current_log"
 mkdir -p "$logdir"
 
@@ -117,8 +119,29 @@ if [ "x$SIPCON_SERVER" != "xinternal" ]; then
   esac
 fi
 
+case "x_$arg" in
+  "x_call")
+    set -x
+    sleep 3
+    ./call.sh
+    sleep 1
+    ./audio_frame.sh
+    sleep 1
+    ./audio_frame.sh
+    sleep 1
+    ./audio_frame.sh
+    sleep 1
+    ./hangup.sh
+    sleep 1
+    ;;
+  *)
+    if [ -n "$arg" ]; then
+      echo "don't know '$arg'"
+    fi
+    ;;
+esac
+
 set +x
-sleep 1
 echo
 echo enter to close
 read enter_to_close
@@ -141,10 +164,9 @@ killall osmo-bsc
 killall osmo-mgw
 killall osmo-hlr
 killall -9 osmo-stp
-killall mobile
 killall virtphy
 killall osmo-bts-virtual
-
+killall mobile
 
 set +e
 cp *.cfg "$logdir"/
