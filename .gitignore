@@ -29,3 +29,4 @@ autolog
 *.db-wal
 # log file created by udtrace
 virt-nitb/osmo-msc.log
+virt-nitb/*.pcapng
