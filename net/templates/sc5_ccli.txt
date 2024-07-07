@@ -1,0 +1,22 @@
+${foreach(HNODEB)}
+
+### sc5 ${HNODEBn}
+ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 -oHostKeyAlgorithms="+ssh-rsa" -oPubkeyAcceptedKeyTypes="+ssh-rsa" root@${HNODEBn_IP}
+
+echo '
+mib.set GPS_AUTO_SET_DATE_TIME_ENABLE 1
+mib.set IUH_ENABLE 1
+mib.set RANAP_PS_UP_ADDR_FORMAT 1
+mib.set PLMN_ID ${MCC}${MNC}
+mib.set RNC_ID 23
+mib.set LAC ${HNODEBn_LAC}
+mib.set IU_SCTP_LOCAL_PORT 29169
+mib.set IU_CORE_NET_ADDRESS ${HNBGW_IP}
+mib.set IU_SCTP_REMOTE_PORT 29169
+mib.set CELL_FACH_ALLOWED 0
+mib.set DL_UARFCN ${HNODEBn_UARFCN}
+mib.set RNC_ID ${HNODEBn_RNC_ID}
+quit
+' | ccli
+
+${foreach_end}

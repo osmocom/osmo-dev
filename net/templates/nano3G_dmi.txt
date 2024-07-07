@@ -1,19 +1,16 @@
 ${foreach(HNODEB)}
 
 ### nano3G ${HNODEBn}
-ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 -c aes128-cbc root@${HNODEBn_IP}
-telnet ${HNODEBn_IP} 8090
+ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 -c aes128-cbc -oHostKeyAlgorithms="+ssh-dss,ssh-rsa" -oPubkeyAcceptedKeyTypes=+ssh-rsa root@${HNODEBn_IP}
 
-set rfParamsCandidateList=({${HNODEBn_UARFCN}, ${HNODEBn_SCRAMBLE}, 1})
-set lacRacCandidateList=({${HNODEBn_LAC}, (${HNODEBn_RAC})})
-set hnbGwAddress="${HNBGW_IP}"
-set mcc="${MCC}"
-set mnc="${MNC}"
-action 2061
-action 1216
-action establishPermanentHnbGwConnection
-set csgAccessMode=CSG_ACCESS_MODE_CLOSED_ACCESS
-set accessControlList = ({"901700000014701",1,"14701"},{"901700000014701",1,"14701"},{"901700000014705",1,"14705"},{"901700000014706",1,"14706"},{"204046848488900",1,"88900"},{"204046848488903",1,"88903"})
+scp -O -oKexAlgorithms=+diffie-hellman-group1-sha1 -c aes128-cbc -oHostKeyAlgorithms="+ssh-dss,ssh-rsa" -oPubkeyAcceptedKeyTypes=+ssh-rsa \
+ nano3G.update_dmi.sh \
+ nano3G-${HNODEBn}.local.dmi \
+ root@${HNODEBn_IP}:/tmp/
+ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 -c aes128-cbc -oHostKeyAlgorithms="+ssh-dss,ssh-rsa" -oPubkeyAcceptedKeyTypes=+ssh-rsa root@${HNODEBn_IP} \
+ /tmp/nano3G.update_dmi.sh /tmp/nano3G-${HNODEBn}.local.dmi
+
+telnet ${HNODEBn_IP} 8090
 
 ${foreach_end}
 

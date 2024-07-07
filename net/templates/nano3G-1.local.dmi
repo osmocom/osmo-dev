@@ -1,0 +1,11 @@
+set rfParamsCandidateList=({${HNODEB1_UARFCN}, ${HNODEB1_SCRAMBLE}, 1})
+set lacRacCandidateList=({${HNODEB1_LAC}, (${HNODEB1_RAC})})
+set hnbGwAddress="${HNBGW_IP}"
+set mcc="${MCC}"
+set mnc="${MNC}"
+set accessClassBarredList=[NOT_BARRED, NOT_BARRED, NOT_BARRED, NOT_BARRED, NOT_BARRED, NOT_BARRED, NOT_BARRED, NOT_BARRED, NOT_BARRED, NOT_BARRED, BARRED, NOT_BARRED, NOT_BARRED, NOT_BARRED, NOT_BARRED, NOT_BARRED]
+set csgAccessMode=CSG_ACCESS_MODE_CLOSED_ACCESS
+${NANO_IMSIS}
+action 2061
+action 1216
+action establishPermanentHnbGwConnection
