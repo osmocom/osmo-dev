@@ -1,3 +1,4 @@
 osmo-msc --enable-smpp
 openbsc --enable-smpp --enable-osmo-bsc --enable-nat
 nftables --with-json
+strongswan-epdg --enable-osmo-epdg --enable-save-keys --enable-eap-aka-3gpp --enable-eap-aka-3gpp2

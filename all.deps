@@ -56,3 +56,5 @@ osmocom-bb_trxcon	libosmocore
 simtrace2_host		libosmocore
 
 osmo-gsm-shark	libosmo-pfcp osmo-mgw libosmo-sccp osmo-iuh
+
+strongswan-epdg		libosmocore
