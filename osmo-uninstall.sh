@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -xe
 # Remove all osmocom installations from given prefix, default is /usr/local
 prefix="${1-/usr/local}"
 echo "$prefix"
