@@ -221,8 +221,25 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
   return f'''
 .make.{proj}.clone:
   @echo "\\n\\n\\n===== $@\\n"
-  test -d {src} || mkdir -p {src}
-  test -d {src_proj} || ( {cmd_clone} && {cmd_set_push_url} )
+
+  @if ! [ -e {src}/ ]; then \\
+    if [ -L {src} ]; then \\
+      echo "ERROR: broken symlink: {src}"; \\
+      exit 1; \\
+    fi; \\
+    set -x; \\
+    mkdir -p {src}; \\
+  fi
+
+  @if ! [ -e {src_proj}/ ]; then \\
+    if [ -L {src_proj} ]; then \\
+      echo "ERROR: broken symlink: {src_proj}"; \\
+      exit 1; \\
+    fi; \\
+    set -x; \\
+    ( {cmd_clone} && {cmd_set_push_url} ); \\
+  fi
+
   sync
   touch $@
   '''
