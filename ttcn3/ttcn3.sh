@@ -248,7 +248,7 @@ setup_dir_make() {
 		no_systemd.opts \
 		ttcn3/ttcn3.opts \
 		werror.opts \
-		--docker-cmd "$docker_cmd" \
+		--virt-cmd "$docker_cmd" \
 		--make-dir "$DIR_MAKE" \
 		--no-ldconfig \
 		--no-make-check \

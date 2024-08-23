@@ -110,8 +110,8 @@ parser.add_argument('-c', '--no-make-check', dest='make_check',
   default=True, action='store_false',
   help='''do not 'make check', just 'make' to build.''')
 
-parser.add_argument('--docker-cmd',
-    help='''prefix configure/make/make install calls with this command (used by ttcn3.sh)''')
+parser.add_argument('--virt-cmd',
+    help='''prefix configure/make/make install calls with this command (used by testenv)''')
 
 parser.add_argument('-g', '--build-debug', dest='build_debug', default=False, action='store_true',
     help='''set 'CFLAGS=-g' when calling src/configure''')
@@ -263,7 +263,7 @@ def gen_makefile_autoconf(proj, src_proj, distclean_cond):
 
 
 def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
-                           cflags, docker_cmd, build_to_src, configure_opts):
+                           cflags, virt_cmd, build_to_src, configure_opts):
   buildsystem = projects_buildsystems.get(proj, "autotools")
   if buildsystem == "autotools":
     return f'''
@@ -273,7 +273,7 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
   -chmod -R ug+w {build_proj}
   -rm -rf {build_proj}
   mkdir -p {build_proj}
-  cd {build_proj}; {cflags}{docker_cmd}{build_to_src}/configure \\
+  cd {build_proj}; {cflags}{virt_cmd}{build_to_src}/configure \\
     --prefix {shlex.quote(args.install_prefix)} \\
     {configure_opts}
   sync
@@ -286,7 +286,7 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
   -chmod -R ug+w {build_proj}
   -rm -rf {build_proj}
   mkdir -p {build_proj}
-  cd {build_proj}; {cflags}{docker_cmd}meson setup {build_to_src} . \\
+  cd {build_proj}; {cflags}{virt_cmd}meson setup {build_to_src} . \\
     --prefix {shlex.quote(args.install_prefix)}
   sync
   touch $@
@@ -296,7 +296,7 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
-def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
+def gen_makefile_build(proj, distclean_cond, build_proj, virt_cmd, jobs,
                        check, src_proj):
   buildsystem = projects_buildsystems.get(proj, "autotools")
 
@@ -305,7 +305,7 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
   if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.configure; fi
   @echo "\\n\\n\\n===== $@\\n"
-  {docker_cmd}$(MAKE) -C {build_proj} -j {jobs} {check}
+  {virt_cmd}$(MAKE) -C {build_proj} -j {jobs} {check}
   sync
   touch $@
     '''
@@ -314,11 +314,11 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
     test_line = ""
     # TODO: currently tests don't pass in this env
     # if check:
-    #   test_line = f"{docker_cmd}meson test -C {build_proj} -v"
+    #   test_line = f"{virt_cmd}meson test -C {build_proj} -v"
     return f'''
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
   @echo "\\n\\n\\n===== $@\\n"
-  {docker_cmd}meson compile -C {build_proj} -j {jobs}
+  {virt_cmd}meson compile -C {build_proj} -j {jobs}
   {test_line}
   sync
   touch $@
@@ -337,14 +337,14 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
-def gen_makefile_install(proj, docker_cmd, sudo_make_install, build_proj,
+def gen_makefile_install(proj, virt_cmd, sudo_make_install, build_proj,
                          no_ldconfig, sudo_ldconfig):
   buildsystem = projects_buildsystems.get(proj, "autotools")
   if buildsystem == "autotools":
     return f'''
 .make.{proj}.install: .make.{proj}.build
   @echo "\\n\\n\\n===== $@\\n"
-  {docker_cmd}{sudo_make_install}$(MAKE) -C {build_proj} install
+  {virt_cmd}{sudo_make_install}$(MAKE) -C {build_proj} install
   {no_ldconfig}{sudo_ldconfig}ldconfig
   sync
   touch $@
@@ -353,7 +353,7 @@ def gen_makefile_install(proj, docker_cmd, sudo_make_install, build_proj,
     return f'''
 .make.{proj}.install: .make.{proj}.build
   @echo "\\n\\n\\n===== $@\\n"
-  {docker_cmd}{sudo_make_install}ninja -C {build_proj} install
+  {virt_cmd}{sudo_make_install}ninja -C {build_proj} install
   {no_ldconfig}{sudo_ldconfig}ldconfig
   sync
   touch $@
@@ -419,7 +419,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
   deps_installed = ' '.join(['.make.%s.install' % d for d in deps])
   deps_reinstall = ' '.join(['%s-reinstall' %d for d in deps])
   cflags = 'CFLAGS=-g ' if args.build_debug else ''
-  docker_cmd = f'OSMODEV_PROJECT={proj} {args.docker_cmd} ' if args.docker_cmd else ''
+  virt_cmd = f'OSMODEV_PROJECT={proj} {args.virt_cmd} ' if args.virt_cmd else ''
   check = 'check' if make_check else ''
   no_ldconfig = '#' if no_ldconfig else ''
   sudo_ldconfig = '' if ldconfig_without_sudo else 'sudo '
@@ -469,11 +469,11 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     clone_rule=gen_makefile_clone(proj, src, src_proj, url, push_url),
     autoconf_rule=gen_makefile_autoconf(proj, src_proj, distclean_cond),
     configure_rule=gen_makefile_configure(proj, deps_installed, distclean_cond,
-                                          build_proj, cflags, docker_cmd,
+                                          build_proj, cflags, virt_cmd,
                                           build_to_src, configure_opts_str),
-    build_rule=gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd,
+    build_rule=gen_makefile_build(proj, distclean_cond, build_proj, virt_cmd,
                                   jobs, check, src_proj),
-    install_rule=gen_makefile_install(proj, docker_cmd, sudo_make_install,
+    install_rule=gen_makefile_install(proj, virt_cmd, sudo_make_install,
                                       build_proj, no_ldconfig, sudo_ldconfig),
     reinstall_rule=gen_makefile_reinstall(proj, deps_reinstall,
                                           sudo_make_install, build_proj),
@@ -585,7 +585,7 @@ regen:
     --make-dir {make_dir} \
     --build-dir {build_dir} \
     --jobs {jobs} \
-    --url "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}{docker_cmd}{build_debug}{auto_distclean}
+    --url "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}{virt_cmd}{build_debug}{auto_distclean}
 
 '''.format(
     script=os.path.relpath(sys.argv[0], make_dir),
@@ -601,7 +601,7 @@ regen:
     no_ldconfig=' \\\n\t\t--no-ldconfig' if args.no_ldconfig else '',
     ldconfig_without_sudo=' \\\n\t\t--ldconfig-without-sudo' if args.ldconfig_without_sudo else '',
     make_check='' if args.make_check else " \\\n\t\t--no-make-check",
-    docker_cmd=f' \\\n\t\t--docker-cmd "{args.docker_cmd}"' if args.docker_cmd else '',
+    virt_cmd=f' \\\n\t\t--virt-cmd "{args.virt_cmd}"' if args.virt_cmd else '',
     build_debug=f' \\\n\t\t--build-debug' if args.build_debug else '',
     auto_distclean=' \\\n\t\t--auto-distclean' if args.auto_distclean else '',
 )
