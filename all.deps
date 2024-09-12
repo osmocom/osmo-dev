@@ -3,19 +3,19 @@ libosmocore
 libosmo-abis	libosmocore
 libosmo-gprs	libosmocore
 libosmo-netif	libosmo-abis
-libosmo-sccp	libosmo-netif
+libosmo-sigtran	libosmo-netif
 libsmpp34
 libasn1c
 osmo-ggsn	libosmocore
-osmo-iuh	libosmo-sccp libasn1c
+osmo-iuh	libosmo-sigtran libasn1c
 osmo-hlr	libosmo-abis
 osmo-mgw	libosmo-netif
 osmo-msc	osmo-iuh osmo-mgw libsmpp34 osmo-hlr
-osmo-bsc	libosmo-sccp osmo-mgw
+osmo-bsc	libosmo-sigtran osmo-mgw
 osmo-sgsn	osmo-iuh osmo-ggsn osmo-hlr
 osmo-sip-connector	libosmocore
 osmo-bts	libosmo-netif
-osmo-smlc	libosmo-sccp
+osmo-smlc	libosmo-sigtran
 # osmo-trx can build with --enable-sanitize, but then won't work reliably.
 # When omitting --enable-sanitize from osmo-trx only, its 'make check' will fail.
 # So if you want osmo-trx, use no sanitize.opts, or use LD_PRELOAD for osmo-trx binaries.
@@ -24,7 +24,7 @@ osmo-pcu	libosmocore libosmo-gprs
 asn1c	libasn1c
 osmo-gbproxy	libosmocore
 osmo-pcap	libosmocore
-osmo-bsc-nat	libosmo-sccp osmo-mgw
+osmo-bsc-nat	libosmo-sigtran osmo-mgw
 libosmo-pfcp	libosmocore
 libgtpnl
 libnftnl
@@ -55,6 +55,6 @@ osmocom-bb_virtphy	libosmocore
 osmocom-bb_trxcon	libosmocore
 simtrace2_host		libosmocore
 
-osmo-gsm-shark	libosmo-pfcp osmo-mgw libosmo-sccp osmo-iuh
+osmo-gsm-shark	libosmo-pfcp osmo-mgw libosmo-sigtran osmo-iuh
 
 strongswan-epdg		libosmocore

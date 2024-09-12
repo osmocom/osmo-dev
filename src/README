@@ -76,7 +76,7 @@ From ssh://go/libosmo-netif
  + 058d3b7...89180ef pespin/jitterbuffer -> origin/pespin/jitterbuffer  (forced update)
  * [new branch]      pespin/osmux-lostpkt -> origin/pespin/osmux-lostpkt
 
-===== libosmo-sccp =====
+===== libosmo-sigtran =====
 
 ===== libosmocore =====
 remote: Counting objects: 36, done
@@ -96,7 +96,7 @@ From ssh://go/libosmocore
      libasn1c master
  libosmo-abis master
 libosmo-netif master
- libosmo-sccp MODS master[+1|-10]
+ libosmo-sigtran MODS master[+1|-10]
   libosmocore master
     libsmpp34 master
      openggsn master
@@ -107,7 +107,7 @@ libosmo-netif master
      osmo-msc pre_release
     osmo-sgsn pre_release
 
-# This shows me that I have local mods in libosmo-sccp, while my local master
+# This shows me that I have local mods in libosmo-sigtran, while my local master
 # branch has one commit that isn't on upstream ("+1"); but at the same time
 # origin/master has moved on by 10 commits ("-10").
 # My osmo-bsc git is on branch 'pre_release', and apparently I have amended the
@@ -145,7 +145,7 @@ master
 Your branch is up-to-date with 'origin/master'.
 
 
-libosmo-sccp
+libosmo-sigtran
 master
 Your branch and 'origin/master' have diverged,
 Diverged. git reset --hard origin/master ?  (empty = no, 'ok' = yes)

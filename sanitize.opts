@@ -3,7 +3,7 @@ libosmo-abis --enable-sanitize
 libosmocore --enable-sanitize
 libosmo-gprs --enable-sanitize
 libosmo-netif --enable-sanitize
-libosmo-sccp --enable-sanitize
+libosmo-sigtran --enable-sanitize
 libosmo-pfcp --enable-sanitize
 libsmpp34 --enable-sanitize
 osmo-bsc --enable-sanitize

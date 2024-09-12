@@ -3,7 +3,7 @@ libosmo-abis --enable-werror
 libosmocore --enable-werror
 libosmo-gprs --enable-werror
 libosmo-netif --enable-werror
-libosmo-sccp --enable-werror
+libosmo-sigtran --enable-werror
 libosmo-pfcp --enable-werror
 libsmpp34 --enable-werror
 libgtpnl --enable-werror

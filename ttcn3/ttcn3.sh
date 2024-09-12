@@ -217,7 +217,7 @@ get_program_repo() {
 	case "$1" in
 		osmo-bts-*) echo "osmo-bts" ;;
 		osmo-pcap-*) echo "osmo-pcap" ;;
-		osmo-stp) echo "libosmo-sccp" ;;
+		osmo-stp) echo "libosmo-sigtran" ;;
 		osmo-uecups-*) echo "osmo-uecups" ;;
 		trxcon) echo "osmocom-bb_trxcon" ;;
 		*) echo "$1" ;;
