@@ -6,7 +6,7 @@ libosmo-netif	libosmo-abis
 libosmo-sigtran	libosmo-netif
 libsmpp34
 libasn1c
-osmo-ggsn	libosmocore
+osmo-ggsn	libosmocore libgtpnl
 osmo-iuh	libosmo-sigtran libasn1c
 osmo-hlr	libosmo-abis
 osmo-mgw	libosmo-netif
