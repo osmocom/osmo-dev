@@ -1,0 +1,1 @@
+asn1c --disable-test-asan --disable-test-ubsan
