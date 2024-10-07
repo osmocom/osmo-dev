@@ -58,3 +58,5 @@ simtrace2_host		libosmocore
 osmo-gsm-shark	libosmo-pfcp osmo-mgw libosmo-sigtran osmo-iuh
 
 strongswan-epdg		libosmocore
+
+upf-benchmark		libosmocore libosmo-pfcp
