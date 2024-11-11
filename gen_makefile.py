@@ -256,7 +256,7 @@ def gen_makefile_autoconf(proj, src_proj, distclean_cond):
   sync
   touch $@
     '''
-  elif buildsystem in ["meson", "erlang"]:
+  elif buildsystem in ["meson", "erlang", "go"]:
     return ""
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
@@ -291,7 +291,7 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
   sync
   touch $@
     '''
-  elif buildsystem == "erlang":
+  elif buildsystem in ["erlang", "go"]:
     return ""
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
@@ -334,6 +334,20 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
   sync
   touch $@
     '''
+  elif buildsystem == "go":
+    return f'''
+.make.{proj}.build: .make.{proj}.clone $({proj}_files)
+  @echo "\\n\\n\\n===== $@\\n"
+  set -x && \\
+    export PATH=$$(go env GOPATH)/bin:$$PATH && \\
+    export OUTPUT_BASE_DIR="$$PWD/{build_proj}" && \\
+    mkdir -p "$$OUTPUT_BASE_DIR" && \\
+    cd {src_proj} && \\
+    go generate -v ./cmd/... && \\
+    go build -v -o "$$OUTPUT_BASE_DIR"/bin/{proj} ./cmd/
+  sync
+  touch $@
+    '''
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
@@ -363,6 +377,16 @@ def gen_makefile_install(proj, docker_cmd, sudo_make_install, build_proj,
 .make.{proj}.install: .make.{proj}.build
   @echo "\\n\\n\\n===== $@\\n"
   for i in {build_proj}/default/bin/*; do \\
+    install -v -Dm755 "$$i" -t {shlex.quote(args.install_prefix)}/bin/; \\
+  done
+  sync
+  touch $@
+    '''
+  elif buildsystem == "go":
+    return f'''
+.make.{proj}.install: .make.{proj}.build
+  @echo "\\n\\n\\n===== $@\\n"
+  for i in {build_proj}/bin/*; do \\
     install -v -Dm755 "$$i" -t {shlex.quote(args.install_prefix)}/bin/; \\
   done
   sync
@@ -441,6 +465,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
       -or -name "*.tpl" \
       -or -name "*.map" \
       -or -name "*.erl" \
+      -or -name "*.go" \
     \) \
     -and -not -name "config.h" 2>/dev/null)
 
