@@ -1,20 +1,20 @@
 # project	build these first
 libosmocore
-libosmo-abis	libosmocore
+libosmo-netif	libosmocore
+libosmo-abis	libosmocore libosmo-netif
 libosmo-gprs	libosmocore
-libosmo-netif	libosmo-abis
 libosmo-sigtran	libosmo-netif
 libsmpp34
 libasn1c
 osmo-ggsn	libosmocore libgtpnl
 osmo-iuh	libosmo-sigtran libasn1c
 osmo-hlr	libosmo-abis
-osmo-mgw	libosmo-netif
+osmo-mgw	libosmo-netif libosmo-abis
 osmo-msc	osmo-iuh osmo-mgw libsmpp34 osmo-hlr
 osmo-bsc	libosmo-sigtran osmo-mgw
 osmo-sgsn	osmo-iuh osmo-ggsn osmo-hlr
 osmo-sip-connector	libosmocore
-osmo-bts	libosmo-netif
+osmo-bts	libosmo-abis
 osmo-smlc	libosmo-sigtran
 # osmo-trx can build with --enable-sanitize, but then won't work reliably.
 # When omitting --enable-sanitize from osmo-trx only, its 'make check' will fail.
@@ -34,7 +34,7 @@ osmo-cbc	libosmo-netif
 osmo-hnodeb	osmo-iuh
 osmo-hnbgw	osmo-iuh osmo-mgw libosmo-pfcp nftables
 osmo-e1d	libosmocore
-osmo-remsim	simtrace2_host libosmo-netif
+osmo-remsim	simtrace2_host libosmo-abis
 osmo-uecups	libosmocore
 
 osmo-s1gw
