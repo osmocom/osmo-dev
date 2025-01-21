@@ -23,7 +23,7 @@ osmo-trx	libosmocore
 osmo-pcu	libosmocore libosmo-gprs
 asn1c	libasn1c
 osmo-gbproxy	libosmocore
-osmo-pcap	libosmocore
+osmo-pcap	libosmocore libosmo-netif
 osmo-bsc-nat	libosmo-sigtran osmo-mgw
 libosmo-pfcp	libosmocore
 libgtpnl
