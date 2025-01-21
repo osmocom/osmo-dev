@@ -601,7 +601,7 @@ regen:
     ldconfig_without_sudo=' \\\n\t\t--ldconfig-without-sudo' if args.ldconfig_without_sudo else '',
     make_check='' if args.make_check else " \\\n\t\t--no-make-check",
     docker_cmd=f' \\\n\t\t--docker-cmd "{args.docker_cmd}"' if args.docker_cmd else '',
-    build_debug=f' \\\n\t\t--build-debug' if args.build_debug else '',
+    build_debug=' \\\n\t\t--build-debug' if args.build_debug else '',
     auto_distclean=' \\\n\t\t--auto-distclean' if args.auto_distclean else '',
 )
 
