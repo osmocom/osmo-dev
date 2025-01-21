@@ -513,45 +513,45 @@ for f in configure_opts_files:
     configure_opts_args += f' \\\n\t\t{os.path.relpath(f, make_dir)}'
 
 # convenience: add a regen target that updates the generated makefile itself
-content += r'''
+content += f'''
 default: usrp
 
 #
 # Convenience targets for whole networks
 #
 .PHONY: cn
-cn: \
-  osmo-ggsn \
-  osmo-hlr \
-  osmo-iuh \
-  osmo-mgw \
-  osmo-msc \
-  osmo-sgsn \
-  osmo-sip-connector \
-  osmo-smlc \
+cn: \\
+  osmo-ggsn \\
+  osmo-hlr \\
+  osmo-iuh \\
+  osmo-mgw \\
+  osmo-msc \\
+  osmo-sgsn \\
+  osmo-sip-connector \\
+  osmo-smlc \\
   $(NULL)
 
 .PHONY: cn-bsc
-cn-bsc: \
-  cn \
-  osmo-bsc \
+cn-bsc: \\
+  cn \\
+  osmo-bsc \\
   $(NULL)
 
 .PHONY: cn-bsc-nat
-cn-bsc-nat: \
-  cn \
-  mobile \
-  osmo-bsc \
-  osmo-bsc-nat \
-  osmo-bts \
-  virtphy \
+cn-bsc-nat: \\
+  cn \\
+  mobile \\
+  osmo-bsc \\
+  osmo-bsc-nat \\
+  osmo-bts \\
+  virtphy \\
   $(NULL)
 
 .PHONY: usrp
-usrp: \
-  cn-bsc \
-  osmo-bts \
-  osmo-trx \
+usrp: \\
+  cn-bsc \\
+  osmo-bts \\
+  osmo-trx \\
   $(NULL)
 
 #
@@ -577,33 +577,33 @@ all_debug:
 # regenerate this Makefile, in case the deps or opts changed
 .PHONY: regen
 regen:
-  {script} \
-    {configure_opts} \
-    --output {makefile} \
-    --src-dir {src_dir} \
-    --make-dir {make_dir} \
-    --build-dir {build_dir} \
-    --jobs {jobs} \
-    --url "{url}"{push_url}{sudo_make_install}{no_ldconfig}{ldconfig_without_sudo}{make_check}{docker_cmd}{build_debug}{auto_distclean}
+  {os.path.relpath(sys.argv[0], make_dir)} \\
+    {configure_opts_args} \\
+    --output {args.output} \\
+    --src-dir {os.path.relpath(args.src_dir, make_dir)} \\
+    --make-dir . \\
+    --build-dir {os.path.relpath(build_dir, make_dir)} \\
+    --jobs {args.jobs} \\
+    --url "{args.url}" \\
+'''
 
-'''.format(
-    script=os.path.relpath(sys.argv[0], make_dir),
-    configure_opts=configure_opts_args,
-    make_dir='.',
-    makefile=args.output,
-    src_dir=os.path.relpath(args.src_dir, make_dir),
-    build_dir=os.path.relpath(build_dir, make_dir),
-    jobs=args.jobs,
-    url=args.url,
-    push_url=(" \\\n\t\t--push-url '%s'"%args.push_url) if args.push_url else '',
-    sudo_make_install=' \\\n\t\t--sudo-make-install' if args.sudo_make_install else '',
-    no_ldconfig=' \\\n\t\t--no-ldconfig' if args.no_ldconfig else '',
-    ldconfig_without_sudo=' \\\n\t\t--ldconfig-without-sudo' if args.ldconfig_without_sudo else '',
-    make_check='' if args.make_check else " \\\n\t\t--no-make-check",
-    docker_cmd=f' \\\n\t\t--docker-cmd "{args.docker_cmd}"' if args.docker_cmd else '',
-    build_debug=' \\\n\t\t--build-debug' if args.build_debug else '',
-    auto_distclean=' \\\n\t\t--auto-distclean' if args.auto_distclean else '',
-)
+if args.push_url:
+  content += f"    --push-url {shlex.quote(args.push_url)} \\\n"
+if args.sudo_make_install:
+  content += "    --sudo-make-install \\\n"
+if args.no_ldconfig:
+  content += "    --no-ldconfig \\\n"
+if args.ldconfig_without_sudo:
+  content += "    --ldconfig-without-sudo \\\n"
+if not args.make_check:
+  content += "    --no-make-check \\\n"
+if args.docker_cmd:
+  content += f"    --push-url {shlex.quote(args.docker_cmd)} \\\n"
+if args.build_debug:
+  content += "    --build-debug \\\n"
+if args.auto_distclean:
+  content += "    --auto-distclean \\\n"
+content += "    $(NULL)\n"
 
 # convenience target: clone all repositories first
 content += 'clone: \\\n\t' + ' \\\n\t'.join([ '.make.%s.clone' % p for p, d in projects_deps ]) + '\n\n'
