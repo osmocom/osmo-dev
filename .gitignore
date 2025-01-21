@@ -8,6 +8,7 @@ src/*
 !src/gits
 !src/grd
 !src/osmo-add-gerrit-hooks.sh
+!src/_update_src_copy.sh
 !src/README
 net/*
 !net/templates*

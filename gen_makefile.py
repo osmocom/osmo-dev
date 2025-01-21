@@ -122,6 +122,9 @@ parser.add_argument('-a', '--auto-distclean', action='store_true',
 parser.add_argument('-i', '--install-prefix', default='/usr/local',
                     help='''install there instead of /usr/local''')
 
+parser.add_argument('-A', '--autoreconf-in-src-copy', action='store_true',
+                    help="run autoreconf in a copy of the source dir, avoids 'run make distclean' errors")
+
 args = parser.parse_args()
 
 class listdict(dict):
@@ -175,12 +178,13 @@ def read_configure_opts(path):
     return {}
   return dict(read_projects_deps(path))
 
-def gen_makefile_clone(proj, src, src_proj, url, push_url):
+def gen_makefile_clone(proj, src, src_proj, url, push_url, update_src_copy_cmd):
   if proj == "osmocom-bb_layer23":
     return f'''
 .make.{proj}.clone: .make.osmocom-bb.clone
   @echo "\\n\\n\\n===== $@\\n"
   test -L {src_proj} || ln -s osmocom-bb/src/host/layer23 {src_proj}
+  {update_src_copy_cmd}
   touch $@
   '''
 
@@ -189,6 +193,7 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
 .make.{proj}.clone: .make.osmocom-bb.clone
   @echo "\\n\\n\\n===== $@\\n"
   test -L {src_proj} || ln -s osmocom-bb/src/host/virt_phy {src_proj}
+  {update_src_copy_cmd}
   touch $@
   '''
 
@@ -197,6 +202,7 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
 .make.{proj}.clone: .make.osmocom-bb.clone
   @echo "\\n\\n\\n===== $@\\n"
   test -L {src_proj} || ln -s osmocom-bb/src/host/trxcon {src_proj}
+  {update_src_copy_cmd}
   touch $@
   '''
 
@@ -205,6 +211,7 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
 .make.{proj}.clone: .make.simtrace2.clone
   @echo "\\n\\n\\n===== $@\\n"
   test -L {src_proj} || ln -s simtrace2/host {src_proj}
+  {update_src_copy_cmd}
   touch $@
   '''
 
@@ -240,19 +247,22 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url):
     ( {cmd_clone} && {cmd_set_push_url} ); \\
   fi
 
+  {update_src_copy_cmd}
   sync
   touch $@
   '''
 
-def gen_makefile_autoconf(proj, src_proj, distclean_cond):
+def gen_makefile_autoconf(proj, src_proj, src_proj_copy, distclean_cond, update_src_copy_cmd):
   buildsystem = projects_buildsystems.get(proj, "autotools")
+
   if buildsystem == "autotools":
     return f'''
 .make.{proj}.autoconf: .make.{proj}.clone {src_proj}/configure.ac
   if {distclean_cond}; then $(MAKE) {proj}-distclean; fi
   @echo "\\n\\n\\n===== $@\\n"
-  -rm -f {src_proj}/.version
-  cd {src_proj}; autoreconf -fi
+  {update_src_copy_cmd}
+  -rm -f {src_proj_copy}/.version
+  cd {src_proj_copy}; autoreconf -fi
   sync
   touch $@
     '''
@@ -263,13 +273,15 @@ def gen_makefile_autoconf(proj, src_proj, distclean_cond):
 
 
 def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
-                           cflags, docker_cmd, build_to_src, configure_opts):
+                           cflags, docker_cmd, build_to_src, configure_opts,
+                           update_src_copy_cmd):
   buildsystem = projects_buildsystems.get(proj, "autotools")
   if buildsystem == "autotools":
     return f'''
 .make.{proj}.configure: .make.{proj}.autoconf {deps_installed} $({proj}_configure_files)
   if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.autoconf; fi
   @echo "\\n\\n\\n===== $@\\n"
+  {update_src_copy_cmd}
   -chmod -R ug+w {build_proj}
   -rm -rf {build_proj}
   mkdir -p {build_proj}
@@ -297,7 +309,7 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
     assert False, f"unknown buildsystem: {buildsystem}"
 
 def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
-                       check, src_proj):
+                       check, src_proj, update_src_copy_cmd):
   buildsystem = projects_buildsystems.get(proj, "autotools")
 
   if buildsystem == "autotools":
@@ -305,6 +317,7 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
   if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.configure; fi
   @echo "\\n\\n\\n===== $@\\n"
+  {update_src_copy_cmd}
   {docker_cmd}$(MAKE) -C {build_proj} -j {jobs} {check}
   sync
   touch $@
@@ -396,17 +409,46 @@ def gen_makefile_distclean(proj, src_proj):
   $(MAKE) -C {src_proj} distclean
   '''
 
+def is_src_copy_needed(proj):
+  if not args.autoreconf_in_src_copy:
+    return False
+
+  # The rsync workaround to not write to the source dir during "autoreconf -fi"
+  # is only needed for autotools based projects
+  buildsystem = projects_buildsystems.get(proj, "autotools")
+  if buildsystem != "autotools":
+    return False
+
+  return True
+
+def gen_update_src_copy_cmd(proj, src_dir, make_dir):
+  if not is_src_copy_needed(proj):
+    return ""
+  ret = "@sh -e "
+  ret += os.path.join(os.path.relpath(args.src_dir, make_dir), "_update_src_copy.sh")
+  ret += f" {shlex.quote(src_dir)}"
+  ret += f" {shlex.quote(proj)}"
+  ret += " $(TIME_START)"
+  return ret
+
+def gen_src_proj_copy(src_proj, make_dir, proj):
+  if not is_src_copy_needed(proj):
+    return src_proj
+  return os.path.join(make_dir, "src_copy", proj)
+
 def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
   src_proj = os.path.join(src_dir, proj)
   if proj == 'openbsc':
     src_proj = os.path.join(src_proj, 'openbsc')
 
-  build_proj = os.path.join(build_dir, proj)
-  build_to_src = os.path.relpath(src_proj, build_proj)
-  build_proj = os.path.relpath(build_proj, make_dir)
-
   src = os.path.relpath(src_dir, make_dir)
   src_proj = os.path.relpath(src_proj, make_dir)
+  src_proj_copy = gen_src_proj_copy(src_proj, make_dir, proj)
+
+  build_proj = os.path.join(build_dir, proj)
+  build_to_src = os.path.relpath(src_proj_copy, build_proj)
+  build_proj = os.path.relpath(build_proj, make_dir)
+
   push_url = push_url or url
 
   if configure_opts:
@@ -423,6 +465,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
   no_ldconfig = '#' if no_ldconfig else ''
   sudo_ldconfig = '' if ldconfig_without_sudo else 'sudo '
   sudo_make_install = 'sudo ' if sudo_make_install else ''
+  update_src_copy_cmd = gen_update_src_copy_cmd(proj, src_dir, make_dir)
 
   return f'''
 ### {proj} ###
@@ -443,9 +486,18 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     \\) \\
     -and -not -name "config.h" 2>/dev/null)
 
-{gen_makefile_clone(proj, src, src_proj, url, push_url)}
+{gen_makefile_clone(proj,
+                    src,
+                    src_proj,
+                    url,
+                    push_url,
+                    update_src_copy_cmd)}
 
-{gen_makefile_autoconf(proj, src_proj, distclean_cond)}
+{gen_makefile_autoconf(proj,
+                       src_proj,
+                       src_proj_copy,
+                       distclean_cond,
+                       update_src_copy_cmd)}
 
 {gen_makefile_configure(proj,
                         deps_installed,
@@ -454,7 +506,8 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
                         cflags,
                         docker_cmd,
                         build_to_src,
-                        configure_opts_str)}
+                        configure_opts_str,
+                        update_src_copy_cmd)}
 
 {gen_makefile_build(proj,
                     distclean_cond,
@@ -462,7 +515,8 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
                     docker_cmd,
                     jobs,
                     check,
-                    src_proj)}
+                    src_proj_copy,
+                    update_src_copy_cmd)}
 
 {gen_makefile_install(proj,
                       docker_cmd,
@@ -606,7 +660,18 @@ if args.build_debug:
   content += "    --build-debug \\\n"
 if args.auto_distclean:
   content += "    --auto-distclean \\\n"
+if args.autoreconf_in_src_copy:
+  content += "    --autoreconf-in-src-copy \\\n"
 content += "    $(NULL)\n"
+
+if args.autoreconf_in_src_copy:
+  content += """
+
+# --autoreconf-in-src-copy: get current time to avoid running rsync more than
+# once within this Makefile per project
+TIME_START := $(shell date +%s%N)
+
+"""
 
 # convenience target: clone all repositories first
 content += 'clone: \\\n\t' + ' \\\n\t'.join([ '.make.%s.clone' % p for p, d in projects_deps ]) + '\n\n'
