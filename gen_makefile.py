@@ -424,62 +424,65 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
   sudo_ldconfig = '' if ldconfig_without_sudo else 'sudo '
   sudo_make_install = 'sudo ' if sudo_make_install else ''
 
-  return r'''
+  return f'''
 ### {proj} ###
 
-{proj}_configure_files := $(shell find -L {src_proj} \
-    -name "Makefile.am" \
-    -or -name "*.in" \
-    -and -not -name "Makefile.in" \
+{proj}_configure_files := $(shell find -L {src_proj} \\
+    -name "Makefile.am" \\
+    -or -name "*.in" \\
+    -and -not -name "Makefile.in" \\
     -and -not -name "config.h.in" 2>/dev/null)
-{proj}_files := $(shell find -L {src_proj} \
-    \( \
-      -name "*.[hc]" \
-      -or -name "*.py" \
-      -or -name "*.cpp" \
-      -or -name "*.tpl" \
-      -or -name "*.map" \
-      -or -name "*.erl" \
-    \) \
+{proj}_files := $(shell find -L {src_proj} \\
+    \\( \\
+      -name "*.[hc]" \\
+      -or -name "*.py" \\
+      -or -name "*.cpp" \\
+      -or -name "*.tpl" \\
+      -or -name "*.map" \\
+      -or -name "*.erl" \\
+    \\) \\
     -and -not -name "config.h" 2>/dev/null)
 
-{clone_rule}
+{gen_makefile_clone(proj, src, src_proj, url, push_url)}
 
-{autoconf_rule}
+{gen_makefile_autoconf(proj, src_proj, distclean_cond)}
 
-{configure_rule}
+{gen_makefile_configure(proj,
+                        deps_installed,
+                        distclean_cond,
+                        build_proj,
+                        cflags,
+                        docker_cmd,
+                        build_to_src,
+                        configure_opts_str)}
 
-{build_rule}
+{gen_makefile_build(proj,
+                    distclean_cond,
+                    build_proj,
+                    docker_cmd,
+                    jobs,
+                    check,
+                    src_proj)}
 
-{install_rule}
+{gen_makefile_install(proj,
+                      docker_cmd,
+                      sudo_make_install,
+                      build_proj,
+                      no_ldconfig,
+                      sudo_ldconfig)}
 
-{reinstall_rule}
+{gen_makefile_reinstall(proj,
+                        deps_reinstall,
+                        sudo_make_install,
+                        build_proj)}
 
-{clean_rule}
+{gen_makefile_clean(proj, build_proj)}
 
-{distclean_rule}
+{gen_makefile_distclean(proj, src_proj)}
 
 .PHONY: {proj}
 {proj}: .make.{proj}.install
-
-'''.format(
-    proj=proj,
-    src_proj=src_proj,
-    clone_rule=gen_makefile_clone(proj, src, src_proj, url, push_url),
-    autoconf_rule=gen_makefile_autoconf(proj, src_proj, distclean_cond),
-    configure_rule=gen_makefile_configure(proj, deps_installed, distclean_cond,
-                                          build_proj, cflags, docker_cmd,
-                                          build_to_src, configure_opts_str),
-    build_rule=gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd,
-                                  jobs, check, src_proj),
-    install_rule=gen_makefile_install(proj, docker_cmd, sudo_make_install,
-                                      build_proj, no_ldconfig, sudo_ldconfig),
-    reinstall_rule=gen_makefile_reinstall(proj, deps_reinstall,
-                                          sudo_make_install, build_proj),
-    clean_rule=gen_makefile_clean(proj, build_proj),
-    distclean_rule=gen_makefile_distclean(proj, src_proj),
-    )
-
+'''
 
 projects_deps = read_projects_deps(all_deps_file)
 projects_urls = read_projects_dict(all_urls_file)
