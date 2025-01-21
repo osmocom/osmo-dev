@@ -144,7 +144,7 @@ class listdict(dict):
 
   def extend_dict(self, d):
     for k,v in d.items():
-      l = self.extend(k, v)
+      self.extend(k, v)
 
 def read_projects_deps(path):
   'Read deps config and return tuples of (project_name, which-other-to-build-first).'
@@ -310,7 +310,6 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
   touch $@
     '''
   elif buildsystem == "meson":
-    target = "test" if check else "compile"
     test_line = ""
     # TODO: currently tests don't pass in this env
     # if check:
