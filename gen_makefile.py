@@ -424,8 +424,12 @@ def is_src_copy_needed(proj):
 def gen_update_src_copy_cmd(proj, src_dir, make_dir):
   if not is_src_copy_needed(proj):
     return ""
+
+  src_dir_script = os.path.join(topdir, "src")
+  src_dir_script = os.path.relpath(src_dir_script, make_dir)
+
   ret = "@sh -e "
-  ret += os.path.join(os.path.relpath(args.src_dir, make_dir), "_update_src_copy.sh")
+  ret += os.path.join(src_dir_script, "_update_src_copy.sh")
   ret += f" {shlex.quote(src_dir)}"
   ret += f" {shlex.quote(proj)}"
   ret += " $(TIME_START)"
