@@ -61,6 +61,45 @@ update_git_dirs_all() {
 	done
 }
 
+# Some project are symlinks to a path in another git repository (for example
+# osmocom-bb_layer23 -> osmocom-bb/src/host/layer23). For those we need to
+# add such a symlink to the src_copy dir and then run _update_src_copy.sh on
+# the main project (osmocom-bb in the example).
+handle_symlink_proj() {
+	local linkdest
+	local git_topdir
+	local proj_main
+	local relpath
+
+	if ! [ -L "$SRC_DIR/$PROJ" ]; then
+		return
+	fi
+
+	linkdest="$(realpath "$SRC_DIR/$PROJ")"
+	git_topdir="$(cd "$linkdest" && git rev-parse --show-toplevel)"
+
+	if [ -z "$git_topdir" ]; then
+		"_update_src_copy: getting git topdir failed: $linkdest"
+		exit 1
+	fi
+
+	proj_main="$(basename "$git_topdir")"
+
+	# Create the symlink in src_copy
+	if ! [ -L "$DEST_DIR_PROJ" ]; then
+		relpath="$(realpath -s --relative-to="$git_topdir" "$linkdest")"
+		if [ -z "$relpath" ]; then
+			"_update_src_copy: getting relpath failed: $linkdest"
+			exit 1
+		fi
+		ln -s "$proj_main/$relpath" "$DEST_DIR_PROJ"
+	fi
+
+	# Copy the original project files to src_copy
+	exec sh -e "$0" "$SRC_DIR" "$proj_main" "$TIME_START"
+	# Not continuing below (exec)
+}
+
 MAKE_DIR="$PWD"
 SRC_DIR="$1"
 PROJ="$2"
@@ -73,6 +112,8 @@ if [ "$(cat "$MARKER" 2>/dev/null)" = "$TIME_START" ]; then
 fi
 
 DEST_DIR_PROJ="$MAKE_DIR/src_copy/$PROJ"
+handle_symlink_proj
+
 COPY_LIST="$(mktemp --suffix=-osmo-dev-rsync-copylist)"
 
 cd "$SRC_DIR/$PROJ"
