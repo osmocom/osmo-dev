@@ -2,20 +2,6 @@
 # Update the src_copy dir with all relevant files from the original git
 # repository (+ submodules). Used by gen_makefile.py --autoreconf-in-src-copy.
 
-MAKE_DIR="$PWD"
-SRC_DIR="$1"
-PROJ="$2"
-TIME_START="$3"
-MARKER="$MAKE_DIR/.make.$PROJ.src_copy"
-
-# Don't run more than once per "make" call
-if [ "$(cat "$MARKER" 2>/dev/null)" = "$TIME_START" ]; then
-	exit 0
-fi
-
-DEST_DIR_PROJ="$MAKE_DIR/src_copy/$PROJ"
-COPY_LIST="$(mktemp --suffix=-osmo-dev-rsync-copylist)"
-
 update_git_dir() {
 	local src="$1"
 	local dest="$DEST_DIR_PROJ/$(echo "$src" | cut -c 3-)"  # cut: remove './'
@@ -74,6 +60,20 @@ update_git_dirs_all() {
 		run_git_version_gen "$src"
 	done
 }
+
+MAKE_DIR="$PWD"
+SRC_DIR="$1"
+PROJ="$2"
+TIME_START="$3"
+MARKER="$MAKE_DIR/.make.$PROJ.src_copy"
+
+# Don't run more than once per "make" call
+if [ "$(cat "$MARKER" 2>/dev/null)" = "$TIME_START" ]; then
+	exit 0
+fi
+
+DEST_DIR_PROJ="$MAKE_DIR/src_copy/$PROJ"
+COPY_LIST="$(mktemp --suffix=-osmo-dev-rsync-copylist)"
 
 cd "$SRC_DIR/$PROJ"
 update_git_dirs_all
