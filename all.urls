@@ -4,3 +4,4 @@ libnftnl	https://git.netfilter.org/libnftnl/
 nftables	https://git.netfilter.org/nftables/
 open5gs		https://github.com/open5gs/open5gs
 strongswan-epdg https://gitea.osmocom.org/ims-volte-vowifi/strongswan-epdg
+osmo-gsm-shark	https://gitea.osmocom.org/nhofmeyr/osmo-gsm-shark
