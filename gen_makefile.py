@@ -437,7 +437,7 @@ def gen_update_src_copy_cmd(proj, src_dir, make_dir):
 
 def gen_src_proj_copy(src_proj, make_dir, proj):
   if not is_src_copy_needed(proj):
-    return src_proj
+    return os.path.join(make_dir, src_proj)
   return os.path.join(make_dir, "src_copy", proj)
 
 def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
