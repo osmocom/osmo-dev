@@ -309,8 +309,9 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
     assert False, f"unknown buildsystem: {buildsystem}"
 
 def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd,
-                       check, src_proj, update_src_copy_cmd):
+                       src_proj, update_src_copy_cmd):
   buildsystem = projects_buildsystems.get(proj, "autotools")
+  check = "check" if args.make_check else ""
 
   if buildsystem == "autotools":
     return f'''
@@ -442,7 +443,7 @@ def gen_src_proj_copy(src_proj, make_dir, proj):
     return src_proj
   return os.path.join(make_dir, "src_copy", proj)
 
-def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir, make_check):
+def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir):
   src_proj = os.path.join(src_dir, proj)
   src_proj_copy = gen_src_proj_copy(src_proj, make_dir, proj)
 
@@ -460,7 +461,6 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir, make_chec
   deps_reinstall = ' '.join(['%s-reinstall' %d for d in deps])
   cflags = 'CFLAGS=-g ' if args.build_debug else ''
   docker_cmd = f'OSMODEV_PROJECT={proj} {args.docker_cmd} ' if args.docker_cmd else ''
-  check = 'check' if make_check else ''
   update_src_copy_cmd = gen_update_src_copy_cmd(proj, src_dir, make_dir)
 
   return f'''
@@ -507,7 +507,6 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir, make_chec
                     distclean_cond,
                     build_proj,
                     docker_cmd,
-                    check,
                     src_proj_copy,
                     update_src_copy_cmd)}
 
@@ -680,9 +679,7 @@ for proj, deps in projects_deps:
   all_config_opts = []
   all_config_opts.extend(configure_opts.get('ALL') or [])
   all_config_opts.extend(configure_opts.get(proj) or [])
-  content += gen_make(proj, deps, all_config_opts,
-                     make_dir, src_dir, build_dir,
-                     args.make_check)
+  content += gen_make(proj, deps, all_config_opts, make_dir, src_dir, build_dir)
 
 # Replace spaces with tabs to avoid the common pitfall of inserting spaces
 # instead of tabs by accident into the Makefile (as the python code is indented
