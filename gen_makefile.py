@@ -349,8 +349,10 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd,
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
-def gen_makefile_install(proj, docker_cmd, sudo_make_install, build_proj,
-                         no_ldconfig, sudo_ldconfig):
+def gen_makefile_install(proj, docker_cmd, build_proj):
+  no_ldconfig = '#' if args.no_ldconfig else ''
+  sudo_ldconfig = '' if args.ldconfig_without_sudo else 'sudo '
+  sudo_make_install = "sudo " if args.sudo_make_install else ""
   buildsystem = projects_buildsystems.get(proj, "autotools")
   if buildsystem == "autotools":
     return f'''
@@ -383,8 +385,8 @@ def gen_makefile_install(proj, docker_cmd, sudo_make_install, build_proj,
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
-def gen_makefile_reinstall(proj, deps_reinstall, sudo_make_install,
-                           build_proj):
+def gen_makefile_reinstall(proj, deps_reinstall, build_proj):
+  sudo_make_install = "sudo " if args.sudo_make_install else ""
   return f'''
 .PHONY: {proj}-reinstall
 {proj}-reinstall: {deps_reinstall}
@@ -440,7 +442,7 @@ def gen_src_proj_copy(src_proj, make_dir, proj):
     return src_proj
   return os.path.join(make_dir, "src_copy", proj)
 
-def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
+def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir, make_check):
   src_proj = os.path.join(src_dir, proj)
   src_proj_copy = gen_src_proj_copy(src_proj, make_dir, proj)
 
@@ -459,9 +461,6 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir, sudo_make
   cflags = 'CFLAGS=-g ' if args.build_debug else ''
   docker_cmd = f'OSMODEV_PROJECT={proj} {args.docker_cmd} ' if args.docker_cmd else ''
   check = 'check' if make_check else ''
-  no_ldconfig = '#' if no_ldconfig else ''
-  sudo_ldconfig = '' if ldconfig_without_sudo else 'sudo '
-  sudo_make_install = 'sudo ' if sudo_make_install else ''
   update_src_copy_cmd = gen_update_src_copy_cmd(proj, src_dir, make_dir)
 
   return f'''
@@ -514,14 +513,10 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir, sudo_make
 
 {gen_makefile_install(proj,
                       docker_cmd,
-                      sudo_make_install,
-                      build_proj,
-                      no_ldconfig,
-                      sudo_ldconfig)}
+                      build_proj)}
 
 {gen_makefile_reinstall(proj,
                         deps_reinstall,
-                        sudo_make_install,
                         build_proj)}
 
 {gen_makefile_clean(proj, build_proj)}
@@ -687,8 +682,7 @@ for proj, deps in projects_deps:
   all_config_opts.extend(configure_opts.get(proj) or [])
   content += gen_make(proj, deps, all_config_opts,
                      make_dir, src_dir, build_dir,
-                     args.sudo_make_install, args.no_ldconfig,
-                     args.ldconfig_without_sudo, args.make_check)
+                     args.make_check)
 
 # Replace spaces with tabs to avoid the common pitfall of inserting spaces
 # instead of tabs by accident into the Makefile (as the python code is indented
