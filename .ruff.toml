@@ -10,3 +10,13 @@ exclude = [
 [lint]
 # E741: Ambiguous variable name: `l`
 ignore = ["E741"]
+
+[format]
+exclude = [
+	"cgit/osmo-commit-filter.py",
+	"gen_makefile.py",
+	"net/fill_config.py",
+	"net/templates/freeswitch/python/dialplan-dgsm/__init__.py",
+	"osmo-cn-latest/provision-hlr.py",
+	"sysmobts-calib.py",
+]
