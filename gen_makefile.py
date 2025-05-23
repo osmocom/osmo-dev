@@ -442,9 +442,6 @@ def gen_src_proj_copy(src_proj, make_dir, proj):
 
 def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
   src_proj = os.path.join(src_dir, proj)
-  if proj == 'openbsc':
-    src_proj = os.path.join(src_proj, 'openbsc')
-
   src_proj_copy = gen_src_proj_copy(src_proj, make_dir, proj)
 
   build_proj = os.path.join(build_dir, proj)
