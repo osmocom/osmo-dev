@@ -437,7 +437,7 @@ def gen_update_src_copy_cmd(proj, src_dir, make_dir):
 
 def gen_src_proj_copy(src_proj, make_dir, proj):
   if not is_src_copy_needed(proj):
-    return os.path.join(make_dir, src_proj)
+    return src_proj
   return os.path.join(make_dir, "src_copy", proj)
 
 def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
@@ -445,8 +445,6 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
   if proj == 'openbsc':
     src_proj = os.path.join(src_proj, 'openbsc')
 
-  src = os.path.relpath(src_dir, make_dir)
-  src_proj = os.path.relpath(src_proj, make_dir)
   src_proj_copy = gen_src_proj_copy(src_proj, make_dir, proj)
 
   build_proj = os.path.join(build_dir, proj)
@@ -491,7 +489,7 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
     -and -not -name "config.h" 2>/dev/null)
 
 {gen_makefile_clone(proj,
-                    src,
+                    src_dir,
                     src_proj,
                     url,
                     push_url,
@@ -558,6 +556,9 @@ make_dir = args.make_dir
 if not make_dir:
   opts_names = '+'.join([f.replace('.opts', '') for f in configure_opts_files])
   make_dir = 'make-%s' % opts_names
+
+make_dir = os.path.abspath(make_dir)
+src_dir = os.path.abspath(args.src_dir)
 
 if not os.path.isdir(make_dir):
   os.makedirs(make_dir)
@@ -693,7 +694,7 @@ for proj, deps in projects_deps:
   all_config_opts.extend(configure_opts.get('ALL') or [])
   all_config_opts.extend(configure_opts.get(proj) or [])
   content += gen_make(proj, deps, all_config_opts, args.jobs,
-                     make_dir, args.src_dir, build_dir, args.url, args.push_url,
+                     make_dir, src_dir, build_dir, args.url, args.push_url,
                      args.sudo_make_install, args.no_ldconfig,
                      args.ldconfig_without_sudo, args.make_check)
 
