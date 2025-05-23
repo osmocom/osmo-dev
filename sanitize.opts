@@ -13,7 +13,6 @@ osmo-iuh --enable-sanitize
 osmo-mgw --enable-sanitize
 osmo-msc --enable-sanitize
 osmo-sgsn --enable-sanitize
-openbsc --enable-sanitize
 osmo-sip-connector --enable-sanitize
 osmo-pcu --enable-sanitize
 osmo-bts --enable-sanitize
