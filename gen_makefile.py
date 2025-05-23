@@ -116,9 +116,6 @@ parser.add_argument('--docker-cmd',
 parser.add_argument('-g', '--build-debug', dest='build_debug', default=False, action='store_true',
     help='''set 'CFLAGS=-g' when calling src/configure''')
 
-parser.add_argument('-a', '--auto-distclean', action='store_true',
-    help='''run "make distclean" automatically if source directory already configured''')
-
 parser.add_argument('-i', '--install-prefix', default='/usr/local',
                     help='''install there instead of /usr/local''')
 
@@ -252,13 +249,12 @@ def gen_makefile_clone(proj, src, src_proj, update_src_copy_cmd):
   touch $@
   '''
 
-def gen_makefile_autoconf(proj, src_proj, src_proj_copy, distclean_cond, update_src_copy_cmd):
+def gen_makefile_autoconf(proj, src_proj, src_proj_copy, update_src_copy_cmd):
   buildsystem = projects_buildsystems.get(proj, "autotools")
 
   if buildsystem == "autotools":
     return f'''
 .make.{proj}.autoconf: .make.{proj}.clone {src_proj}/configure.ac
-  if {distclean_cond}; then $(MAKE) {proj}-distclean; fi
   @echo "\\n\\n\\n===== $@\\n"
   {update_src_copy_cmd}
   -rm -f {src_proj_copy}/.version
@@ -272,14 +268,13 @@ def gen_makefile_autoconf(proj, src_proj, src_proj_copy, distclean_cond, update_
     assert False, f"unknown buildsystem: {buildsystem}"
 
 
-def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
+def gen_makefile_configure(proj, deps_installed, build_proj,
                            cflags, docker_cmd, build_to_src, configure_opts,
                            update_src_copy_cmd):
   buildsystem = projects_buildsystems.get(proj, "autotools")
   if buildsystem == "autotools":
     return f'''
 .make.{proj}.configure: .make.{proj}.autoconf {deps_installed} $({proj}_configure_files)
-  if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.autoconf; fi
   @echo "\\n\\n\\n===== $@\\n"
   {update_src_copy_cmd}
   -chmod -R ug+w {build_proj}
@@ -308,7 +303,7 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
-def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd,
+def gen_makefile_build(proj, build_proj, docker_cmd,
                        src_proj, update_src_copy_cmd):
   buildsystem = projects_buildsystems.get(proj, "autotools")
   check = "check" if args.make_check else ""
@@ -316,7 +311,6 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd,
   if buildsystem == "autotools":
     return f'''
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
-  if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.configure; fi
   @echo "\\n\\n\\n===== $@\\n"
   {update_src_copy_cmd}
   {docker_cmd}$(MAKE) -C {build_proj} -j {args.jobs} {check}
@@ -404,14 +398,6 @@ def gen_makefile_clean(proj, build_proj):
   -rm -rf .make.{proj}.*
   '''
 
-def gen_makefile_distclean(proj, src_proj):
-  return f'''
-.PHONY: {proj}-distclean
-{proj}-distclean: {proj}-clean
-  @echo "\\n\\n\\n===== $@\\n"
-  $(MAKE) -C {src_proj} distclean
-  '''
-
 def is_src_copy_needed(proj):
   if not args.autoreconf_in_src_copy:
     return False
@@ -456,7 +442,6 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir):
   else:
     configure_opts_str = ''
 
-  distclean_cond = f'[ -e {src_proj}/config.status ]' if args.auto_distclean else 'false'
   deps_installed = ' '.join(['.make.%s.install' % d for d in deps])
   deps_reinstall = ' '.join(['%s-reinstall' %d for d in deps])
   cflags = 'CFLAGS=-g ' if args.build_debug else ''
@@ -490,12 +475,10 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir):
 {gen_makefile_autoconf(proj,
                        src_proj,
                        src_proj_copy,
-                       distclean_cond,
                        update_src_copy_cmd)}
 
 {gen_makefile_configure(proj,
                         deps_installed,
-                        distclean_cond,
                         build_proj,
                         cflags,
                         docker_cmd,
@@ -504,7 +487,6 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir):
                         update_src_copy_cmd)}
 
 {gen_makefile_build(proj,
-                    distclean_cond,
                     build_proj,
                     docker_cmd,
                     src_proj_copy,
@@ -519,8 +501,6 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir):
                         build_proj)}
 
 {gen_makefile_clean(proj, build_proj)}
-
-{gen_makefile_distclean(proj, src_proj)}
 
 .PHONY: {proj}
 {proj}: .make.{proj}.install
@@ -649,8 +629,6 @@ if args.docker_cmd:
   content += f"    --push-url {shlex.quote(args.docker_cmd)} \\\n"
 if args.build_debug:
   content += "    --build-debug \\\n"
-if args.auto_distclean:
-  content += "    --auto-distclean \\\n"
 if args.autoreconf_in_src_copy:
   content += "    --autoreconf-in-src-copy \\\n"
 content += "    $(NULL)\n"
