@@ -308,7 +308,7 @@ def gen_makefile_configure(proj, deps_installed, distclean_cond, build_proj,
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
-def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
+def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd,
                        check, src_proj, update_src_copy_cmd):
   buildsystem = projects_buildsystems.get(proj, "autotools")
 
@@ -318,7 +318,7 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
   if {distclean_cond}; then $(MAKE) {proj}-distclean .make.{proj}.configure; fi
   @echo "\\n\\n\\n===== $@\\n"
   {update_src_copy_cmd}
-  {docker_cmd}$(MAKE) -C {build_proj} -j {jobs} {check}
+  {docker_cmd}$(MAKE) -C {build_proj} -j {args.jobs} {check}
   sync
   touch $@
     '''
@@ -330,7 +330,7 @@ def gen_makefile_build(proj, distclean_cond, build_proj, docker_cmd, jobs,
     return f'''
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
   @echo "\\n\\n\\n===== $@\\n"
-  {docker_cmd}meson compile -C {build_proj} -j {jobs}
+  {docker_cmd}meson compile -C {build_proj} -j {args.jobs}
   {test_line}
   sync
   touch $@
@@ -440,7 +440,7 @@ def gen_src_proj_copy(src_proj, make_dir, proj):
     return src_proj
   return os.path.join(make_dir, "src_copy", proj)
 
-def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
+def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
   src_proj = os.path.join(src_dir, proj)
   src_proj_copy = gen_src_proj_copy(src_proj, make_dir, proj)
 
@@ -512,7 +512,6 @@ def gen_make(proj, deps, configure_opts, jobs, make_dir, src_dir, build_dir, url
                     distclean_cond,
                     build_proj,
                     docker_cmd,
-                    jobs,
                     check,
                     src_proj_copy,
                     update_src_copy_cmd)}
@@ -690,7 +689,7 @@ for proj, deps in projects_deps:
   all_config_opts = []
   all_config_opts.extend(configure_opts.get('ALL') or [])
   all_config_opts.extend(configure_opts.get(proj) or [])
-  content += gen_make(proj, deps, all_config_opts, args.jobs,
+  content += gen_make(proj, deps, all_config_opts,
                      make_dir, src_dir, build_dir, args.url, args.push_url,
                      args.sudo_make_install, args.no_ldconfig,
                      args.ldconfig_without_sudo, args.make_check)
