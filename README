@@ -141,37 +141,6 @@ default is /usr/local.
 
 Find other useful scripts in src/, see src/README.
 
-
-=== ttcn3/ttcn3.sh
-
-Run a given testsuite with docker, so it behaves exactly the same as when
-jenkins runs it [1], but use osmo-dev to build all related Osmocom components
-and the testsuite, and mount them inside the docker containers. After building
-the docker containers for the first time (which takes rather long), this gives
-short test cycles: just modify something, run the script again and the relevant
-objects will be built directly, already built objects do not need to be
-rebuilt. (This is a big speed improvement over just using docker containers as
-you don't need to push your sources to a git server first, have the docker
-containers fetch the git sources and build the modified component from scratch
-again.)
-
-The docker containers are used, so we don't have to maintain a second set of
-configs which works without docker (that was tried before, and found not to be
-feasible).
-
-Example usage:
-
-  ./ttcn3/ttcn3.sh mgw
-  IMAGE_SUFFIX=latest ./ttcn3/ttcn3.sh mgw
-
-More about the testsuites:
-https://osmocom.org/projects/cellular-infrastructure/wiki/Titan_TTCN3_Testsuites
-
-Video explaining this script, related approaches and osmo-dev in general:
-https://media.ccc.de/v/osmodevcall-20211210-osmith-osmo-dev-ttcn3
-
-[1] https://jenkins.osmocom.org/jenkins/view/TTCN3/
-
 === ttcn3/tmux
 
 It's possible to run TTCN-3 test cases without using Docker.  This directory
