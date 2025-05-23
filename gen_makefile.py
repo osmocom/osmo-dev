@@ -110,9 +110,6 @@ parser.add_argument('-c', '--no-make-check', dest='make_check',
   default=True, action='store_false',
   help='''do not 'make check', just 'make' to build.''')
 
-parser.add_argument('--docker-cmd',
-    help='''prefix configure/make/make install calls with this command (used by ttcn3.sh)''')
-
 parser.add_argument('-g', '--build-debug', dest='build_debug', default=False, action='store_true',
     help='''set 'CFLAGS=-g' when calling src/configure''')
 
@@ -269,7 +266,7 @@ def gen_makefile_autoconf(proj, src_proj, src_proj_copy, update_src_copy_cmd):
 
 
 def gen_makefile_configure(proj, deps_installed, build_proj,
-                           cflags, docker_cmd, build_to_src, configure_opts,
+                           cflags, build_to_src, configure_opts,
                            update_src_copy_cmd):
   buildsystem = projects_buildsystems.get(proj, "autotools")
   if buildsystem == "autotools":
@@ -280,7 +277,7 @@ def gen_makefile_configure(proj, deps_installed, build_proj,
   -chmod -R ug+w {build_proj}
   -rm -rf {build_proj}
   mkdir -p {build_proj}
-  cd {build_proj}; {cflags}{docker_cmd}{build_to_src}/configure \\
+  cd {build_proj}; {cflags}{build_to_src}/configure \\
     --prefix {shlex.quote(args.install_prefix)} \\
     {configure_opts}
   sync
@@ -293,7 +290,7 @@ def gen_makefile_configure(proj, deps_installed, build_proj,
   -chmod -R ug+w {build_proj}
   -rm -rf {build_proj}
   mkdir -p {build_proj}
-  cd {build_proj}; {cflags}{docker_cmd}meson setup {build_to_src} . \\
+  cd {build_proj}; {cflags}meson setup {build_to_src} . \\
     --prefix {shlex.quote(args.install_prefix)}
   sync
   touch $@
@@ -303,8 +300,7 @@ def gen_makefile_configure(proj, deps_installed, build_proj,
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
-def gen_makefile_build(proj, build_proj, docker_cmd,
-                       src_proj, update_src_copy_cmd):
+def gen_makefile_build(proj, build_proj, src_proj, update_src_copy_cmd):
   buildsystem = projects_buildsystems.get(proj, "autotools")
   check = "check" if args.make_check else ""
 
@@ -313,7 +309,7 @@ def gen_makefile_build(proj, build_proj, docker_cmd,
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
   @echo "\\n\\n\\n===== $@\\n"
   {update_src_copy_cmd}
-  {docker_cmd}$(MAKE) -C {build_proj} -j {args.jobs} {check}
+  $(MAKE) -C {build_proj} -j {args.jobs} {check}
   sync
   touch $@
     '''
@@ -321,11 +317,11 @@ def gen_makefile_build(proj, build_proj, docker_cmd,
     test_line = ""
     # TODO: currently tests don't pass in this env
     # if check:
-    #   test_line = f"{docker_cmd}meson test -C {build_proj} -v"
+    #   test_line = f"meson test -C {build_proj} -v"
     return f'''
 .make.{proj}.build: .make.{proj}.configure $({proj}_files)
   @echo "\\n\\n\\n===== $@\\n"
-  {docker_cmd}meson compile -C {build_proj} -j {args.jobs}
+  meson compile -C {build_proj} -j {args.jobs}
   {test_line}
   sync
   touch $@
@@ -344,7 +340,7 @@ def gen_makefile_build(proj, build_proj, docker_cmd,
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
-def gen_makefile_install(proj, docker_cmd, build_proj):
+def gen_makefile_install(proj, build_proj):
   no_ldconfig = '#' if args.no_ldconfig else ''
   sudo_ldconfig = '' if args.ldconfig_without_sudo else 'sudo '
   sudo_make_install = "sudo " if args.sudo_make_install else ""
@@ -353,7 +349,7 @@ def gen_makefile_install(proj, docker_cmd, build_proj):
     return f'''
 .make.{proj}.install: .make.{proj}.build
   @echo "\\n\\n\\n===== $@\\n"
-  {docker_cmd}{sudo_make_install}$(MAKE) -C {build_proj} install
+  {sudo_make_install}$(MAKE) -C {build_proj} install
   {no_ldconfig}{sudo_ldconfig}ldconfig
   sync
   touch $@
@@ -362,7 +358,7 @@ def gen_makefile_install(proj, docker_cmd, build_proj):
     return f'''
 .make.{proj}.install: .make.{proj}.build
   @echo "\\n\\n\\n===== $@\\n"
-  {docker_cmd}{sudo_make_install}ninja -C {build_proj} install
+  {sudo_make_install}ninja -C {build_proj} install
   {no_ldconfig}{sudo_ldconfig}ldconfig
   sync
   touch $@
@@ -445,7 +441,6 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir):
   deps_installed = ' '.join(['.make.%s.install' % d for d in deps])
   deps_reinstall = ' '.join(['%s-reinstall' %d for d in deps])
   cflags = 'CFLAGS=-g ' if args.build_debug else ''
-  docker_cmd = f'OSMODEV_PROJECT={proj} {args.docker_cmd} ' if args.docker_cmd else ''
   update_src_copy_cmd = gen_update_src_copy_cmd(proj, src_dir, make_dir)
 
   return f'''
@@ -481,19 +476,16 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir):
                         deps_installed,
                         build_proj,
                         cflags,
-                        docker_cmd,
                         build_to_src,
                         configure_opts_str,
                         update_src_copy_cmd)}
 
 {gen_makefile_build(proj,
                     build_proj,
-                    docker_cmd,
                     src_proj_copy,
                     update_src_copy_cmd)}
 
 {gen_makefile_install(proj,
-                      docker_cmd,
                       build_proj)}
 
 {gen_makefile_reinstall(proj,
@@ -625,8 +617,6 @@ if args.ldconfig_without_sudo:
   content += "    --ldconfig-without-sudo \\\n"
 if not args.make_check:
   content += "    --no-make-check \\\n"
-if args.docker_cmd:
-  content += f"    --push-url {shlex.quote(args.docker_cmd)} \\\n"
 if args.build_debug:
   content += "    --build-debug \\\n"
 if args.autoreconf_in_src_copy:
