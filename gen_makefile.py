@@ -178,7 +178,7 @@ def read_configure_opts(path):
     return {}
   return dict(read_projects_deps(path))
 
-def gen_makefile_clone(proj, src, src_proj, url, push_url, update_src_copy_cmd):
+def gen_makefile_clone(proj, src, src_proj, update_src_copy_cmd):
   if proj == "osmocom-bb_layer23":
     return f'''
 .make.{proj}.clone: .make.osmocom-bb.clone
@@ -219,8 +219,8 @@ def gen_makefile_clone(proj, src, src_proj, url, push_url, update_src_copy_cmd):
     url = projects_urls[proj]
     cmd_set_push_url = "true"
   else:
-    url = f"{url}/{proj}"
-    push_url = f"{push_url}/{proj}"
+    url = f"{args.url}/{proj}"
+    push_url = f"{args.push_url or args.url}/{proj}"
     cmd_set_push_url = f'git -C "{src}/{proj}" remote set-url --push origin "{push_url}"'
 
   cmd_clone = f'git -C {src} clone --recurse-submodules "{url}" "{proj}"'
@@ -440,15 +440,13 @@ def gen_src_proj_copy(src_proj, make_dir, proj):
     return src_proj
   return os.path.join(make_dir, "src_copy", proj)
 
-def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir, url, push_url, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
+def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir, sudo_make_install, no_ldconfig, ldconfig_without_sudo, make_check):
   src_proj = os.path.join(src_dir, proj)
   src_proj_copy = gen_src_proj_copy(src_proj, make_dir, proj)
 
   build_proj = os.path.join(build_dir, proj)
   build_to_src = os.path.relpath(src_proj_copy, build_proj)
   build_proj = os.path.relpath(build_proj, make_dir)
-
-  push_url = push_url or url
 
   if configure_opts:
     configure_opts_str = ' '.join(configure_opts)
@@ -488,8 +486,6 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir, url, push
 {gen_makefile_clone(proj,
                     src_dir,
                     src_proj,
-                    url,
-                    push_url,
                     update_src_copy_cmd)}
 
 {gen_makefile_autoconf(proj,
@@ -690,7 +686,7 @@ for proj, deps in projects_deps:
   all_config_opts.extend(configure_opts.get('ALL') or [])
   all_config_opts.extend(configure_opts.get(proj) or [])
   content += gen_make(proj, deps, all_config_opts,
-                     make_dir, src_dir, build_dir, args.url, args.push_url,
+                     make_dir, src_dir, build_dir,
                      args.sudo_make_install, args.no_ldconfig,
                      args.ldconfig_without_sudo, args.make_check)
 
