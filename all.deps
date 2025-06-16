@@ -60,3 +60,10 @@ osmo-gsm-shark	libosmo-pfcp osmo-mgw libosmo-sigtran osmo-iuh
 strongswan-epdg		libosmocore
 
 upf-benchmark		libosmocore libosmo-pfcp
+
+# PyHSS + deps
+comp128-python
+gsm0338
+pyosmocom		gsm0338
+pysctp
+pyhss	comp128-python pyosmocom pysctp

@@ -55,6 +55,7 @@ import shlex
 topdir = os.path.dirname(os.path.realpath(__file__))
 all_deps_file = os.path.join(topdir, "all.deps")
 all_urls_file = os.path.join(topdir, "all.urls")
+venv_req_file = os.path.join(topdir, "python-venv-requirements.txt")
 all_buildsystems_file = os.path.join(topdir, "all.buildsystems")
 parser = argparse.ArgumentParser(epilog=__doc__, formatter_class=argparse.RawTextHelpFormatter)
 
@@ -218,6 +219,9 @@ def gen_convenience_targets():
     ret += f"{short}: {' '.join(full)}\n"
   return ret
 
+def gen_venv_activate():
+  return f". {shlex.quote(args.install_prefix)}/venv/bin/activate"
+
 def filter_projects_deps_targets():
   if not args.targets:
     return projects_deps
@@ -345,7 +349,7 @@ def gen_makefile_autoconf(proj, src_proj, src_proj_copy, update_src_copy_cmd):
   sync
   touch $@
     '''
-  elif buildsystem in ["meson", "erlang"]:
+  elif buildsystem in ["meson", "erlang", "python"]:
     return ""
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
@@ -381,7 +385,7 @@ def gen_makefile_configure(proj, deps_installed, build_proj,
   sync
   touch $@
     '''
-  elif buildsystem == "erlang":
+  elif buildsystem in ["erlang", "python"]:
     return f'''
 .make.{proj}.configure: .make.{proj}.clone {deps_installed}
   touch $@
@@ -423,6 +427,19 @@ def gen_makefile_build(proj, build_proj, src_proj, update_src_copy_cmd):
     export REBAR_BASE_DIR="$$PWD/{build_proj}" && \\
     mkdir -p "$$REBAR_BASE_DIR" && \\
     $(MAKE) -C {src_proj} build {check}
+  sync
+  touch $@
+    '''
+  elif buildsystem == "python":
+    return f'''
+.make.{proj}.build: .make.{proj}.configure .make.{proj}.clone $({proj}_files)
+  @echo "\\n\\n\\n===== $@\\n"
+  rm -f {build_proj}/*.whl
+  python3 \
+      -m build \
+      --no-isolation \
+      {src_proj} \
+      --outdir {build_proj}
   sync
   touch $@
     '''
@@ -471,6 +488,14 @@ def gen_makefile_install(proj, build_proj, src_proj):
         install -v -Dm755 "$$i" -t {shlex.quote(args.install_prefix)}/bin/; \\
       done; \\
     fi
+  sync
+  touch $@
+    '''
+  elif buildsystem == "python":
+    return f'''
+.make.{proj}.install: .make.venv .make.{proj}.build
+  @echo "\\n\\n\\n===== $@\\n"
+  {gen_venv_activate()} && pip install {shlex.quote(build_proj)}/*.whl --force-reinstall
   sync
   touch $@
     '''
@@ -556,6 +581,7 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir):
     \\( \\
       -name "*.[hc]" \\
       -or -name "*.py" \\
+      -or -name "pyproject.toml" \\
       -or -name "*.cpp" \\
       -or -name "*.tpl" \\
       -or -name "*.map" \\
@@ -650,6 +676,12 @@ default: usrp
 all_debug:
   $(MAKE) --dry-run -d all | grep "is newer than target"
   $(MAKE) all
+
+# one shared venv for python projects
+.make.venv: {venv_req_file}
+  python3 -m venv {args.install_prefix}/venv
+  {gen_venv_activate()} && pip install -r {venv_req_file}
+  touch $@
 
 # regenerate this Makefile, in case the deps or opts changed
 .PHONY: regen

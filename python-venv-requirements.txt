@@ -1,0 +1,23 @@
+# These dependencies will be installed into one shared venv in the make dir
+# when building python projects such as pyhss. Dependencies that are built from
+# source are in all.deps.
+
+Flask==2.2.3
+Jinja2==3.1.2
+PyYAML
+Requests==2.31.0
+SQLAlchemy==2.0.43
+SQLAlchemy_Utils==0.41.1
+Werkzeug==2.2.3
+aiohttp
+alembic
+comp128==1.0.0
+flask_restx==1.1.0
+prometheus_flask_exporter
+pycryptodome==3.17
+pydantic==2.8.2
+pydantic_core==2.20.1
+pysnmp==4.4.12
+redis==5.0.0
+tzlocal==4.3
+xmltodict==0.14.2

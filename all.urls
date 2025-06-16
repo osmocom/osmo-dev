@@ -5,3 +5,9 @@ nftables	https://git.netfilter.org/nftables/
 open5gs		https://github.com/open5gs/open5gs
 strongswan-epdg https://gitea.osmocom.org/ims-volte-vowifi/strongswan-epdg
 osmo-gsm-shark	https://gitea.osmocom.org/nhofmeyr/osmo-gsm-shark
+
+comp128-python	https://github.com/Takuto88/comp128-python
+gsm0338		https://github.com/dsch/gsm0338
+pyosmocom	https://gerrit.osmocom.org/python/pyosmocom
+pysctp		https://github.com/P1sec/pysctp
+pyhss		https://github.com/nickvsnetworking/pyhss

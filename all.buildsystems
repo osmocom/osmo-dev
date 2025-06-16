@@ -4,3 +4,9 @@ open5gs		meson
 osmo-s1gw	erlang
 osmo-epdg	erlang
 osmo_dia2gsup	erlang
+
+comp128-python	python
+gsm0338		python
+pyosmocom	python
+pysctp		python
+pyhss		python
