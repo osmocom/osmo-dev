@@ -382,7 +382,10 @@ def gen_makefile_configure(proj, deps_installed, build_proj,
   touch $@
     '''
   elif buildsystem == "erlang":
-    return ""
+    return f'''
+.make.{proj}.configure: .make.{proj}.clone {deps_installed}
+  touch $@
+    '''
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
@@ -414,7 +417,7 @@ def gen_makefile_build(proj, build_proj, src_proj, update_src_copy_cmd):
     '''
   elif buildsystem == "erlang":
     return f'''
-.make.{proj}.build: $({proj}_files)
+.make.{proj}.build: .make.{proj}.configure $({proj}_files)
   @echo "\\n\\n\\n===== $@\\n"
   set -x && \\
     export REBAR_BASE_DIR="$$PWD/{build_proj}" && \\
