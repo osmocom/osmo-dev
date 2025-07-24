@@ -31,7 +31,7 @@ libnftnl
 nftables	libnftnl
 osmo-upf	libosmocore libosmo-pfcp libgtpnl nftables
 osmo-cbc	libosmo-netif
-osmo-hnodeb	osmo-iuh
+osmo-hnodeb	libosmocore libosmo-netif libosmo-abis osmo-iuh
 osmo-hnbgw	osmo-iuh osmo-mgw libosmo-pfcp nftables
 osmo-e1d	libosmocore
 osmo-remsim	simtrace2_host libosmo-abis
