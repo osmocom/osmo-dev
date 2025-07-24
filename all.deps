@@ -35,7 +35,7 @@ osmo-hnodeb	osmo-iuh
 osmo-hnbgw	osmo-iuh osmo-mgw libosmo-pfcp nftables
 osmo-e1d	libosmocore
 osmo-remsim	simtrace2_host libosmo-abis
-osmo-uecups	libosmocore
+osmo-uecups	libosmocore libosmo-netif
 
 osmo-s1gw
 osmo-epdg
