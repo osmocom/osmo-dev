@@ -22,4 +22,5 @@ osmo-upf --enable-sanitize
 osmo-cbc --enable-sanitize
 osmo-hnbgw --enable-sanitize
 osmo-gsm-shark --enable-sanitize
+osmo-uecups --enable-sanitize
 upf-benchmark --enable-sanitize
