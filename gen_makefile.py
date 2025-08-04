@@ -153,6 +153,9 @@ parser.add_argument('-i', '--install-prefix', default='/usr/local',
 parser.add_argument('-A', '--autoreconf-in-src-copy', action='store_true',
                     help="run autoreconf in a copy of the source dir, avoids 'run make distclean' errors")
 
+parser.add_argument('--targets',
+                    help="comma separated list of high-level targets to build instead of all targets")
+
 args = parser.parse_args()
 
 class listdict(dict):
@@ -213,6 +216,40 @@ def gen_convenience_targets():
       ret += "\n"
     ret += f".PHONY: {short}\n"
     ret += f"{short}: {' '.join(full)}\n"
+  return ret
+
+def filter_projects_deps_targets():
+  if not args.targets:
+    return projects_deps
+
+  ret = {}
+  for target in args.targets.split(","):
+    # .make.osmocom-bb.clone -> osmocom-bb
+    if target.startswith(".make."):
+      target = target.split(".")[2]
+
+    current_targets = [target]
+    if target in convenience_targets:
+      current_targets = convenience_targets[target]
+
+    for target in current_targets:
+      # Add target + all dependencies to ret
+      queue = [target]
+      while queue:
+        project = queue.pop()
+        if project not in projects_deps:
+          print()
+          print(f"ERROR: filter_projects_deps_targets: can't find project {project} in projects_deps!")
+          print()
+          sys.exit(1)
+
+        deps = projects_deps[project]
+        ret[project] = deps
+
+        for dep in deps:
+          if dep not in ret:
+            queue += [dep]
+
   return ret
 
 def gen_makefile_clone(proj, src, src_proj, update_src_copy_cmd):
@@ -555,6 +592,7 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir):
 '''
 
 projects_deps = read_projects_deps(all_deps_file)
+projects_deps = filter_projects_deps_targets()
 projects_urls = read_projects_dict(all_urls_file)
 projects_buildsystems = read_projects_dict(all_buildsystems_file)
 configure_opts = listdict()
@@ -631,6 +669,8 @@ if args.build_debug:
   content += "    --build-debug \\\n"
 if args.autoreconf_in_src_copy:
   content += "    --autoreconf-in-src-copy \\\n"
+if args.targets:
+  content += f"    --targets={shlex.quote(args.targets)} \\\n"
 content += "    $(NULL)\n"
 
 if args.autoreconf_in_src_copy:

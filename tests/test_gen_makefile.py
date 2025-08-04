@@ -64,3 +64,14 @@ def test_make_open5gs_configure_src_copy(tmp_path):
     run_cmd(["./gen_makefile.py", "-m", tmp_path, "--autoreconf-in-src-copy"], cwd=osmo_dev_path)
     run_cmd(["make", ".make.open5gs.configure"], cwd=tmp_path)
     run_make_regen_2x(tmp_path)
+
+
+def test_gen_makefile_with_targets_arg(tmp_path):
+    run_cmd(["./gen_makefile.py", "-m", tmp_path, "--targets", "trxcon,osmo-mgw"], cwd=osmo_dev_path)
+    run_cmd("grep -q '^osmocom-bb_trxcon_files :=' Makefile", cwd=tmp_path, shell=True)
+    run_cmd("grep -q '^osmo-mgw_files :=' Makefile", cwd=tmp_path, shell=True)
+    run_cmd("grep -q '^libosmocore_files :=' Makefile", cwd=tmp_path, shell=True)
+    run_cmd("! grep -q '^osmo-bts_files :=' Makefile", cwd=tmp_path, shell=True)
+    run_cmd("! grep -q '^osmo-s1gw_files :=' Makefile", cwd=tmp_path, shell=True)
+    run_cmd("! grep -q '^open5gs_files :=' Makefile", cwd=tmp_path, shell=True)
+    run_make_regen_2x(tmp_path)
