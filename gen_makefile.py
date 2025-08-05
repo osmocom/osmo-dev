@@ -144,15 +144,15 @@ class listdict(dict):
       self.extend(k, v)
 
 def read_projects_deps(path):
-  'Read deps config and return tuples of (project_name, which-other-to-build-first).'
-  l = []
+  'Read deps config and return a dict of {project_name: which-other-to-build-first, …}.'
+  ret = {}
   for line in open(path):
     line = line.strip()
     if not line or line.startswith('#'):
       continue
     tokens = line.split()
-    l.append((tokens[0], tokens[1:]))
-  return l
+    ret[tokens[0]] = tokens[1:]
+  return ret
 
 def read_projects_dict(path):
   'Read urls/buildsystems config and return dict {project_name: url, …}.'
@@ -170,7 +170,7 @@ def read_configure_opts(path):
   'Read config opts file and return tuples of (project_name, config-opts).'
   if not path:
     return {}
-  return dict(read_projects_deps(path))
+  return read_projects_deps(path)
 
 def gen_makefile_clone(proj, src, src_proj, update_src_copy_cmd):
   if proj == "osmocom-bb_layer23":
@@ -646,17 +646,17 @@ TIME_START := $(shell date +%s%N)
 """
 
 # convenience target: clone all repositories first
-content += 'clone: \\\n\t' + ' \\\n\t'.join([ '.make.%s.clone' % p for p, d in projects_deps ]) + '\n\n'
+content += 'clone: \\\n\t' + ' \\\n\t'.join([ '.make.%s.clone' % p for p, d in projects_deps.items() ]) + '\n\n'
 
 # convenience target: clean all
-content += 'clean: \\\n\t' + ' \\\n\t'.join([ '%s-clean' % p for p, d in projects_deps ]) + '\n\n'
+content += 'clean: \\\n\t' + ' \\\n\t'.join([ '%s-clean' % p for p, d in projects_deps.items() ]) + '\n\n'
 
 # now the actual useful build rules
 content += 'all: clone all-install\n\n'
 
-content += 'all-install: \\\n\t' + ' \\\n\t'.join([ '.make.%s.install' % p for p, d in projects_deps ]) + '\n\n'
+content += 'all-install: \\\n\t' + ' \\\n\t'.join([ '.make.%s.install' % p for p, d in projects_deps.items() ]) + '\n\n'
 
-for proj, deps in projects_deps:
+for proj, deps in projects_deps.items():
   all_config_opts = []
   all_config_opts.extend(configure_opts.get('ALL') or [])
   all_config_opts.extend(configure_opts.get(proj) or [])
