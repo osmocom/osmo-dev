@@ -58,6 +58,40 @@ all_urls_file = os.path.join(topdir, "all.urls")
 all_buildsystems_file = os.path.join(topdir, "all.buildsystems")
 parser = argparse.ArgumentParser(epilog=__doc__, formatter_class=argparse.RawTextHelpFormatter)
 
+convenience_targets = {
+  # Whole networks
+  "cn": [
+    "osmo-ggsn",
+    "osmo-hlr",
+    "osmo-iuh",
+    "osmo-mgw",
+    "osmo-sgsn",
+    "osmo-sip-connector",
+    "osmo-smlc",
+  ],
+  "cn-bsc": [
+    "cn",
+    "osmo-bsc",
+  ],
+  "cn-bsc-nat": [
+    "cn",
+    "mobile",
+    "osmo-bsc",
+    "osmo-bsc-nat",
+    "osmo-bts",
+    "virtphy",
+  ],
+  "usrp": [
+    "cn-bsc",
+    "osmo-bts",
+    "osmo-trx",
+  ],
+  # Components in subdirs of repositories
+  "mobile": ["osmocom-bb_layer23"],
+  "trxcon": ["osmocom-bb_trxcon"],
+  "virtphy": ["osmocom-bb_virtphy"],
+}
+
 parser.add_argument('configure_opts_files',
   help='''Config file containing project name and
 ./configure options''',
@@ -171,6 +205,15 @@ def read_configure_opts(path):
   if not path:
     return {}
   return read_projects_deps(path)
+
+def gen_convenience_targets():
+  ret = ""
+  for short, full in convenience_targets.items():
+    if ret:
+      ret += "\n"
+    ret += f".PHONY: {short}\n"
+    ret += f"{short}: {' '.join(full)}\n"
+  return ret
 
 def gen_makefile_clone(proj, src, src_proj, update_src_copy_cmd):
   if proj == "osmocom-bb_layer23":
@@ -550,55 +593,9 @@ content += f'''
 default: usrp
 
 #
-# Convenience targets for whole networks
+# Convenience targets (whole networks, components in subdirs)
 #
-.PHONY: cn
-cn: \\
-  osmo-ggsn \\
-  osmo-hlr \\
-  osmo-iuh \\
-  osmo-mgw \\
-  osmo-msc \\
-  osmo-sgsn \\
-  osmo-sip-connector \\
-  osmo-smlc \\
-  $(NULL)
-
-.PHONY: cn-bsc
-cn-bsc: \\
-  cn \\
-  osmo-bsc \\
-  $(NULL)
-
-.PHONY: cn-bsc-nat
-cn-bsc-nat: \\
-  cn \\
-  mobile \\
-  osmo-bsc \\
-  osmo-bsc-nat \\
-  osmo-bts \\
-  virtphy \\
-  $(NULL)
-
-.PHONY: usrp
-usrp: \\
-  cn-bsc \\
-  osmo-bts \\
-  osmo-trx \\
-  $(NULL)
-
-#
-# Convenience targets for components in subdirs of repositories
-#
-.PHONY: mobile
-mobile: osmocom-bb_layer23
-
-.PHONY: virtphy
-virtphy: osmocom-bb_virtphy
-
-.PHONY: trxcon
-trxcon: osmocom-bb_trxcon
-
+{gen_convenience_targets()}
 #
 # Other convenience targets
 #
