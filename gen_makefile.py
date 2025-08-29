@@ -243,6 +243,12 @@ def filter_projects_deps_targets():
           print()
           sys.exit(1)
 
+        # simtrace2_host -> simtrace2
+        if "_" in project:
+          project_main = project.split("_")[0]
+          if project_main in projects_deps and project_main not in ret:
+            queue += [project_main]
+
         deps = projects_deps[project]
         ret[project] = deps
 
