@@ -435,7 +435,7 @@ def gen_makefile_build(proj, build_proj, src_proj, update_src_copy_cmd):
 .make.{proj}.build: .make.{proj}.configure .make.{proj}.clone $({proj}_files)
   @echo "\\n\\n\\n===== $@\\n"
   rm -f {build_proj}/*.whl
-  python3 \
+  {gen_venv_activate()} && python3 \
       -m build \
       --no-isolation \
       {src_proj} \
