@@ -1,9 +1,10 @@
 # project	build these first
 libosmocore
+libosmo-asn1-tcap
 libosmo-netif	libosmocore
 libosmo-abis	libosmocore libosmo-netif
 libosmo-gprs	libosmocore
-libosmo-sigtran	libosmo-netif
+libosmo-sigtran	libosmo-netif libosmo-asn1-tcap
 libsmpp34
 libasn1c
 osmo-ggsn	libosmocore libgtpnl
