@@ -1,4 +1,6 @@
 #!/bin/sh -e
+# Copyright 2025 sysmocom - s.f.m.c. GmbH
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Update the src_copy dir with all relevant files from the original git
 # repository (+ submodules). Used by gen_makefile.py --autoreconf-in-src-copy.
 
@@ -8,6 +10,13 @@ update_git_dir() {
 
 	echo "updating src_copy: $dest"
 
+	# Get files that are deleted, but not committed yet
+	git \
+		-C "$src" \
+		ls-files \
+		--deleted \
+		| sort >"$LIST_DELETED"
+
 	# Get list of files (everything that is not in gitignore)
 	git \
 		-C "$src" \
@@ -15,14 +24,21 @@ update_git_dir() {
 		--others \
 		--cached \
 		--exclude-standard \
-		> "$COPY_LIST"
+		| sort >"$LIST_COPY"
+
+	# Remove the deleted files from the list
+	comm \
+		-3 \
+		"$LIST_COPY" \
+		"$LIST_DELETED" \
+		>"$LIST_COPY_WITHOUT_DELETED"
 
 	mkdir -p "$dest"
 
 	# Copy files that changed
 	rsync \
 		--archive \
-		--files-from="$COPY_LIST" \
+		--files-from="$LIST_COPY_WITHOUT_DELETED" \
 		"$src" \
 		"$dest"
 }
@@ -114,11 +130,16 @@ fi
 DEST_DIR_PROJ="$MAKE_DIR/src_copy/$PROJ"
 handle_symlink_proj
 
-COPY_LIST="$(mktemp --suffix=-osmo-dev-rsync-copylist)"
+LIST_COPY="$(mktemp --suffix=-osmo-dev-rsync-list-copy)"
+LIST_DELETED="$(mktemp --suffix=-osmo-dev-rsync-list-deleted)"
+LIST_COPY_WITHOUT_DELETED="$(mktemp --suffix=-osmo-dev-rsync-list-copy-without-deleted)"
 
 cd "$SRC_DIR/$PROJ"
 update_git_dirs_all
-rm "$COPY_LIST"
+rm \
+	"$LIST_COPY" \
+	"$LIST_DELETED" \
+	"$LIST_COPY_WITHOUT_DELETED"
 echo "$TIME_START" >"$MARKER"
 
 # Output an empty line when done to make the Makefile output more readable
