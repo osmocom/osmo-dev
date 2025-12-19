@@ -7,6 +7,7 @@ libosmo-sigtran --enable-sanitize
 libosmo-pfcp --enable-sanitize
 libsmpp34 --enable-sanitize
 osmo-bsc --enable-sanitize
+osmo-gbproxy --enable-sanitize
 osmo-ggsn --enable-sanitize
 osmo-hlr --enable-sanitize
 osmo-iuh --enable-sanitize
