@@ -24,4 +24,7 @@ osmo-cbc --enable-sanitize
 osmo-hnbgw --enable-sanitize
 osmo-gsm-shark --enable-sanitize
 osmo-uecups --enable-sanitize
+osmocom-bb_layer23 --enable-sanitize
+osmocom-bb_trxcon --enable-sanitize
+osmocom-bb_virtphy --enable-sanitize
 upf-benchmark --enable-sanitize
