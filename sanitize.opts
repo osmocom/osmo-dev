@@ -15,6 +15,7 @@ osmo-mgw --enable-sanitize
 osmo-msc --enable-sanitize
 osmo-sgsn --enable-sanitize
 osmo-sip-connector --enable-sanitize
+osmo-pcap --enable-sanitize
 osmo-pcu --enable-sanitize
 osmo-bts --enable-sanitize
 osmo-smlc --enable-sanitize
