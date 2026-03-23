@@ -7,7 +7,7 @@ libosmo-gprs	libosmocore
 libosmo-sigtran	libosmo-netif libosmo-asn1-tcap
 libsmpp34
 libasn1c
-osmo-ggsn	libosmocore libgtpnl
+osmo-ggsn	libosmocore libosmo-netif libgtpnl
 osmo-iuh	libosmo-sigtran libasn1c
 osmo-hlr	libosmo-abis
 osmo-mgw	libosmo-netif libosmo-abis
