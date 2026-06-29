@@ -8,8 +8,9 @@ import configparser
 import json
 import os
 import subprocess
-import urllib.request
+import sys
 import urllib.parse
+import urllib.request
 
 
 def get_topdir():
@@ -22,14 +23,14 @@ def get_topdir():
         ).stdout.rstrip()
     except subprocess.CalledProcessError:
         print("ERROR: not running inside a git repository")
-        exit(1)
+        sys.exit(1)
 
 
 def get_config_path():
     ret = f"{get_topdir()}/.gitreview"
     if not os.path.exists(ret):
         print(f"ERROR: config not found: {ret}")
-        exit(1)
+        sys.exit(1)
     return ret
 
 
@@ -72,7 +73,7 @@ def git_fetch(host, project, patch_id, rev):
     try:
         return subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError:
-        exit(1)
+        sys.exit(1)
 
 
 def git_cherry_pick_fetch_head():
@@ -82,7 +83,7 @@ def git_cherry_pick_fetch_head():
     try:
         return subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError:
-        exit(1)
+        sys.exit(1)
 
 
 def git_checkout_fetch_head(patch_id, rev):
@@ -92,7 +93,7 @@ def git_checkout_fetch_head(patch_id, rev):
     try:
         return subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError:
-        exit(1)
+        sys.exit(1)
 
 
 desc = "git review download: fetch and checkout a patch from gerrit"
