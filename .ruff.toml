@@ -6,6 +6,10 @@ exclude = [
 	"osmo-cn-latest/provision-hlr.py",
 	"sysmobts-calib.py",
 ]
+include = [
+	"*.py",
+	"src/grd",
+]
 
 [lint]
 # E741: Ambiguous variable name: `l`
