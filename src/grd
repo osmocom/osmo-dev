@@ -28,14 +28,38 @@ def get_topdir():
 
 def get_config_path():
     ret = f"{get_topdir()}/.gitreview"
-    if not os.path.exists(ret):
-        print(f"ERROR: config not found: {ret}")
-        sys.exit(1)
-    return ret
+    return ret if os.path.exists(ret) else None
+
+
+def exit_gerrit_host_project_unknown():
+    print("ERROR: failed to get gerrit host and project")
+    print("Consider adding a .gitreview file:")
+    print("  [gerrit]")
+    print("  host=gerrit.osmocom.org")
+    print("  project=…")
+    sys.exit(1)
+
+
+def get_config_from_origin_url():
+    url = subprocess.run(
+        ["git", "config", "--get", "remote.origin.url"],
+        check=True,
+        capture_output=True,
+        encoding="UTF-8",
+    ).stdout.rstrip()
+
+    if not url.startswith("https://gerrit.osmocom.org/"):
+        exit_gerrit_host_project_unknown()
+
+    host = url.split("/")[2]
+    project = "/".join(url.split("/")[3:])
+    return host, project
 
 
 def get_config():
     config_path = get_config_path()
+    if not config_path:
+        return get_config_from_origin_url()
     config = configparser.ConfigParser()
     config.read(config_path)
     return config["gerrit"]["host"], config["gerrit"]["project"]
