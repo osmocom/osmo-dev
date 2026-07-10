@@ -349,7 +349,7 @@ def gen_makefile_autoconf(proj, src_proj, src_proj_copy, update_src_copy_cmd):
   sync
   touch $@
     '''
-  elif buildsystem in ["meson", "erlang", "python"]:
+  elif buildsystem in ["meson", "erlang", "python", "cmake"]:
     return ""
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
@@ -382,6 +382,18 @@ def gen_makefile_configure(proj, deps_installed, build_proj,
   mkdir -p {build_proj}
   cd {build_proj}; {cflags}meson setup {build_to_src} . \\
     --prefix {shlex.quote(args.install_prefix)}
+  sync
+  touch $@
+    '''
+  elif buildsystem == "cmake":
+    return f'''
+.make.{proj}.configure: .make.{proj}.clone {deps_installed} $({proj}_configure_files)
+  @echo "\\n\\n\\n===== $@\\n"
+  -chmod -R ug+w {build_proj}
+  -rm -rf {build_proj}
+  mkdir -p {build_proj}
+  cd {build_proj}; cmake -S {build_to_src} -B . \\
+      -DCMAKE_INSTALL_PREFIX={shlex.quote(args.install_prefix)}
   sync
   touch $@
     '''
@@ -443,6 +455,18 @@ def gen_makefile_build(proj, build_proj, src_proj, update_src_copy_cmd):
   sync
   touch $@
     '''
+  elif buildsystem == "cmake":
+    test_cmd = ""
+    if args.make_check:
+      test_cmd = f"ctest --test-dir {shlex.quote(build_proj)}"
+    return f'''
+.make.{proj}.build: .make.{proj}.configure $({proj}_files)
+  @echo "\\n\\n\\n===== $@\\n"
+  cmake --build {shlex.quote(build_proj)} -j {args.jobs}
+  {test_cmd}
+  sync
+  touch $@
+    '''
   else:
     assert False, f"unknown buildsystem: {buildsystem}"
 
@@ -496,6 +520,14 @@ def gen_makefile_install(proj, build_proj, src_proj):
 .make.{proj}.install: .make.venv .make.{proj}.build
   @echo "\\n\\n\\n===== $@\\n"
   {gen_venv_activate()} && pip install {shlex.quote(build_proj)}/*.whl --force-reinstall
+  sync
+  touch $@
+    '''
+  elif buildsystem == "cmake":
+    return f'''
+.make.{proj}.install: .make.{proj}.build
+  @echo "\\n\\n\\n===== $@\\n"
+  cmake --install {shlex.quote(build_proj)}
   sync
   touch $@
     '''
@@ -574,6 +606,7 @@ def gen_make(proj, deps, configure_opts, make_dir, src_dir, build_dir):
 
 {proj}_configure_files := $(shell find -L {src_proj} \\
     -name "Makefile.am" \\
+    -or -name "CMakeLists.txt" \\
     -or -name "*.in" \\
     -and -not -name "Makefile.in" \\
     -and -not -name "config.h.in" 2>/dev/null)

@@ -45,6 +45,7 @@ osmo_dia2gsup
 open5gs
 
 onomondo-eim
+onomondo-ipa
 
 # can only clone these
 docker-playground
