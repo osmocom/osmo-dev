@@ -5,6 +5,7 @@ osmo-s1gw	erlang
 osmo-epdg	erlang
 osmo_dia2gsup	erlang
 onomondo-eim	erlang
+onomondo-ipa	cmake
 
 comp128-python	python
 gsm0338		python
