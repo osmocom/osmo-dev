@@ -44,6 +44,8 @@ osmo_dia2gsup
 
 open5gs
 
+onomondo-eim
+
 # can only clone these
 docker-playground
 osmo-ttcn3-hacks
