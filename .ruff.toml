@@ -12,8 +12,16 @@ include = [
 ]
 
 [lint]
-# E741: Ambiguous variable name: `l`
-ignore = ["E741"]
+ignore = [
+	"B026",    # https://docs.astral.sh/ruff/rules/star-arg-unpacking-after-keyword-arg/
+	"E741",    # https://docs.astral.sh/ruff/rules/ambiguous-variable-name/
+	"EXE001",  # https://docs.astral.sh/ruff/rules/shebang-not-executable/
+	"I001",    # https://docs.astral.sh/ruff/rules/unsorted-imports/
+	"PLR1730", # https://docs.astral.sh/ruff/rules/if-stmt-min-max/
+	"SIM103",  # https://docs.astral.sh/ruff/rules/needless-bool/
+	"SIM115",  # https://docs.astral.sh/ruff/rules/open-file-with-context-handler/
+	"UP031",   # https://docs.astral.sh/ruff/rules/printf-string-formatting/
+]
 
 [format]
 exclude = [
