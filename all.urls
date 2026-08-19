@@ -1,10 +1,14 @@
-# Git clone URLs for projects not developed at gerrit.osmocom.org
+# Git clone URLs for projects not developed at gerrit.osmocom.org/$project
 # project	url
 libnftnl	https://git.netfilter.org/libnftnl/
 nftables	https://git.netfilter.org/nftables/
 open5gs		https://github.com/open5gs/open5gs
 strongswan-epdg https://gitea.osmocom.org/ims-volte-vowifi/strongswan-epdg
 osmo-gsm-shark	https://gitea.osmocom.org/nhofmeyr/osmo-gsm-shark
+
+osmo_dia2gsup	https://gerrit.osmocom.org/erlang/osmo_dia2gsup
+osmo-epdg	https://gerrit.osmocom.org/erlang/osmo-epdg
+osmo-s1gw	https://gerrit.osmocom.org/erlang/osmo-s1gw
 
 comp128-python	https://github.com/Takuto88/comp128-python
 gsm0338		https://github.com/dsch/gsm0338
