@@ -332,7 +332,6 @@ def gen_makefile_clone(proj, src, src_proj, update_src_copy_cmd):
   fi
 
   {update_src_copy_cmd}
-  sync
   touch $@
   '''
 
@@ -346,7 +345,6 @@ def gen_makefile_autoconf(proj, src_proj, src_proj_copy, update_src_copy_cmd):
   {update_src_copy_cmd}
   -rm -f {src_proj_copy}/.version
   cd {src_proj_copy}; autoreconf -fi
-  sync
   touch $@
     '''
   elif buildsystem in ["meson", "erlang", "python", "cmake"]:
@@ -370,7 +368,6 @@ def gen_makefile_configure(proj, deps_installed, build_proj,
   cd {build_proj}; {cflags}{build_to_src}/configure \\
     --prefix {shlex.quote(args.install_prefix)} \\
     {configure_opts}
-  sync
   touch $@
     '''
   elif buildsystem == "meson":
@@ -382,7 +379,6 @@ def gen_makefile_configure(proj, deps_installed, build_proj,
   mkdir -p {build_proj}
   cd {build_proj}; {cflags}meson setup {build_to_src} . \\
     --prefix {shlex.quote(args.install_prefix)}
-  sync
   touch $@
     '''
   elif buildsystem == "cmake":
@@ -394,7 +390,6 @@ def gen_makefile_configure(proj, deps_installed, build_proj,
   mkdir -p {build_proj}
   cd {build_proj}; cmake -S {build_to_src} -B . \\
       -DCMAKE_INSTALL_PREFIX={shlex.quote(args.install_prefix)}
-  sync
   touch $@
     '''
   elif buildsystem in ["erlang", "python"]:
@@ -415,7 +410,6 @@ def gen_makefile_build(proj, build_proj, src_proj, update_src_copy_cmd):
   @echo "\\n\\n\\n===== $@\\n"
   {update_src_copy_cmd}
   $(MAKE) -C {build_proj} -j {args.jobs} {check}
-  sync
   touch $@
     '''
   elif buildsystem == "meson":
@@ -428,7 +422,6 @@ def gen_makefile_build(proj, build_proj, src_proj, update_src_copy_cmd):
   @echo "\\n\\n\\n===== $@\\n"
   meson compile -C {build_proj} -j {args.jobs}
   {test_line}
-  sync
   touch $@
     '''
   elif buildsystem == "erlang":
@@ -439,7 +432,6 @@ def gen_makefile_build(proj, build_proj, src_proj, update_src_copy_cmd):
     export REBAR_BASE_DIR="$$PWD/{build_proj}" && \\
     mkdir -p "$$REBAR_BASE_DIR" && \\
     $(MAKE) -C {src_proj} build {check}
-  sync
   touch $@
     '''
   elif buildsystem == "python":
@@ -452,7 +444,6 @@ def gen_makefile_build(proj, build_proj, src_proj, update_src_copy_cmd):
       --no-isolation \
       {src_proj} \
       --outdir {build_proj}
-  sync
   touch $@
     '''
   elif buildsystem == "cmake":
@@ -464,7 +455,6 @@ def gen_makefile_build(proj, build_proj, src_proj, update_src_copy_cmd):
   @echo "\\n\\n\\n===== $@\\n"
   cmake --build {shlex.quote(build_proj)} -j {args.jobs}
   {test_cmd}
-  sync
   touch $@
     '''
   else:
@@ -481,7 +471,6 @@ def gen_makefile_install(proj, build_proj, src_proj):
   @echo "\\n\\n\\n===== $@\\n"
   {sudo_make_install}$(MAKE) -C {build_proj} install
   {no_ldconfig}{sudo_ldconfig}ldconfig
-  sync
   touch $@
     '''
   elif buildsystem == "meson":
@@ -490,7 +479,6 @@ def gen_makefile_install(proj, build_proj, src_proj):
   @echo "\\n\\n\\n===== $@\\n"
   {sudo_make_install}ninja -C {build_proj} install
   {no_ldconfig}{sudo_ldconfig}ldconfig
-  sync
   touch $@
     '''
   elif buildsystem == "erlang":
@@ -512,7 +500,6 @@ def gen_makefile_install(proj, build_proj, src_proj):
         install -v -Dm755 "$$i" -t {shlex.quote(args.install_prefix)}/bin/; \\
       done; \\
     fi
-  sync
   touch $@
     '''
   elif buildsystem == "python":
@@ -520,7 +507,6 @@ def gen_makefile_install(proj, build_proj, src_proj):
 .make.{proj}.install: .make.venv .make.{proj}.build
   @echo "\\n\\n\\n===== $@\\n"
   {gen_venv_activate()} && pip install {shlex.quote(build_proj)}/*.whl --force-reinstall
-  sync
   touch $@
     '''
   elif buildsystem == "cmake":
@@ -528,7 +514,6 @@ def gen_makefile_install(proj, build_proj, src_proj):
 .make.{proj}.install: .make.{proj}.build
   @echo "\\n\\n\\n===== $@\\n"
   cmake --install {shlex.quote(build_proj)}
-  sync
   touch $@
     '''
   else:
