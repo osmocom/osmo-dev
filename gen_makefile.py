@@ -378,7 +378,8 @@ def gen_makefile_configure(proj, deps_installed, build_proj,
   -rm -rf {build_proj}
   mkdir -p {build_proj}
   cd {build_proj}; {cflags}meson setup {build_to_src} . \\
-    --prefix {shlex.quote(args.install_prefix)}
+    --prefix {shlex.quote(args.install_prefix)} \\
+    {configure_opts}
   touch $@
     '''
   elif buildsystem == "cmake":
@@ -389,7 +390,8 @@ def gen_makefile_configure(proj, deps_installed, build_proj,
   -rm -rf {build_proj}
   mkdir -p {build_proj}
   cd {build_proj}; cmake -S {build_to_src} -B . \\
-      -DCMAKE_INSTALL_PREFIX={shlex.quote(args.install_prefix)}
+      -DCMAKE_INSTALL_PREFIX={shlex.quote(args.install_prefix)} \\
+      {configure_opts}
   touch $@
     '''
   elif buildsystem in ["erlang", "python"]:
@@ -753,9 +755,15 @@ content += 'all: clone all-install\n\n'
 content += 'all-install: \\\n\t' + ' \\\n\t'.join([ '.make.%s.install' % p for p, d in projects_deps.items() ]) + '\n\n'
 
 for proj, deps in projects_deps.items():
+  # Build a project-specific list of configure options
   all_config_opts = []
-  all_config_opts.extend(configure_opts.get('ALL') or [])
+  if projects_buildsystems.get(proj, "autotools") == "autotools":
+    # Options for ALL are only applied to projects with the autotools build
+    # system. When applying unknown options to ./configure, they simply get
+    # ignored whereas other build systems will fail.
+    all_config_opts.extend(configure_opts.get('ALL') or [])
   all_config_opts.extend(configure_opts.get(proj) or [])
+
   content += gen_make(proj, deps, all_config_opts, make_dir, src_dir, build_dir)
 
 # Replace spaces with tabs to avoid the common pitfall of inserting spaces
