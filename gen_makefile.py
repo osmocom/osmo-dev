@@ -656,7 +656,6 @@ for configure_opts_file in configure_opts_files:
   if configure_opts_file.endswith(".deps"):
     print(f"WARNING: using {all_deps_file} instead of {configure_opts_file}")
     continue
-  r = read_configure_opts(configure_opts_file)
   configure_opts.extend_dict(read_configure_opts(configure_opts_file))
 
 make_dir = args.make_dir
