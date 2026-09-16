@@ -1,1 +1,1 @@
-libosmocore --disable-uring
+libosmocore --disable-uring --disable-uring-tests
