@@ -113,8 +113,8 @@ for config_file in [orig_config_file, local_config_file]:
     current_config_identifiers += [name]
 
 # replace variable names with above values recursively
-replace_re = re.compile('\$\{([A-Z_][A-Za-z0-9_]*)\}')
-command_re = re.compile('\$\{([a-z][A-Za-z0-9_]*)\(([^)]*)\)\}')
+replace_re = re.compile(r'\$\{([A-Z_][A-Za-z0-9_]*)\}')
+command_re = re.compile(r'\$\{([a-z][A-Za-z0-9_]*)\(([^)]*)\)\}')
 
 idx = 0
 
@@ -275,7 +275,7 @@ for tmpl_name in sorted(os.listdir(tmpl_dir)):
   # then replace that n by 23. This happens automatically in ${foreach} blocks,
   # but doing this also allows expanding the n outside of ${foreach}.
   for key, val in local_config.items():
-    foo_n_re = re.compile('\$\{([A-Za-z0-9_]*)n[_}]')
+    foo_n_re = re.compile(r'\$\{([A-Za-z0-9_]*)n[_}]')
     for m in foo_n_re.finditer(val):
       name = m.group(1)
       item_re = re.compile('^%s([0-9]+)_.*' % name)
