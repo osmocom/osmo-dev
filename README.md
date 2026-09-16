@@ -3,18 +3,18 @@
 ## Overview
 
 The main purpose of this project is building the Osmocom stack (and related
-projects such as Open5GS) from source with `gen_makefile.py`. This is described
-in more detail below.
+projects such as Open5GS) from source with a top-level Makefile produced by
+`gen_makefile.py`. This is described in more detail below.
 
 ### Additional scripts
 
-* `net`: quickly configure, launch and tear down an entire Osmocom core network
+* `net/`: quickly configure, launch and tear down an entire Osmocom core network
   on your box (see `net/README`).
 
 * `ttcn3/tmux`: start a tmux session with a TTCN-3 testsuite and related
   binaries (see `ttcn3/tmux/README.md`).
 
-* `src`: other useful scripts related to git and gerrit (see `src/README`).
+* `src/`: scripts to sync local git clones with upstream gerrit (see `src/README`).
 
 * `osmo-uninstall.sh`: remove installed binaries, libraries and headers from a
   given prefix, the default is `/usr/local`.
@@ -63,7 +63,19 @@ various configurations, see the command line options of `gen_makefile.py`.
 
 ### Make targets
 
-Other make targets exist for specific use cases:
+Single projects can be built by name. The following example builds only
+libosmo-abis, and its dependencies libosmocore and libosmo-netif:
+
+```
+make libosmo-abis
+```
+This can be used for any project in `all.deps`, e.g. `make osmo-msc`,
+`make osmo-bsc` etc.
+
+Top-level make targets exist for specific use cases:
+
+* `cn`: core network components: OsmoMSC, OsmoSGSN, osmo-iuh, OsmoGGSN, OsmoHLR, OsmoMGW,
+  OsmoSIPConnector, OsmoSMLC, including all of their dependencies.
 
 * `usrp`:
   Build the CN, OsmoBSC, OsmoBTS and OsmoTRX (default, e.g. when connecting
@@ -72,29 +84,34 @@ Other make targets exist for specific use cases:
 * `cn-bsc`:
   Build the CN and OsmoBSC (e.g. when connecting to an external sysmoBTS)
 
-* `osmo-msc`:
-  Build only the OsmoMSC project and its dependencies (this can be used for
-  any project in `all.deps`).
-
 * `.make.osmo-ttcn3-hacks.clone`:
   Clone the osmo-ttcn3-hacks git repository (it cannot be built by osmo-dev,
   but cloning it is still useful.)
 
-If you modify the `all.deps` or `*.opts` file, you can easily run `make regen`
-in a `make*` subdir to regenerate the `Makefile` from the same files, with the
-same options for `gen_makefile.py`.
+* You will find many other (hidden) `.make.*` files in your `make*/` dir.
+  These control the top-level Makefile: removing a file makes sure that the
+  given step is rebuilt, including all of its dependencies.
+  For example, if you `rm .make.libosmocore.autoconf`, libosmocore and all
+  projects depending on libosmocore will be rebuilt from scratch.
 
-In your `make*` subdir there are empty status files that are touched for every
-completed make target. From these, `make` can detect what needs to be rebuilt.
-You can manually remove them to force a rebuild of a specific target. For
-example, if you `rm .make.libosmocore.autoconf`, libosmocore and all projects
-depending on libosmocore will be rebuilt from scratch.
+### Modify configuration
+
+If you modify the `all.deps` or `*.opts` file, update your `make*` subdir with:
+
+```
+make regen
+```
+
+This keeps the options intact that were first passed to `gen_makefile.py`.
+(They are listed near the top of the generated `make*/Makefile`, convenient to
+edit.)
 
 ### Configuration files
 
 ### all.deps
 
 Whitespace-separated listing of:
+
 ```
 project_name depends_on_project_1 depends_on_project_2 ...
 ```
@@ -103,6 +120,7 @@ project_name depends_on_project_1 depends_on_project_2 ...
 
 Projects that are not developed at `gerrit.osmocom.org/$project` are listed
 here in the following format:
+
 ```
 project_name    URL
 ```
@@ -111,6 +129,7 @@ project_name    URL
 
 Projects that are not using `autotools` need an entry in this file in the
 form of:
+
 ```
 project_name    BUILDSYSTEM
 ```
@@ -131,10 +150,14 @@ The `*.opts` files provide options that are passed to `./configure`,
 project_name    OPTION(S)
 ```
 
-If `project_name` is `ALL`, the option gets added to all projects using the
-`autotools` build system. This is because `./configure` just ignores any
-options it does not understand and initially only `autotools` was supported by
-`gen_makefile.py`.
+Options can be added to all `./configure` steps of builds that use `autotools`
+using the `ALL` keyword, for example:
+
+```
+ALL --prefix=/usr
+```
+
+(Note that `./configure` just ignores any options it does not understand.)
 
 Find more information about specific `*.opts` files below.
 
@@ -179,7 +202,10 @@ export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
 export PATH="$PATH:/usr/local/bin"
 ```
 
+WARNING: setting `LD_LIBRARY_PATH` can have adverse effects.
+
 ### sanitize.opts and osmo-trx
 
-When using sanitize.opts, osmo-trx is not built with the address sanitizer
-enabled. Linking a sanitizer-enabled libosmocore will not work.
+osmo-trx is never built with the address sanitizer enabled. If you intend to
+build osmo-trx, you should not use sanitize.opts, because linking a
+sanitizer-enabled libosmocore will not work.
