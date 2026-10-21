@@ -44,12 +44,8 @@ tmux send-keys -t $SESSION:1.0 "osmo-bsc -c osmo-bsc.cfg" C-m
 # Start trxcon
 tmux send-keys -t $SESSION:1.1 "cd $OBB_DIR/src/host/trxcon" C-m
 tmux send-keys -t $SESSION:1.1 "./src/trxcon -s /tmp/osmocom_l2" C-m
-# Start fake_trx.py
-tmux send-keys -t $SESSION:1.2 "cd $OBB_DIR/src/target/trx_toolkit" C-m
-tmux send-keys -t $SESSION:1.2 "./fake_trx.py"
-tmux send-keys -t $SESSION:1.2     " --trx TRX1@127.0.0.1:5700/1"
-tmux send-keys -t $SESSION:1.2     " --trx TRX2@127.0.0.1:5700/2"
-tmux send-keys -t $SESSION:1.2     " --trx TRX3@127.0.0.1:5700/3"
-tmux send-keys -t $SESSION:1.2 C-m
+# Start osmo-trx-proxy
+tmux send-keys -t $SESSION:1.2 "cd $SUITE_DIR/bts" C-m
+tmux send-keys -t $SESSION:1.2 "osmo-trx-proxy -c osmo-trx-proxy.cfg" C-m
 
 tmux attach -t $SESSION:0
