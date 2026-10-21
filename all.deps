@@ -56,7 +56,7 @@ simtrace2
 # configure.ac not in topdir of repository
 osmocom-bb_layer23	libosmocore
 osmocom-bb_virtphy	libosmocore
-osmocom-bb_trxcon	libosmocore
+osmocom-bb_trxcon	libosmocore osmo-trx
 simtrace2_host		libosmocore
 
 osmo-gsm-shark	libosmo-pfcp osmo-mgw libosmo-sigtran osmo-iuh
