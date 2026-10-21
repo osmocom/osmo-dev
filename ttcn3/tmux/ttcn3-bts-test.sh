@@ -31,7 +31,7 @@ tmux split-window -t $SESSION:0 -v
 tmux send-keys -t $SESSION:0.0 "cd $SUITE_DIR/bts" C-m
 tmux send-keys -t $SESSION:0.0 "$RESPAWN osmo-bts-trx -c osmo-bts.cfg"
 tmux send-keys -t $SESSION:0.1 "cd $SUITE_DIR/bts" C-m
-tmux send-keys -t $SESSION:0.1 "../start-testsuite.sh ./BTS_Tests BTS_Tests.cfg"
+tmux send-keys -t $SESSION:0.1 "../start-testsuite.sh bts/BTS_Tests BTS_Tests.cfg"
 
 
 tmux new-window -t $SESSION:1

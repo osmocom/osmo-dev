@@ -17,7 +17,7 @@ tmux split-window -t $SESSION:0 -v
 tmux send-keys -t $SESSION:0.0 "cd $SUITE_DIR/msc" C-m
 tmux send-keys -t $SESSION:0.0 "osmo-msc -c osmo-msc.cfg" C-m
 tmux send-keys -t $SESSION:0.1 "cd $SUITE_DIR/msc" C-m
-tmux send-keys -t $SESSION:0.1 "../start-testsuite.sh ./MSC_Tests MSC_Tests.cfg"
+tmux send-keys -t $SESSION:0.1 "../start-testsuite.sh msc/MSC_Tests MSC_Tests.cfg"
 
 tmux new-window -t $SESSION:1
 tmux send-keys -t $SESSION:1.0 "cd $SUITE_DIR/msc" C-m
