@@ -43,7 +43,7 @@ tmux send-keys -t $SESSION:1.0 "cd $SUITE_DIR/bts" C-m
 tmux send-keys -t $SESSION:1.0 "osmo-bsc -c osmo-bsc.cfg" C-m
 # Start trxcon
 tmux send-keys -t $SESSION:1.1 "cd $OBB_DIR/src/host/trxcon" C-m
-tmux send-keys -t $SESSION:1.1 "./trxcon -s /tmp/osmocom_l2" C-m
+tmux send-keys -t $SESSION:1.1 "./src/trxcon -s /tmp/osmocom_l2" C-m
 # Start fake_trx.py
 tmux send-keys -t $SESSION:1.2 "cd $OBB_DIR/src/target/trx_toolkit" C-m
 tmux send-keys -t $SESSION:1.2 "./fake_trx.py"
