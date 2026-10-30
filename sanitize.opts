@@ -30,3 +30,4 @@ osmocom-bb_layer23 --enable-sanitize
 osmocom-bb_trxcon --enable-sanitize
 osmocom-bb_virtphy --enable-sanitize
 upf-benchmark --enable-sanitize
+open5gs -Db_sanitize=address,undefined
